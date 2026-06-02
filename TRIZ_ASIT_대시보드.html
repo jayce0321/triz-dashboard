@@ -861,6 +861,25 @@ body {
 }
 .ap-metric::before { content:'📊'; flex-shrink:0; font-size:12px; }
 
+.ap-app-ideas { display: flex; flex-direction: column; gap: 10px; }
+.ap-app-idea {
+  background: linear-gradient(135deg, #f0f7ff, #e8f3ff);
+  border: 1px solid #bfdbfe;
+  border-left: 3px solid var(--brand);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.ap-app-idea-title { font-size: 13px; font-weight: 700; color: var(--brand-dark); margin-bottom: 5px; }
+.ap-app-idea-scenario { font-size: 12px; color: #374151; line-height: 1.6; margin-bottom: 6px; font-style: italic; }
+.ap-app-idea-value {
+  font-size: 11px; font-weight: 600;
+  color: #065f46;
+  background: #d1fae5;
+  border-radius: 99px;
+  display: inline-block;
+  padding: 2px 10px;
+}
+
 .ap-obstacles { display: flex; flex-direction: column; gap: 8px; }
 .ap-obstacle {
   background: #fef2f2;
@@ -1306,8 +1325,8 @@ body {
       <button class="tab-btn" onclick="switchTab(2)">🔧 ASIT 아이디어</button>
       <button class="tab-btn" onclick="switchTab(3)">👥 에이전트 평가</button>
       <button class="tab-btn" onclick="switchTab(4)">🏆 최종 보고서</button>
-      <button class="tab-btn" onclick="switchTab(5)">🔬 프레임워크 피드백</button>
-      <button class="tab-btn" id="tab-btn-6" onclick="switchTab(6)">🚀 실행 아이디어</button>
+      <button class="tab-btn" id="tab-btn-5" onclick="switchTab(5)">🚀 실행 아이디어</button>
+      <button class="tab-btn" onclick="switchTab(6)">🔬 프레임워크 피드백</button>
     </nav>
 
     <!-- 탭 콘텐츠 -->
@@ -1363,7 +1382,22 @@ body {
         <div id="tab4-content" style="display:none"></div>
       </div>
 
-      <!-- 탭6: 프레임워크 피드백 -->
+      <!-- 탭6→5: 실행 아이디어 (보고서 바로 다음) -->
+      <div class="tab-pane" id="tab-6">
+        <div id="tab6-placeholder" class="placeholder-box">
+          <div class="placeholder-icon">🚀</div>
+          <div class="placeholder-text">구체적 실행 아이디어가 여기에 표시됩니다</div>
+          <div class="placeholder-sub">최종 보고서 분석이 완료되면 자동으로 생성됩니다</div>
+        </div>
+        <div id="tab6-loading" style="display:none;text-align:center;padding:40px 0;">
+          <div style="font-size:28px;margin-bottom:12px;">⚙️</div>
+          <div style="font-size:14px;font-weight:600;color:#2367d7;margin-bottom:6px;">실행 아이디어 생성 중...</div>
+          <div style="font-size:12px;color:#64748b;">Top 10 아이디어를 현장 실행 계획 + 적용 아이디어로 변환하고 있습니다 (약 20~30초)</div>
+        </div>
+        <div id="tab6-content" style="display:none"></div>
+      </div>
+
+      <!-- 탭7→6: 프레임워크 피드백 -->
       <div class="tab-pane" id="tab-5">
         <div style="padding:16px 0;">
           <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">🔬 프레임워크 관점 피드백</h3>
@@ -1409,21 +1443,6 @@ body {
           </div>
           <div id="fw-results" style="display:none;margin-top:20px;"></div>
         </div>
-      </div>
-
-      <!-- 탭7: 실행 아이디어 -->
-      <div class="tab-pane" id="tab-6">
-        <div id="tab6-placeholder" class="placeholder-box">
-          <div class="placeholder-icon">🚀</div>
-          <div class="placeholder-text">구체적 실행 아이디어가 여기에 표시됩니다</div>
-          <div class="placeholder-sub">최종 보고서 분석이 완료되면 자동으로 생성됩니다</div>
-        </div>
-        <div id="tab6-loading" style="display:none;text-align:center;padding:40px 0;">
-          <div style="font-size:28px;margin-bottom:12px;">⚙️</div>
-          <div style="font-size:14px;font-weight:600;color:#2367d7;margin-bottom:6px;">실행 계획 생성 중...</div>
-          <div style="font-size:12px;color:#64748b;">Top 10 아이디어를 현장 실행 계획으로 변환하고 있습니다 (약 20~30초)</div>
-        </div>
-        <div id="tab6-content" style="display:none"></div>
       </div>
 
     </div><!-- /tab-content -->
@@ -2848,6 +2867,18 @@ function getMockActionPlan(synthesisData) {
     avg_score: t.avg || 0,
     timing: t.timing || '즉시',
     first_action: `${t.name} 담당자를 지정하고 이번 주 킥오프 미팅 일정을 잡는다`,
+    application_ideas: [
+      {
+        title: `${t.name} — 핵심 기능 파일럿`,
+        scenario: `나는 오늘 서비스를 열었을 때 ${t.name}이 반영된 새로운 화면을 본다. 기존에 느꼈던 불편함이 사라지고 원하던 정보에 한 번에 접근할 수 있다. "이런 게 필요했는데"라고 생각하며 앱을 닫지 않고 더 오래 머문다.`,
+        value: `초기 파일럿 기준 체류 시간 15% 증가, 재방문율 10% 개선 예상`,
+      },
+      {
+        title: `${t.name} — 독자 피드백 루프`,
+        scenario: `나는 서비스를 이용하면서 내 의견이 실제로 반영되는 경험을 한다. 간단한 반응 버튼이나 짧은 피드백 채널이 있고, 다음 주에 그 의견이 반영된 변화를 눈으로 확인한다. 이 서비스가 나를 진짜 고객으로 대우한다고 느낀다.`,
+        value: `독자 참여율 20% 향상, 충성 독자 전환율 5%p 개선 목표`,
+      },
+    ],
     steps: [
       { step: 1, action: '현황 파악 및 책임자 지정', detail: '현재 상태를 측정하고 담당팀과 책임자를 확정한다', who: '팀장', when: '1주 내' },
       { step: 2, action: '파일럿 범위 설정', detail: '리스크를 최소화하는 소규모 실험 대상을 선정한다', who: '담당팀', when: '2주 내' },
@@ -2929,6 +2960,17 @@ function renderActionPlan(data) {
             </div>
           </div>
 
+          ${(p.application_ideas || []).length ? `
+          <div class="ap-section-label">💡 실제 적용 아이디어 — AI 추천</div>
+          <div class="ap-app-ideas">${(p.application_ideas || []).map(a => `
+            <div class="ap-app-idea">
+              <div class="ap-app-idea-title">✦ ${a.title}</div>
+              <div class="ap-app-idea-scenario">${a.scenario}</div>
+              <span class="ap-app-idea-value">📈 ${a.value}</span>
+            </div>
+          `).join('')}</div>
+          ` : ''}
+
           <div class="ap-section-label">실행 단계</div>
           <div class="ap-steps">${steps}</div>
 
@@ -3002,6 +3044,12 @@ function exportActionPlan() {
   (d.action_plans || []).forEach(p => {
     md += `## ${p.rank}위. ${p.name} (avg ${(p.avg_score||0).toFixed(1)}점 / ${p.timing})\n\n`;
     md += `### 🎯 이번 주 첫 행동\n${p.first_action}\n\n`;
+    if ((p.application_ideas||[]).length) {
+      md += `### 💡 실제 적용 아이디어 (AI 추천)\n`;
+      (p.application_ideas||[]).forEach(a => {
+        md += `#### ✦ ${a.title}\n${a.scenario}\n> 📈 ${a.value}\n\n`;
+      });
+    }
     md += `### 📋 실행 단계\n`;
     (p.steps || []).forEach(s => {
       md += `${s.step}. **${s.action}**\n   - 방법: ${s.detail}\n   - 담당: ${s.who} | 일정: ${s.when}\n\n`;
