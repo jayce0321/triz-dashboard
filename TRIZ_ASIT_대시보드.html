@@ -1,0 +1,3023 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRIZ/ASIT AI 에이전트 분석 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== 리셋 & 기본 ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --brand: #2367d7;
+  --brand-dark: #1a50b0;
+  --brand-light: #e8f0fd;
+  --planner: #7c3aed;
+  --consultant: #059669;
+  --engineer: #d97706;
+  --customer: #0891b2;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text-2: #64748b;
+  --text-3: #94a3b8;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.12);
+  --font: 'Noto Sans KR', 'Apple SD Gothic Neo', '맑은 고딕', sans-serif;
+}
+
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ===== 스크롤바 ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ===== 헤더 ===== */
+#header {
+  height: 60px;
+  background: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(35,103,215,.3);
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header-logo {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,.2);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.header-title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -.3px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.header-badge {
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.3);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 99px;
+}
+#clock {
+  color: rgba(255,255,255,.85);
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== 레이아웃 ===== */
+#layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: calc(100vh - 60px);
+  margin-top: 60px;
+}
+
+/* ===== 사이드바 ===== */
+#sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  position: sticky;
+  top: 60px;
+  height: calc(100vh - 60px);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.sidebar-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.form-group { margin-bottom: 10px; }
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 5px;
+}
+.form-input, .form-textarea {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+  resize: none;
+}
+.form-input:focus, .form-textarea:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(35,103,215,.12);
+  background: #fff;
+}
+.form-textarea { min-height: 60px; }
+
+/* ===== AI 문제 분석 UI ===== */
+.problem-free-area {
+  min-height: 130px;
+  font-size: 13px;
+  line-height: 1.75;
+  resize: vertical;
+}
+#btn-parse {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--brand-light);
+  color: var(--brand);
+  border: 1.5px solid var(--brand);
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin-top: 8px;
+}
+#btn-parse:hover:not(:disabled) {
+  background: var(--brand);
+  color: #fff;
+}
+#btn-parse:disabled { opacity: .55; cursor: not-allowed; }
+
+.parse-spinner {
+  display: inline-block;
+  width: 13px; height: 13px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: parse-spin .7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes parse-spin { to { transform: rotate(360deg); } }
+
+.step-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700;
+  padding: 4px 11px; border-radius: 99px;
+  margin-bottom: 8px;
+  transition: all .3s;
+}
+.step-badge.wait   { background: #f1f5f9; color: var(--text-3); }
+.step-badge.loading{ background: #dbeafe; color: var(--brand); }
+.step-badge.done   { background: #dcfce7; color: #166534; }
+
+.parsed-result-panel {
+  border: 1.5px solid #86efac;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-top: 10px;
+  background: #f0fdf4;
+}
+.parsed-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 13px;
+  cursor: pointer;
+  font-size: 12px; font-weight: 700; color: #166534;
+  user-select: none;
+  background: #dcfce7;
+  border-bottom: 1px solid #86efac;
+}
+.parsed-toggle:hover { background: #bbf7d0; }
+.parsed-toggle small { font-weight: 400; color: #4ade80; margin-left: 4px; }
+.parsed-arrow { font-size: 10px; transition: transform .25s; }
+.parsed-fields-body {
+  padding: 12px;
+  display: flex; flex-direction: column; gap: 0;
+  background: var(--surface);
+}
+.parsed-fields-body.collapsed { display: none; }
+
+/* ===== 문제 유형 라디오 ===== */
+.type-radio-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.type-radio-item {
+  flex: 1;
+  cursor: pointer;
+}
+.type-radio-item input[type="radio"] { display: none; }
+.type-radio-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface);
+  transition: all .15s;
+  cursor: pointer;
+}
+.type-radio-item input[type="radio"]:checked + .type-radio-label {
+  border-color: var(--brand);
+  background: var(--brand-light);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.check-group { display: flex; flex-direction: column; gap: 8px; }
+.check-item {
+  display: flex; align-items: center; gap: 9px;
+  cursor: pointer; font-size: 13px; color: var(--text);
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  transition: background .15s;
+}
+.check-item:hover { background: var(--brand-light); }
+.check-item input[type=checkbox] {
+  width: 16px; height: 16px;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+#btn-start {
+  width: 100%;
+  padding: 13px;
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s, transform .15s, box-shadow .2s;
+  box-shadow: 0 4px 14px rgba(35,103,215,.35);
+  letter-spacing: -.2px;
+}
+#btn-start:hover:not(:disabled) {
+  background: var(--brand-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(35,103,215,.45);
+}
+#btn-start:active:not(:disabled) { transform: translateY(0); }
+#btn-start:disabled {
+  background: #93aed8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ===== 프로그레스 바 ===== */
+#progress-wrapper {
+  display: none;
+  margin-top: 14px;
+}
+.progress-label {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+.progress-bar-bg {
+  height: 6px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand), #60a5fa);
+  border-radius: 99px;
+  transition: width .5s ease;
+  width: 0%;
+}
+
+/* ===== 에러 배너 ===== */
+#error-banner {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fef2f2;
+  border: 1.5px solid #fca5a5;
+  color: #b91c1c;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 200;
+  box-shadow: var(--shadow-md);
+  max-width: 600px;
+  text-align: center;
+}
+
+/* ===== 메인 영역 ===== */
+#main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ===== 에이전트 상태 바 ===== */
+#agent-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 60px;
+  z-index: 50;
+}
+.agent-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  flex: 1;
+  min-width: 140px;
+  transition: box-shadow .2s, border-color .2s;
+}
+.agent-card.running {
+  border-color: var(--brand);
+  background: var(--brand-light);
+  box-shadow: 0 0 0 3px rgba(35,103,215,.1);
+}
+.agent-card.done {
+  border-color: var(--success);
+  background: #f0fdf4;
+}
+.agent-card.error {
+  border-color: var(--danger);
+  background: #fef2f2;
+}
+.agent-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  background: rgba(35,103,215,.12);
+  flex-shrink: 0;
+}
+.agent-info { flex: 1; min-width: 0; }
+.agent-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.agent-status {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 1px;
+}
+.agent-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-3);
+  flex-shrink: 0;
+}
+.agent-card.running .agent-dot { background: var(--brand); animation: blink 1s infinite; }
+.agent-card.done .agent-dot { background: var(--success); }
+.agent-card.error .agent-dot { background: var(--danger); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* ===== 탭 ===== */
+/* ===== 에이전트 점수 뱃지 (아이디어 카드 하단) ===== */
+.agent-score-row { margin-top: 10px; }
+.asr-label { font-size: 10px; font-weight: 700; color: var(--text-3); margin-bottom: 5px; letter-spacing: .4px; }
+.asr-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+.asr-badge {
+  font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px;
+  white-space: nowrap;
+}
+
+/* ===== 출처 뱃지 ===== */
+.src-badge {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 6px; white-space: nowrap;
+}
+.src-badge.triz { background: #eff6ff; color: #1d4ed8; }
+.src-badge.asit { background: #f0fdf4; color: #166534; }
+
+/* ===== 매트릭스 섹션 ===== */
+.matrix-section { margin-top: 24px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.matrix-toggle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: var(--gray-50, #f8fafc);
+  font-size: 13px; font-weight: 700; color: var(--text);
+  cursor: pointer; user-select: none;
+}
+.matrix-toggle:hover { background: var(--brand-light); }
+.matrix-arrow { margin-left: auto; transition: transform .2s; }
+.matrix-body { display: none; padding: 16px; }
+.matrix-body.open { display: block; }
+
+#tab-nav {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: 0 20px;
+  gap: 4px;
+  overflow-x: auto;
+  position: relative;
+  z-index: 60;
+}
+.tab-btn {
+  padding: 11px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -2px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .2s, border-color .2s;
+}
+.tab-btn:hover { color: var(--brand); }
+.tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+/* ===== 탭 콘텐츠 ===== */
+#tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+}
+.tab-pane { display: none; animation: fadeIn .3s ease; }
+.tab-pane.active { display: block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.placeholder-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  color: var(--text-3);
+  text-align: center;
+  gap: 14px;
+}
+.placeholder-icon { font-size: 52px; opacity: .45; }
+.placeholder-text { font-size: 15px; font-weight: 500; }
+.placeholder-sub { font-size: 13px; }
+
+/* ===== 카드 공통 ===== */
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  transition: transform .2s, box-shadow .2s;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.card-body { font-size: 13px; color: var(--text-2); line-height: 1.7; }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::after {
+  content:'';
+  flex:1;
+  height:1px;
+  background:var(--border);
+}
+
+/* ===== 탭1 카드들 ===== */
+.summary-card {
+  background: linear-gradient(135deg, var(--brand), #4f8ef7);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(35,103,215,.3);
+}
+.summary-card h3 { font-size: 13px; opacity:.8; margin-bottom:8px; }
+.summary-card p { font-size: 14px; font-weight:500; line-height:1.7; }
+
+.contradiction-card {
+  border-left: 4px solid;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+.contradiction-card.tech { border-color: var(--brand); }
+.contradiction-card.phys { border-color: var(--engineer); }
+
+.ifr-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 16px 0; }
+.ifr-card {
+  background: var(--surface);
+  border: 1.5px solid var(--brand-light);
+  border-radius: var(--radius);
+  padding: 15px;
+  box-shadow: var(--shadow);
+  transition: transform .2s, box-shadow .2s;
+}
+.ifr-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+.ifr-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--brand);
+  background: var(--brand-light);
+  padding: 3px 9px;
+  border-radius: 99px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+.ifr-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+.tools-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tool-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: var(--brand-light);
+  color: var(--brand);
+  border: 1px solid rgba(35,103,215,.2);
+}
+
+/* ===== 탭2 아이디어 카드 ===== */
+.idea-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  transition: transform .2s, box-shadow .2s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.idea-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); }
+.idea-principle-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  display: inline-block;
+  align-self: flex-start;
+}
+.idea-num { font-size: 12px; color: var(--text-3); }
+.idea-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.idea-desc { font-size: 12.5px; color: var(--text-2); line-height: 1.65; }
+.pros-cons { display: flex; flex-wrap: wrap; gap: 5px; }
+.pros-tag, .cons-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 99px;
+}
+.pros-tag { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.cons-tag { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+.star-row { display: flex; gap: 2px; align-items: center; }
+.star { color: #fbbf24; font-size: 14px; }
+.star.empty { color: #e2e8f0; }
+.score-num { font-size: 12px; font-weight: 700; color: var(--text-2); margin-left: 5px; }
+
+/* ===== 탭3 ASIT ===== */
+.asit-section { margin-bottom: 28px; }
+.asit-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.asit-icon { font-size: 20px; }
+
+/* ===== 탭4 에이전트 평가 ===== */
+.eval-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+.eval-panel {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: box-shadow .2s;
+}
+.eval-panel:hover { box-shadow: var(--shadow-md); }
+.eval-header {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.eval-header-icon { font-size: 20px; }
+.eval-header-name { font-size: 14px; font-weight: 700; }
+.eval-status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-3);
+  margin-left: auto;
+}
+.eval-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.eval-summary { font-size: 13px; color: var(--text-2); line-height: 1.7; }
+.eval-top3 { display: flex; flex-wrap: wrap; gap: 6px; }
+.eval-idea-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 99px;
+  background: var(--brand-light);
+  color: var(--brand);
+}
+.concern-box {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: var(--radius-sm);
+  padding: 10px 13px;
+  font-size: 12.5px;
+  color: #9a3412;
+}
+.mini-bar-list { display: flex; flex-direction: column; gap: 7px; }
+.mini-bar-item { display: flex; align-items: center; gap: 9px; }
+.mini-bar-label { font-size: 11px; color: var(--text-2); width: 130px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mini-bar-bg { flex:1; height:6px; background:var(--border); border-radius:99px; overflow:hidden; }
+.mini-bar-fill { height:100%; border-radius:99px; transition:width .6s ease; }
+.mini-bar-score { font-size: 11px; font-weight:700; color:var(--text-2); width:22px; text-align:right; }
+
+/* ===== 탭6 실행 아이디어 (Action Plan) ===== */
+.ap-quick-start {
+  background: linear-gradient(135deg, #1a50b0, #2367d7);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.ap-qs-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+.ap-qs-label { font-size: 11px; font-weight: 700; opacity: .75; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.ap-qs-text { font-size: 15px; font-weight: 600; line-height: 1.5; }
+
+.ap-timeline-group { margin-bottom: 28px; }
+.ap-timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.ap-timing-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 99px;
+  letter-spacing: .04em;
+}
+.ap-timing-immediate { background: #fef3c7; color: #92400e; }
+.ap-timing-1month    { background: #dbeafe; color: #1e40af; }
+.ap-timing-long      { background: #f3f4f6; color: #374151; }
+.ap-count-text { font-size: 12px; color: var(--text-2); }
+
+.ap-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: box-shadow .2s;
+}
+.ap-card:hover { box-shadow: var(--shadow-md); }
+.ap-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  cursor: pointer;
+  user-select: none;
+}
+.ap-rank-badge {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--brand-light);
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ap-rank-badge.gold   { background: #fef3c7; color: #92400e; }
+.ap-rank-badge.silver { background: #f1f5f9; color: #475569; }
+.ap-rank-badge.bronze { background: #fff7ed; color: #9a3412; }
+.ap-card-title { font-size: 13px; font-weight: 700; flex: 1; }
+.ap-score-chip {
+  font-size: 12px; font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: var(--brand-light);
+  color: var(--brand);
+  flex-shrink: 0;
+}
+.ap-chevron { font-size: 11px; color: var(--text-3); transition: transform .25s; flex-shrink: 0; }
+.ap-card.open .ap-chevron { transform: rotate(180deg); }
+
+.ap-card-body { display: none; padding: 0 18px 18px; border-top: 1px solid var(--border); }
+.ap-card.open .ap-card-body { display: block; }
+
+.ap-first-action {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin: 14px 0 16px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.ap-fa-icon { font-size: 18px; flex-shrink: 0; }
+.ap-fa-label { font-size: 10px; font-weight: 800; color: #92400e; margin-bottom: 3px; }
+.ap-fa-text { font-size: 13px; font-weight: 600; color: #78350f; line-height: 1.45; }
+
+.ap-section-label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; margin: 14px 0 8px; }
+
+.ap-steps { display: flex; flex-direction: column; gap: 8px; }
+.ap-step {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 0 10px;
+  align-items: start;
+}
+.ap-step-num {
+  width: 28px; height: 28px;
+  background: var(--brand);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ap-step-content {}
+.ap-step-action { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.ap-step-detail { font-size: 12px; color: var(--text-2); margin-bottom: 2px; }
+.ap-step-meta { display: flex; gap: 10px; margin-top: 3px; }
+.ap-step-who, .ap-step-when {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+.ap-step-who  { background: #eff6ff; color: #1d4ed8; }
+.ap-step-when { background: #f0fdf4; color: #166534; }
+
+.ap-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+
+.ap-metrics { display: flex; flex-direction: column; gap: 6px; }
+.ap-metric {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; color: var(--text);
+}
+.ap-metric::before { content:'📊'; flex-shrink:0; font-size:12px; }
+
+.ap-obstacles { display: flex; flex-direction: column; gap: 8px; }
+.ap-obstacle {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.ap-obs-problem { font-size: 12px; font-weight: 600; color: #991b1b; margin-bottom: 4px; }
+.ap-obs-solution { font-size: 12px; color: #374151; }
+.ap-obs-solution::before { content: '→ '; color: #059669; font-weight: 700; }
+
+.ap-resources { display: flex; flex-wrap: wrap; gap: 6px; }
+.ap-resource-tag {
+  font-size: 11px;
+  padding: 3px 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  color: var(--text-2);
+}
+.ap-resource-tag::before { content: '⚙️ '; }
+
+/* ===== 탭5 최종 보고서 ===== */
+.report-table-wrap { overflow-x: auto; margin-bottom: 24px; border-radius: var(--radius); box-shadow: var(--shadow); }
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  background: var(--surface);
+}
+.report-table th {
+  background: var(--brand);
+  color: #fff;
+  padding: 11px 12px;
+  text-align: center;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.report-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  vertical-align: middle;
+}
+.report-table tr:last-child td { border-bottom: none; }
+.report-table tr:hover td { background: var(--bg); }
+.rank-badge {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--border);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px;
+}
+.rank-badge.gold { background: #fef3c7; color: #92400e; }
+.rank-badge.silver { background: #f1f5f9; color: #475569; }
+.rank-badge.bronze { background: #fef3c7; color: #78350f; }
+.score-cell { font-weight: 700; border-radius: 6px; padding: 3px 8px; display: inline-block; }
+.score-high { background: #dcfce7; color: #166534; }
+.score-mid { background: #fef9c3; color: #854d0e; }
+.score-low { background: #fee2e2; color: #991b1b; }
+.timing-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: var(--brand-light);
+  color: var(--brand);
+}
+.impact-bar { display: flex; align-items: center; gap: 6px; }
+.impact-dots { display: flex; gap: 3px; }
+.impact-dot { width: 8px; height: 8px; border-radius: 50%; }
+.impact-dot.filled { background: var(--brand); }
+.impact-dot.empty { background: var(--border); }
+
+.quick-wins {
+  background: linear-gradient(135deg, var(--brand), #3b82f6);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(35,103,215,.35);
+}
+.quick-wins h3 { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+.quick-wins ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.quick-wins li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 13.5px; line-height: 1.6;
+}
+.quick-wins li::before {
+  content: '✓';
+  background: rgba(255,255,255,.25);
+  border-radius: 50%;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.insights { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.insight-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+  transition: transform .2s;
+}
+.insight-item:hover { transform: translateX(4px); }
+.insight-num {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.insight-text { font-size: 13.5px; color: var(--text); line-height: 1.7; }
+.insight-text strong { color: var(--brand); }
+
+.timeline { position: relative; padding-left: 24px; margin-bottom: 24px; }
+.timeline::before {
+  content:'';
+  position: absolute;
+  left: 7px; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.timeline-item { position: relative; margin-bottom: 20px; }
+.timeline-dot {
+  position: absolute;
+  left: -21px; top: 4px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--brand);
+  border: 2.5px solid #fff;
+  box-shadow: 0 0 0 2px var(--brand);
+}
+.timeline-period {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--brand);
+  background: var(--brand-light);
+  padding: 2px 9px;
+  border-radius: 99px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+.timeline-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.timeline-desc { font-size: 13px; color: var(--text-2); line-height: 1.65; }
+
+#btn-export {
+  padding: 13px 28px;
+  background: var(--surface);
+  color: var(--brand);
+  border: 2px solid var(--brand);
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 auto;
+}
+#btn-export:hover {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(35,103,215,.35);
+}
+
+/* ===== 에이전트 로그 ===== */
+#log-section {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.log-toggle {
+  width: 100%;
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s;
+}
+.log-toggle:hover { background: var(--bg); }
+.log-toggle-arrow { transition: transform .2s; }
+.log-toggle.open .log-toggle-arrow { transform: rotate(180deg); }
+#log-body {
+  display: none;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 10px 20px;
+  background: #0f172a;
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 11.5px;
+}
+#log-body.open { display: block; }
+.log-line { color: #94a3b8; margin-bottom: 3px; }
+.log-line .log-time { color: #4ade80; margin-right: 8px; }
+.log-line .log-msg { color: #e2e8f0; }
+.log-line.log-progress .log-msg { color: #60a5fa; }
+.log-line.log-result .log-msg { color: #a78bfa; }
+.log-line.log-complete .log-msg { color: #4ade80; }
+.log-line.log-error .log-msg { color: #f87171; }
+
+/* ===== 반응형 ===== */
+@media (max-width: 900px) {
+  #layout { grid-template-columns: 1fr; }
+  #sidebar { position: static; height: auto; }
+  .grid-3 { grid-template-columns: repeat(2,1fr); }
+  .ifr-grid { grid-template-columns: 1fr; }
+  .eval-grid { grid-template-columns: 1fr; }
+  .agent-bar { flex-wrap: wrap; }
+}
+@media (max-width: 600px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .header-title { font-size: 13px; }
+  #tab-content { padding: 16px 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 에러 배너 -->
+<div id="error-banner">⚠️ <span id="error-msg">오류가 발생했습니다.</span></div>
+
+<!-- 헤더 -->
+<header id="header">
+  <div class="header-left">
+    <div class="header-logo">🧠</div>
+    <span class="header-title">TRIZ/ASIT AI 에이전트 분석 대시보드</span>
+  </div>
+  <div class="header-right">
+    <span class="header-badge">실제 문제 상황 분석</span>
+    <span class="header-badge" id="ai-backend-badge" style="background:rgba(255,255,255,.1)">⏳ AI 확인 중</span>
+    <span id="clock">--:--:--</span>
+  </div>
+</header>
+
+<!-- 레이아웃 -->
+<div id="layout">
+
+  <!-- 사이드바 -->
+  <aside id="sidebar">
+
+    <!-- Section 1: 문제 정의 -->
+    <div>
+      <p class="sidebar-section-title">0단계 · 문제 정의</p>
+
+      <!-- 상태 뱃지 -->
+      <span class="step-badge wait" id="parse-status-badge">⏺ 문제를 입력하고 AI 분석을 눌러주세요</span>
+
+      <!-- 자유 입력 -->
+      <div class="form-group">
+        <label class="form-label">📝 문제 상황 자유 입력</label>
+        <textarea class="form-textarea problem-free-area" id="f-problem-free"
+          placeholder="해결하고 싶은 문제를 자유롭게 설명해주세요.
+
+예) MZ세대의 디지털 뉴스 구독 해지율이 월 8% 증가하고 있습니다. 무료 SNS 뉴스로의 이탈이 주요 원인이며, 6개월 내 해지율 3% 이하, 신규 구독자 20% 증가가 목표입니다..."></textarea>
+      </div>
+
+      <!-- AI 분석 버튼 -->
+      <button id="btn-parse" onclick="parseProblem()">🤖 AI 문제 구조 분석</button>
+
+      <!-- 문제 유형 선택 -->
+      <div class="form-group" id="problem-type-group" style="display:none">
+        <label class="form-label">🗂 문제 유형</label>
+        <div class="type-radio-group">
+          <label class="type-radio-item">
+            <input type="radio" name="problem-type" id="pt-product" value="상품서비스" checked onchange="onProblemTypeChange()">
+            <span class="type-radio-label">🛒 상품/서비스</span>
+          </label>
+          <label class="type-radio-item">
+            <input type="radio" name="problem-type" id="pt-org" value="조직프로세스" onchange="onProblemTypeChange()">
+            <span class="type-radio-label">🏢 조직/프로세스</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 추출 결과 패널 (접기/펼치기) -->
+      <div class="parsed-result-panel" id="parsed-panel" style="display:none">
+        <div class="parsed-toggle" onclick="toggleParsedPanel()">
+          <span>✅ AI 추출 결과 <small>(클릭하여 수정 가능)</small></span>
+          <span class="parsed-arrow" id="parsed-arrow">▼</span>
+        </div>
+        <div id="parsed-fields-body" class="parsed-fields-body collapsed">
+
+          <!-- ===== 상품/서비스 필드 ===== -->
+          <div id="fields-product">
+            <div class="form-group">
+              <label class="form-label">매체</label>
+              <input class="form-input" id="f-media" type="text" placeholder="예: 종합일간신문">
+            </div>
+            <div class="form-group">
+              <label class="form-label">상품명</label>
+              <input class="form-input" id="f-product" type="text" placeholder="예: 디지털 뉴스 구독 서비스">
+            </div>
+            <div class="form-group">
+              <label class="form-label">하위요소</label>
+              <input class="form-input" id="f-sub" type="text" placeholder="예: 기사, 영상, 뉴스레터">
+            </div>
+            <div class="form-group">
+              <label class="form-label">상위요소</label>
+              <input class="form-input" id="f-super" type="text" placeholder="예: 정보 서비스, 미디어 플랫폼">
+            </div>
+            <div class="form-group">
+              <label class="form-label">대상</label>
+              <input class="form-input" id="f-target" type="text" placeholder="예: MZ세대(25-40세) 직장인">
+            </div>
+            <div class="form-group">
+              <label class="form-label">가치 지표 (KPI)</label>
+              <input class="form-input" id="f-kpi" type="text" placeholder="예: 구독률, 체류시간, 충성도">
+            </div>
+          </div>
+
+          <!-- ===== 조직/프로세스 필드 ===== -->
+          <div id="fields-org" style="display:none">
+            <div class="form-group">
+              <label class="form-label">조직명</label>
+              <input class="form-input" id="f-orgname" type="text" placeholder="예: 세계일보 편집국">
+            </div>
+            <div class="form-group">
+              <label class="form-label">대상 부서/팀</label>
+              <input class="form-input" id="f-dept" type="text" placeholder="예: 편집국 취재부, 디지털뉴스부">
+            </div>
+            <div class="form-group">
+              <label class="form-label">구성원 현황</label>
+              <input class="form-input" id="f-members" type="text" placeholder="예: 편집국 150명, 디지털팀 20명">
+            </div>
+            <div class="form-group">
+              <label class="form-label">핵심 지표 (KPI)</label>
+              <input class="form-input" id="f-kpi-org" type="text" placeholder="예: PV 기여율, 1인당 생산성">
+            </div>
+            <div class="form-group">
+              <label class="form-label">현재 구조/프로세스</label>
+              <textarea class="form-textarea" id="f-structure" style="min-height:52px" placeholder="현재 조직 구조와 업무 흐름..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">제약 조건</label>
+              <input class="form-input" id="f-constraint" type="text" placeholder="예: 기존 인력 유지, 예산 동결">
+            </div>
+          </div>
+
+          <!-- ===== 공통 필드 ===== -->
+          <div class="form-group">
+            <label class="form-label">문제현상</label>
+            <textarea class="form-textarea" id="f-problem" style="min-height:52px" placeholder="현재 발생하고 있는 문제..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">목표</label>
+            <textarea class="form-textarea" id="f-goal" style="min-height:52px" placeholder="달성하고자 하는 목표..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: 분석 도구 -->
+    <div>
+      <p class="sidebar-section-title">분석 도구 선택</p>
+      <div class="check-group">
+        <label class="check-item"><input type="checkbox" id="c-ifr" checked> TRIZ IFR (이상적 최종 결과)</label>
+        <label class="check-item"><input type="checkbox" id="c-sep" checked> TRIZ 분리원리</label>
+        <label class="check-item"><input type="checkbox" id="c-inv" checked> TRIZ 발명원리 (8개 핵심 원리)</label>
+        <label class="check-item"><input type="checkbox" id="c-asit" checked> ASIT 전체 (5가지 도구)</label>
+      </div>
+    </div>
+
+    <!-- Section 3: 버튼 -->
+    <div>
+      <button id="btn-start" onclick="startAnalysis()">🚀 AI 에이전트 분석 시작</button>
+      <div id="progress-wrapper">
+        <div class="progress-label">
+          <span id="progress-label-text">분석 준비 중...</span>
+          <span id="progress-pct">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- 메인 -->
+  <div id="main">
+
+    <!-- 에이전트 상태 바 -->
+    <div id="agent-bar">
+      <div class="agent-card" id="ac-master">
+        <div class="agent-icon">🎯</div>
+        <div class="agent-info">
+          <div class="agent-name">마스터 에이전트</div>
+          <div class="agent-status">문제 구조화</div>
+        </div>
+        <div class="agent-dot"></div>
+      </div>
+      <div class="agent-card" id="ac-triz">
+        <div class="agent-icon">💡</div>
+        <div class="agent-info">
+          <div class="agent-name">TRIZ 분석</div>
+          <div class="agent-status">아이디어 발굴</div>
+        </div>
+        <div class="agent-dot"></div>
+      </div>
+      <div class="agent-card" id="ac-asit">
+        <div class="agent-icon">🔧</div>
+        <div class="agent-info">
+          <div class="agent-name">ASIT 분석</div>
+          <div class="agent-status">5가지 도구</div>
+        </div>
+        <div class="agent-dot"></div>
+      </div>
+      <div class="agent-card" id="ac-eval">
+        <div class="agent-icon">👥</div>
+        <div class="agent-info">
+          <div class="agent-name">4인 평가단</div>
+          <div class="agent-status">기획·컨설턴트·엔지니어·고객</div>
+        </div>
+        <div class="agent-dot"></div>
+      </div>
+      <div class="agent-card" id="ac-synth">
+        <div class="agent-icon">🏆</div>
+        <div class="agent-info">
+          <div class="agent-name">최종 종합</div>
+          <div class="agent-status">보고서 생성</div>
+        </div>
+        <div class="agent-dot"></div>
+      </div>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <nav id="tab-nav">
+      <button class="tab-btn active" onclick="switchTab(0)">📋 문제 구조화</button>
+      <button class="tab-btn" onclick="switchTab(1)">💡 TRIZ 아이디어</button>
+      <button class="tab-btn" onclick="switchTab(2)">🔧 ASIT 아이디어</button>
+      <button class="tab-btn" onclick="switchTab(3)">👥 에이전트 평가</button>
+      <button class="tab-btn" onclick="switchTab(4)">🏆 최종 보고서</button>
+      <button class="tab-btn" onclick="switchTab(5)">🔬 프레임워크 피드백</button>
+      <button class="tab-btn" id="tab-btn-6" onclick="switchTab(6)">🚀 실행 아이디어</button>
+    </nav>
+
+    <!-- 탭 콘텐츠 -->
+    <div id="tab-content">
+
+      <!-- 탭1: 문제 구조화 -->
+      <div class="tab-pane active" id="tab-0">
+        <div id="tab0-placeholder" class="placeholder-box">
+          <div class="placeholder-icon">📋</div>
+          <div class="placeholder-text">분석을 시작하면 문제 구조화 결과가 여기에 표시됩니다</div>
+          <div class="placeholder-sub">왼쪽 폼을 작성하고 분석 시작 버튼을 누르세요</div>
+        </div>
+        <div id="tab0-content" style="display:none"></div>
+      </div>
+
+      <!-- 탭2: TRIZ 아이디어 -->
+      <div class="tab-pane" id="tab-1">
+        <div id="tab1-placeholder" class="placeholder-box">
+          <div class="placeholder-icon">💡</div>
+          <div class="placeholder-text">TRIZ 아이디어가 여기에 표시됩니다</div>
+          <div class="placeholder-sub">분석 완료 후 자동으로 업데이트됩니다</div>
+        </div>
+        <div id="tab1-content" style="display:none"></div>
+      </div>
+
+      <!-- 탭3: ASIT 아이디어 -->
+      <div class="tab-pane" id="tab-2">
+        <div id="tab2-placeholder" class="placeholder-box">
+          <div class="placeholder-icon">🔧</div>
+          <div class="placeholder-text">ASIT 아이디어가 여기에 표시됩니다</div>
+          <div class="placeholder-sub">분석 완료 후 자동으로 업데이트됩니다</div>
+        </div>
+        <div id="tab2-content" style="display:none"></div>
+      </div>
+
+      <!-- 탭4: 에이전트 평가 -->
+      <div class="tab-pane" id="tab-3">
+        <div id="tab3-placeholder" class="placeholder-box">
+          <div class="placeholder-icon">👥</div>
+          <div class="placeholder-text">4인 에이전트 평가 결과가 여기에 표시됩니다</div>
+          <div class="placeholder-sub">분석 완료 후 각 에이전트의 평가를 확인하세요</div>
+        </div>
+        <div id="tab3-content" style="display:none"></div>
+      </div>
+
+      <!-- 탭5: 최종 보고서 -->
+      <div class="tab-pane" id="tab-4">
+        <div id="tab4-placeholder" class="placeholder-box">
+          <div class="placeholder-icon">🏆</div>
+          <div class="placeholder-text">최종 보고서가 여기에 표시됩니다</div>
+          <div class="placeholder-sub">모든 분석이 완료되면 최종 보고서를 확인하세요</div>
+        </div>
+        <div id="tab4-content" style="display:none"></div>
+      </div>
+
+      <!-- 탭6: 프레임워크 피드백 -->
+      <div class="tab-pane" id="tab-5">
+        <div style="padding:16px 0;">
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">🔬 프레임워크 관점 피드백</h3>
+          <p style="font-size:12px;color:#64748b;margin-bottom:16px;">아이디어 하나를 입력하면 IFR · ASIT 폐쇄세계 · 분리원리 3가지 프레임워크 에이전트가 각각 피드백을 제공합니다.</p>
+
+          <div style="display:grid;gap:10px;margin-bottom:14px;">
+            <div>
+              <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">아이디어명</label>
+              <input id="fw-idea-name" type="text" placeholder="예: AI 기사 자동 분류 시스템"
+                style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">아이디어 설명</label>
+              <textarea id="fw-idea-desc" rows="3" placeholder="아이디어를 구체적으로 설명하세요 (2~4문장)"
+                style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">문제 요약 <span style="font-weight:400;color:#94a3b8">(분석 후 자동입력 또는 직접 입력)</span></label>
+              <input id="fw-problem" type="text" placeholder="핵심 문제를 한 줄로 요약하세요"
+                style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">물리 모순 <span style="font-weight:400;color:#94a3b8">(선택)</span></label>
+                <input id="fw-phys" type="text" placeholder="X는 A이면서 동시에 B여야 한다"
+                  style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">기존 구성요소 <span style="font-weight:400;color:#94a3b8">(선택)</span></label>
+                <input id="fw-elements" type="text" placeholder="요소1, 요소2, 요소3"
+                  style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;">
+              </div>
+            </div>
+          </div>
+
+          <button id="fw-run-btn" onclick="runFrameworkFeedback()"
+            style="background:#2367d7;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;width:100%;">
+            3개 프레임워크로 분석하기
+          </button>
+
+          <div id="fw-loading" style="display:none;text-align:center;padding:20px;color:#64748b;font-size:13px;">
+            ⏳ IFR · ASIT 폐쇄세계 · 분리원리 에이전트 순차 실행 중... (약 20~30초)
+          </div>
+          <div id="fw-results" style="display:none;margin-top:20px;"></div>
+        </div>
+      </div>
+
+      <!-- 탭7: 실행 아이디어 -->
+      <div class="tab-pane" id="tab-6">
+        <div id="tab6-placeholder" class="placeholder-box">
+          <div class="placeholder-icon">🚀</div>
+          <div class="placeholder-text">구체적 실행 아이디어가 여기에 표시됩니다</div>
+          <div class="placeholder-sub">최종 보고서 분석이 완료되면 자동으로 생성됩니다</div>
+        </div>
+        <div id="tab6-loading" style="display:none;text-align:center;padding:40px 0;">
+          <div style="font-size:28px;margin-bottom:12px;">⚙️</div>
+          <div style="font-size:14px;font-weight:600;color:#2367d7;margin-bottom:6px;">실행 계획 생성 중...</div>
+          <div style="font-size:12px;color:#64748b;">Top 10 아이디어를 현장 실행 계획으로 변환하고 있습니다 (약 20~30초)</div>
+        </div>
+        <div id="tab6-content" style="display:none"></div>
+      </div>
+
+    </div><!-- /tab-content -->
+
+    <!-- 에이전트 로그 -->
+    <div id="log-section">
+      <button class="log-toggle" id="log-toggle-btn" onclick="toggleLog()">
+        <span>🖥 에이전트 로그</span>
+        <span id="log-count" style="background:#e2e8f0;color:#64748b;font-size:10px;padding:1px 8px;border-radius:99px;margin-left:4px;">0</span>
+        <span style="flex:1"></span>
+        <span class="log-toggle-arrow">▼</span>
+      </button>
+      <div id="log-body"></div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+/* ===== 유틸 ===== */
+const $ = id => document.getElementById(id);
+
+function kstNow() {
+  return new Date().toLocaleString('ko-KR', { timeZone:'Asia/Seoul', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+}
+function kstDate() {
+  return new Date().toLocaleString('ko-KR', { timeZone:'Asia/Seoul', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false });
+}
+
+/* ===== 시계 ===== */
+function updateClock() { $('clock').textContent = kstNow(); }
+updateClock();
+setInterval(updateClock, 1000);
+
+/* ===== 탭 ===== */
+let currentTab = 0;
+function switchTab(idx) {
+  document.querySelectorAll('.tab-pane').forEach((p,i) => p.classList.toggle('active', i===idx));
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  currentTab = idx;
+}
+
+/* ===== 에이전트 상태 ===== */
+const agentMap = {
+  master: 'ac-master',
+  triz:   'ac-triz',
+  asit:   'ac-asit',
+  evaluation: 'ac-eval',
+  synthesis:  'ac-synth'
+};
+function setAgentState(key, state) {
+  const el = $(agentMap[key]);
+  if (!el) return;
+  el.classList.remove('running','done','error');
+  const dot = el.querySelector('.agent-dot');
+  const status = el.querySelector('.agent-status');
+  if (state==='running') {
+    el.classList.add('running');
+    if (status) status.textContent = '실행 중...';
+  } else if (state==='done') {
+    el.classList.add('done');
+    if (status) status.textContent = '완료 ✓';
+  } else if (state==='error') {
+    el.classList.add('error');
+    if (status) status.textContent = '오류 ✗';
+  } else {
+    if (status) status.textContent = '대기 중';
+  }
+}
+
+/* ===== 프로그레스 ===== */
+const steps = ['problem','triz','asit','evaluation','synthesis'];
+function setProgress(step) {
+  const idx = steps.indexOf(step);
+  const pct = idx < 0 ? 0 : Math.round((idx+1)/steps.length*100);
+  $('progress-fill').style.width = pct + '%';
+  $('progress-pct').textContent = pct + '%';
+  const labels = {
+    problem: '문제 구조화 중...',
+    triz:    'TRIZ 아이디어 생성 중...',
+    asit:    'ASIT 아이디어 생성 중...',
+    evaluation: '에이전트 평가 중...',
+    synthesis:  '최종 보고서 생성 중...'
+  };
+  $('progress-label-text').textContent = labels[step] || '처리 중...';
+}
+
+/* ===== 로그 ===== */
+let logCount = 0;
+function addLog(msg, type='') {
+  logCount++;
+  $('log-count').textContent = logCount;
+  const line = document.createElement('div');
+  line.className = `log-line log-${type}`;
+  line.innerHTML = `<span class="log-time">[${kstNow()}]</span><span class="log-msg">${msg}</span>`;
+  $('log-body').appendChild(line);
+  $('log-body').scrollTop = $('log-body').scrollHeight;
+}
+function toggleLog() {
+  const body = $('log-body');
+  const btn = $('log-toggle-btn');
+  body.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
+/* ===== 에러 배너 ===== */
+function showError(msg) {
+  $('error-msg').textContent = msg;
+  $('error-banner').style.display = 'block';
+  setTimeout(() => { $('error-banner').style.display = 'none'; }, 5000);
+}
+
+/* ===== 스타 렌더 ===== */
+function renderStars(score) {
+  let html = '<div class="star-row">';
+  for (let i=1;i<=10;i++) {
+    if (i<=2) html += `<span class="star${score>=i?'':' empty'}">★</span>`;
+  }
+  // 5점 척도 별 5개
+  const s5 = Math.round(score/2);
+  html = '<div class="star-row">';
+  for (let i=1;i<=5;i++) html += `<span class="star${i<=s5?'':' empty'}">★</span>`;
+  html += `<span class="score-num">${score.toFixed(1)}</span></div>`;
+  return html;
+}
+
+/* ===== 점수 색상 ===== */
+function scoreClass(s) {
+  if (s>=8) return 'score-high';
+  if (s>=6) return 'score-mid';
+  return 'score-low';
+}
+
+/* ===== 탭1: 문제 구조화 렌더 ===== */
+function renderProblem(data) {
+  const c = $('tab0-content');
+  c.innerHTML = `
+    <div class="summary-card">
+      <h3>핵심 문제 요약</h3>
+      <p>${data.summary}</p>
+    </div>
+    <div class="grid-2" style="margin-bottom:16px">
+      <div class="contradiction-card tech">
+        <div class="card-title">⚡ 기술 모순</div>
+        <div class="card-body">${data.techContradiction}</div>
+      </div>
+      <div class="contradiction-card phys">
+        <div class="card-title">⚖️ 물리 모순</div>
+        <div class="card-body">${data.physContradiction}</div>
+      </div>
+    </div>
+    <p class="section-title">이상적 최종 결과 (IFR)</p>
+    <div class="ifr-grid">
+      ${data.ifr.map((t,i)=>`
+        <div class="ifr-card">
+          <span class="ifr-label">IFR-${i+1}</span>
+          <div class="ifr-text">${t}</div>
+        </div>
+      `).join('')}
+    </div>
+    <p class="section-title" style="margin-top:8px">추천 분석 도구</p>
+    <div class="tools-wrap">
+      ${data.tools.map(t=>`<span class="tool-badge">${t}</span>`).join('')}
+    </div>
+  `;
+  $('tab0-placeholder').style.display = 'none';
+  c.style.display = 'block';
+}
+
+/* ===== 탭2: TRIZ 아이디어 렌더 ===== */
+const trizColors = [
+  {bg:'#eff6ff',color:'#1d4ed8'},
+  {bg:'#faf5ff',color:'#7c3aed'},
+  {bg:'#fff7ed',color:'#c2410c'},
+  {bg:'#f0fdf4',color:'#166534'},
+  {bg:'#fef9c3',color:'#854d0e'},
+  {bg:'#fce7f3',color:'#9d174d'},
+  {bg:'#ecfdf5',color:'#065f46'},
+  {bg:'#fef2f2',color:'#991b1b'},
+];
+function renderTriz(ideas) {
+  stageData.triz = ideas;
+  ideas.forEach(d => { if (!stageData.allIdeas.find(x=>x.name===d.name)) stageData.allIdeas.push({...d, source:'TRIZ', sourceFull:`TRIZ — ${d.principle}`}); });
+  const c = $('tab1-content');
+  c.innerHTML = `<div class="grid-3">${ideas.map((d,i)=>{
+    const col = trizColors[i%trizColors.length];
+    return `
+      <div class="idea-card" data-idea="${encodeURIComponent(d.name)}">
+        <span class="idea-principle-badge" style="background:${col.bg};color:${col.color}">${d.principle}</span>
+        <div>
+          <div class="idea-num">아이디어 T${String(i+1).padStart(2,'0')}</div>
+          <div class="idea-name">${d.name}</div>
+        </div>
+        <div class="idea-desc">${d.desc}</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:5px">장점 / 단점</div>
+          <div class="pros-cons">
+            ${d.pros.map(p=>`<span class="pros-tag">✓ ${p}</span>`).join('')}
+            ${d.cons.map(p=>`<span class="cons-tag">✗ ${p}</span>`).join('')}
+          </div>
+        </div>
+        ${renderStars(d.score)}
+        <div class="agent-score-row" id="asr-${encodeURIComponent(d.name)}"></div>
+      </div>
+    `;
+  }).join('')}</div>`;
+  $('tab1-placeholder').style.display = 'none';
+  c.style.display = 'block';
+}
+
+/* ===== 탭3: ASIT 아이디어 렌더 ===== */
+const asitTools = [
+  { key:'removal',  label:'제거',     icon:'🗑', bg:'#fff7ed', color:'#c2410c' },
+  { key:'clone',    label:'복제',     icon:'🪞', bg:'#f0fdf4', color:'#166534' },
+  { key:'split',    label:'분할',     icon:'✂️', bg:'#eff6ff', color:'#1d4ed8' },
+  { key:'merge',    label:'기능통합', icon:'🔗', bg:'#faf5ff', color:'#7c3aed' },
+  { key:'depend',   label:'속성의존성',icon:'📐', bg:'#fef9c3', color:'#854d0e' },
+];
+function renderAsit(data) {
+  stageData.asit = data;
+  asitTools.forEach(tool => {
+    (data[tool.key]||[]).forEach(d => {
+      if (!stageData.allIdeas.find(x=>x.name===d.name))
+        stageData.allIdeas.push({...d, source:'ASIT', sourceFull:`ASIT — ${tool.label}`});
+    });
+  });
+  const c = $('tab2-content');
+  c.innerHTML = asitTools.map(tool=>{
+    const ideas = data[tool.key] || [];
+    if (!ideas.length) return '';
+    return `
+      <div class="asit-section">
+        <div class="asit-header" style="background:${tool.bg};color:${tool.color}">
+          <span class="asit-icon">${tool.icon}</span>
+          <span>${tool.label}</span>
+          <span style="font-size:11px;opacity:.7;margin-left:4px">(${ideas.length}개 아이디어)</span>
+        </div>
+        <div class="grid-3">
+          ${ideas.map((d,i)=>`
+            <div class="idea-card" data-idea="${encodeURIComponent(d.name)}">
+              <span class="idea-principle-badge" style="background:${tool.bg};color:${tool.color}">${tool.label}</span>
+              <div>
+                <div class="idea-num">아이디어 A-${tool.key.slice(0,3).toUpperCase()}${String(i+1).padStart(2,'0')}</div>
+                <div class="idea-name">${d.name}</div>
+              </div>
+              <div class="idea-desc">${d.desc}</div>
+              <div class="pros-cons">
+                ${d.pros.map(p=>`<span class="pros-tag">✓ ${p}</span>`).join('')}
+                ${d.cons.map(p=>`<span class="cons-tag">✗ ${p}</span>`).join('')}
+              </div>
+              ${renderStars(d.score)}
+              <div class="agent-score-row" id="asr-${encodeURIComponent(d.name)}"></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+  $('tab2-placeholder').style.display = 'none';
+  c.style.display = 'block';
+}
+
+/* ===== 에이전트 점수 → 아이디어 카드 주입 ===== */
+const agentCfg = [
+  { key:'planner',    short:'기획자', color:'#7c3aed' },
+  { key:'consultant', short:'컨설턴트', color:'#059669' },
+  { key:'engineer',   short:'엔지니어', color:'#d97706' },
+  { key:'customer',   short:'고객',   color:'#0891b2' },
+];
+function injectAgentScores(evalData) {
+  stageData.evaluation = evalData;
+  stageData.allIdeas.forEach(idea => {
+    const el = document.getElementById('asr-' + encodeURIComponent(idea.name));
+    if (!el) return;
+    const badges = agentCfg.map(ag => {
+      const ev = evalData[ag.key];
+      if (!ev) return '';
+      const found = (ev.scores||ev.evaluations||[]).find(s => s.name === idea.name || (idea.name && s.name && idea.name.includes(s.name.slice(0,5))));
+      const score = found ? found.score : null;
+      if (score === null) return '';
+      return `<span class="asr-badge" style="background:${ag.color}22;color:${ag.color};border:1px solid ${ag.color}44">${ag.short} ${score}</span>`;
+    }).join('');
+    if (badges) {
+      el.innerHTML = `<div class="asr-label">에이전트 평가</div><div class="asr-badges">${badges}</div>`;
+    }
+  });
+}
+
+/* ===== 전체 아이디어 × 에이전트 매트릭스 ===== */
+function renderMatrix(evalData) {
+  const ideas = stageData.allIdeas;
+  if (!ideas.length) return '';
+  const rows = ideas.map(idea => {
+    const scores = agentCfg.map(ag => {
+      const ev = evalData[ag.key];
+      if (!ev) return '<td>—</td>';
+      const found = (ev.scores||ev.evaluations||[]).find(s => s.name === idea.name || (idea.name && s.name && idea.name.includes(s.name.slice(0,5))));
+      const score = found ? found.score : null;
+      return score !== null
+        ? `<td><span class="score-cell ${scoreClass(score)}">${score}</span></td>`
+        : '<td><span style="color:#cbd5e1">—</span></td>';
+    }).join('');
+    const srcLabel = idea.source === 'TRIZ'
+      ? `<span class="src-badge triz">${idea.sourceFull}</span>`
+      : `<span class="src-badge asit">${idea.sourceFull}</span>`;
+    return `<tr>
+      <td style="text-align:left;font-weight:600;white-space:nowrap">${idea.name}</td>
+      <td>${srcLabel}</td>
+      ${scores}
+      <td><span class="score-cell ${scoreClass(idea.score)}">${idea.score}</span></td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="matrix-section">
+      <div class="matrix-toggle" onclick="this.nextElementSibling.classList.toggle('open')">
+        📊 전체 아이디어 × 에이전트 점수 매트릭스 (${ideas.length}개)
+        <span class="matrix-arrow">▼</span>
+      </div>
+      <div class="matrix-body">
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>아이디어명</th><th>출처</th>
+                <th style="color:#c4b5fd">기획자</th>
+                <th style="color:#6ee7b7">컨설턴트</th>
+                <th style="color:#fcd34d">엔지니어</th>
+                <th style="color:#67e8f9">고객</th>
+                <th>초기점수</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ===== 탭4: 에이전트 평가 렌더 ===== */
+const evalAgents = [
+  { key:'planner',    label:'기획자 에이전트',     icon:'📊', color:'var(--planner)' },
+  { key:'consultant', label:'컨설턴트 에이전트',   icon:'💼', color:'var(--consultant)' },
+  { key:'engineer',   label:'엔지니어 에이전트',   icon:'⚙️', color:'var(--engineer)' },
+  { key:'customer',   label:'고객 에이전트',       icon:'🙋', color:'var(--customer)' },
+];
+function renderEvaluation(data) {
+  const c = $('tab3-content');
+  c.innerHTML = `<div class="eval-grid">${evalAgents.map(ag=>{
+    const d = data[ag.key];
+    if (!d) return `<div class="eval-panel"><div class="eval-header" style="border-left:4px solid ${ag.color}"><span>${ag.icon}</span><span class="eval-header-name">${ag.label}</span></div><div class="eval-body"><p class="eval-summary">데이터 없음</p></div></div>`;
+    const barColor = ag.key==='planner'?'#7c3aed': ag.key==='consultant'?'#059669': ag.key==='engineer'?'#d97706':'#0891b2';
+    return `
+      <div class="eval-panel" style="border-color:${ag.color}">
+        <div class="eval-header" style="border-left:4px solid ${ag.color}">
+          <span class="eval-header-icon">${ag.icon}</span>
+          <span class="eval-header-name" style="color:${ag.color}">${ag.label}</span>
+          <div class="eval-status-dot" style="background:${ag.color}"></div>
+        </div>
+        <div class="eval-body">
+          <div class="eval-summary">${d.summary}</div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">TOP 3 추천 아이디어</div>
+            <div class="eval-top3">${d.top3.map(t=>`<span class="eval-idea-badge" style="background:${ag.color}22;color:${ag.color}">${t}</span>`).join('')}</div>
+          </div>
+          <div class="concern-box">⚠️ 주요 우려: ${d.concern}</div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px">아이디어별 점수</div>
+            <div class="mini-bar-list">${d.scores.map(s=>`
+              <div class="mini-bar-item">
+                <div class="mini-bar-label" title="${s.name}">${s.name}</div>
+                <div class="mini-bar-bg">
+                  <div class="mini-bar-fill" style="width:${s.score*10}%;background:${barColor}"></div>
+                </div>
+                <div class="mini-bar-score">${s.score}</div>
+              </div>
+            `).join('')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('')}</div>`;
+  // 매트릭스 섹션 추가
+  const matrixEl = document.createElement('div');
+  matrixEl.innerHTML = renderMatrix(data);
+  c.appendChild(matrixEl);
+
+  // 아이디어 카드에 에이전트 점수 뱃지 주입
+  injectAgentScores(data);
+
+  $('tab3-placeholder').style.display = 'none';
+  c.style.display = 'block';
+}
+
+/* ===== 탭5: 최종 보고서 렌더 ===== */
+function impactDots(n) {
+  let h = '<div class="impact-dots">';
+  for (let i=1;i<=5;i++) h += `<div class="impact-dot ${i<=n?'filled':'empty'}"></div>`;
+  return h + '</div>';
+}
+function renderSynthesis(data) {
+  const c = $('tab4-content');
+  const rows = data.top10.map((d,i)=>{
+    const rankCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const srcInfo = stageData.allIdeas.find(x=>x.name===d.name);
+    const srcBadge = srcInfo
+      ? `<span class="src-badge ${srcInfo.source==='TRIZ'?'triz':'asit'}">${srcInfo.sourceFull}</span>`
+      : `<span class="src-badge">—</span>`;
+    return `
+      <tr>
+        <td><span class="rank-badge ${rankCls}">${i+1}</span></td>
+        <td style="text-align:left;font-weight:600">${d.name}</td>
+        <td>${srcBadge}</td>
+        <td><span class="score-cell ${scoreClass(d.planner)}">${d.planner}</span></td>
+        <td><span class="score-cell ${scoreClass(d.consultant)}">${d.consultant}</span></td>
+        <td><span class="score-cell ${scoreClass(d.engineer)}">${d.engineer}</span></td>
+        <td><span class="score-cell ${scoreClass(d.customer)}">${d.customer}</span></td>
+        <td><span class="score-cell ${scoreClass(d.avg)}">${d.avg.toFixed(1)}</span></td>
+        <td><span class="timing-badge">${d.timing}</span></td>
+        <td><div class="impact-bar">${impactDots(d.impact)}</div></td>
+      </tr>
+    `;
+  }).join('');
+
+  c.innerHTML = `
+    <p class="section-title">Top 10 아이디어 종합 순위</p>
+    <div class="report-table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>순위</th><th>아이디어명</th><th>출처</th>
+            <th style="color:#c4b5fd">기획자</th>
+            <th style="color:#6ee7b7">컨설턴트</th>
+            <th style="color:#fcd34d">엔지니어</th>
+            <th style="color:#67e8f9">고객</th>
+            <th>평균</th><th>실행시기</th><th>임팩트</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+
+    <div class="quick-wins">
+      <h3>⚡ 즉시 실행 추천 (Quick Wins)</h3>
+      <ul>${data.quickWins.map(q=>`<li>${q}</li>`).join('')}</ul>
+    </div>
+
+    <p class="section-title">핵심 통찰</p>
+    <div class="insights">${data.insights.map((t,i)=>`
+      <div class="insight-item">
+        <div class="insight-num">${i+1}</div>
+        <div class="insight-text">${t}</div>
+      </div>
+    `).join('')}</div>
+
+    <p class="section-title">다음 단계 실행 계획</p>
+    <div class="timeline">${data.timeline.map(t=>`
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <span class="timeline-period">${t.period}</span>
+        <div class="timeline-title">${t.title}</div>
+        <div class="timeline-desc">${t.desc}</div>
+      </div>
+    `).join('')}</div>
+
+    <div style="text-align:center;padding:20px 0">
+      <button id="btn-export" onclick="exportReport()">📥 보고서 내보내기 (Markdown)</button>
+    </div>
+  `;
+  $('tab4-placeholder').style.display = 'none';
+  c.style.display = 'block';
+  window.__reportData = data;
+}
+
+/* ===== 보고서 내보내기 ===== */
+function exportReport() {
+  const d = window.__reportData;
+  if (!d) { showError('내보낼 보고서 데이터가 없습니다.'); return; }
+  const md = `# TRIZ/ASIT AI 에이전트 분석 보고서
+생성일시: ${kstDate()}
+
+---
+
+## Top 10 아이디어 순위
+
+| 순위 | 아이디어명 | 기획자 | 컨설턴트 | 엔지니어 | 고객 | 평균 | 실행시기 | 임팩트 |
+|------|-----------|--------|----------|---------|------|------|---------|--------|
+${d.top10.map((r,i)=>`| ${i+1} | ${r.name} | ${r.planner} | ${r.consultant} | ${r.engineer} | ${r.customer} | ${r.avg.toFixed(1)} | ${r.timing} | ${'★'.repeat(r.impact)} |`).join('\n')}
+
+---
+
+## 즉시 실행 추천 (Quick Wins)
+
+${d.quickWins.map(q=>`- ${q}`).join('\n')}
+
+---
+
+## 핵심 통찰
+
+${d.insights.map((t,i)=>`${i+1}. ${t}`).join('\n')}
+
+---
+
+## 다음 단계 실행 계획
+
+${d.timeline.map(t=>`### ${t.period}: ${t.title}\n${t.desc}`).join('\n\n')}
+`;
+  const blob = new Blob([md], {type:'text/markdown;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `TRIZ_ASIT_분석보고서_${new Date().toISOString().slice(0,10)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ===== 모의 데이터 (API 없을 때) ===== */
+function getMockData(step, formData) {
+  const fd = formData || {};
+  const isOrg = (fd.문제유형 === '조직프로세스');
+  const 문제현상 = fd.문제현상 || '(문제현상 미입력)';
+  const 목표 = (fd.목표 && fd.목표 !== '(목표 미입력)') ? fd.목표 : `${문제현상.slice(0, 15)} 문제 해결`;
+
+  // 빈 필드 시 문제현상에서 자동 추출
+  const 첫단어들 = 문제현상.replace(/[^가-힣a-zA-Z0-9 ]/g, ' ').trim().split(/\s+/).slice(0, 3).join(' ');
+  const 주체 = isOrg
+    ? (fd.조직명 || fd.대상부서 || 첫단어들 || '해당 조직')
+    : (fd.상품명 || fd.매체 || 첫단어들 || '해당 서비스');
+  const 대상 = isOrg
+    ? (fd.구성원 || fd.대상부서 || '구성원')
+    : (fd.대상 || '사용자');
+  const 지표 = isOrg
+    ? (fd.핵심지표 || '핵심 성과 지표')
+    : (fd.가치 || '핵심 성과 지표');
+  const 구성요소 = isOrg
+    ? (fd.현재구조 || fd.구성원 || '기존 구성 요소')
+    : (fd.하위요소 || fd.상품명 || '기존 구성 요소');
+
+  const maps = {
+    problem: {
+      summary: `${문제현상}\n\n[목표] ${목표}`,
+      techContradiction: `${주체}의 ${지표}를 향상시키면 → 비용·복잡도 증가 / 기존 방식과 충돌이 발생합니다. 핵심 모순: 성과 개선을 원하지만 현재 구조·자원을 바꾸기 어렵습니다.`,
+      physContradiction: `${주체}는 현재 상태를 유지하면서 동시에 변화해야 합니다. ${대상}은 더 많은 가치를 원하지만 추가 투입 없이 실현해야 합니다.`,
+      ifr: [
+        `${주체}가 스스로 ${지표}를 향상시키는 시스템이 추가 비용 없이 작동합니다.`,
+        `${대상}이 자발적으로 목표 달성에 기여하게 되어, 외부 개입 없이도 ${목표}가 실현됩니다.`,
+        `기존 ${구성요소}만으로 문제가 해결되고, 새로운 자원 없이도 이상적 결과에 도달합니다.`
+      ],
+      tools: ['TRIZ 분리원리 (시간/공간)', 'TRIZ 발명원리 #1 분할', 'TRIZ 발명원리 #10 선행조치', 'ASIT 제거', 'ASIT 대칭파괴', 'ASIT 기능통합']
+    },
+    triz: [
+      { principle:'분할 원리', name:`${주체} 역할 분리`, desc:`${구성요소}를 기능별로 분리하여, 각 역할이 독립적으로 최적화되도록 구조를 재편합니다. 한쪽이 성장해도 다른 쪽에 부담이 없는 구조를 만듭니다.`, pros:['역할 명확화','독립적 최적화'], cons:['조율 비용 증가','분리 저항'], score:8.2 },
+      { principle:'비대칭 원리', name:`${대상} 맞춤 차별 적용`, desc:`현재 동일하게 적용되는 방식을 ${대상}의 특성·성과·역할에 따라 비대칭적으로 설계합니다. 성과가 높은 쪽에 더 많은 자원을 집중합니다.`, pros:['효율 극대화','성과 기반 운영'], cons:['형평성 이슈','기준 설정 어려움'], score:8.7 },
+      { principle:'통합 원리', name:'직장인 인사이트 레포트', desc:'뉴스를 소비하는 것이 아닌, 직장인의 업무에 직결되는 산업 분석·경쟁사 동향을 주1회 리포트로 통합 제공합니다.', pros:['B2B 확장 가능','실용적 가치'], cons:['전문 에디터 필요','발행 주기 제약'], score:8.5 },
+      { principle:'선행조치 원리', name:'이탈 예측 리텐션 캠페인', desc:'구독 이탈 30일 전 패턴을 AI로 감지하여 선제적으로 맞춤 혜택·콘텐츠 추천을 자동 발송합니다.', pros:['해지율 직접 감소','자동화 가능'], cons:['예측 정확도 의존','남용 시 역효과'], score:9.0 },
+      { principle:'선행조치 원리', name:`${주체} 사전 개입 시스템`, desc:`${지표} 저하 신호를 사전에 감지하여 30일 전부터 맞춤형 개입을 시작합니다. ${대상}이 문제를 인식하기 전에 선제적으로 대응합니다.`, pros:['선제 대응','자동화 가능'], cons:['예측 정확도 의존','남용 시 역효과'], score:9.0 },
+      { principle:'복제 원리', name:`${구성요소} 복제 확장`, desc:`기존 ${구성요소} 중 성과가 높은 요소를 복제·변형하여 다른 맥락에 적용합니다. 새로운 자원 없이 기존 강점을 배가시킵니다.`, pros:['빠른 확장','리스크 낮음'], cons:['차별화 약화'], score:7.8 },
+      { principle:'전환 원리', name:`${대상} 참여 보상 구조`, desc:`${대상}의 활동 자체를 ${지표} 향상에 연결시킵니다. 기여도에 따라 인센티브가 자동으로 부여되는 구조를 만듭니다.`, pros:['자발적 참여','지속가능'], cons:['남발 시 역효과','운영 비용'], score:7.5 },
+      { principle:'통합 원리', name:`${주체} 기능 통합`, desc:`현재 분리된 두 기능을 하나의 주체가 동시에 수행하도록 통합합니다. ${대상}의 접점을 단일화하여 효율을 높입니다.`, pros:['복잡도 감소','효율화'], cons:['단일 실패점'], score:8.1 },
+      { principle:'피드백 원리', name:`${지표} 실시간 피드백`, desc:`${대상}에게 자신의 기여가 ${지표}에 미치는 영향을 실시간으로 보여줍니다. 가시성이 행동 변화를 유도합니다.`, pros:['투명성 향상','동기 부여'], cons:['데이터 인프라 필요'], score:7.3 },
+    ],
+    asit: {
+      removal: [
+        { name:`${구성요소} 핵심 제거`, desc:`현재 ${주체}에서 당연하게 여기던 요소를 제거했을 때 오히려 ${지표}가 향상되는 경우를 탐색합니다. 불필요한 복잡도를 없애 본질에 집중합니다.`, pros:['단순화','비용 절감'], cons:['기존 사용자 저항'], score:8.3 },
+        { name:`${대상} 부담 요소 제거`, desc:`${대상}이 가장 불편하게 느끼는 요소를 완전히 제거합니다. 제거만으로도 ${지표}가 개선되는 효과를 기대할 수 있습니다.`, pros:['즉각적 만족도 향상'], cons:['대체 가치 필요'], score:7.6 },
+      ],
+      clone: [
+        { name:`고성과 요소 복제`, desc:`${주체} 내에서 ${지표} 기여도가 높은 요소를 복제하여 다른 영역에도 동일하게 적용합니다. 성공 패턴을 시스템화합니다.`, pros:['검증된 방식 확산','빠른 실행'], cons:['맥락 차이 간과'], score:7.9 },
+        { name:`${대상} 역할 복제 분화`, desc:`가장 성과가 좋은 ${대상}의 방식을 다른 구성원에게 복제·적용합니다. 개인 역량을 조직 역량으로 전환합니다.`, pros:['우수 사례 확산'], cons:['표준화 저항'], score:7.2 },
+      ],
+      split: [
+        { name:`${구성요소} 기능 분리`, desc:`하나의 ${구성요소}가 담당하던 역할을 기능별로 분리하여, 각각 최적화된 형태로 운영합니다. 집중과 전문화를 통해 전체 성과를 높입니다.`, pros:['전문화','최적화'], cons:['조율 비용'], score:8.0 },
+        { name:`시간대별 역할 분리`, desc:`동일한 ${대상}이 시간대·상황에 따라 다른 역할을 수행하도록 분리합니다. 같은 자원으로 더 많은 ${지표}를 달성합니다.`, pros:['자원 효율화'], cons:['집중력 분산'], score:8.4 },
+      ],
+      merge: [
+        { name:`${주체} 기능 통합`, desc:`현재 분리된 두 역할을 하나의 ${주체}가 동시에 수행하게 합니다. 병목을 제거하고 전달 속도를 높입니다.`, pros:['속도 향상','소통 간소화'], cons:['과부하 위험'], score:7.7 },
+        { name:`${대상} 접점 통합`, desc:`${대상}이 여러 채널을 통해 분산 접근하던 것을 하나로 통합합니다. 일관된 경험과 높은 ${지표}를 동시에 달성합니다.`, pros:['일관성','편의성'], cons:['통합 구현 복잡도'], score:8.6 },
+      ],
+      depend: [
+        { name:`성과 연동 보상`, desc:`${지표} 달성 수준에 따라 ${대상}의 처우·자원 배분이 자동으로 변화하는 구조를 만듭니다. 성과와 보상의 연동이 자발적 향상을 유도합니다.`, pros:['자발적 동기','공정성'], cons:['기준 설정 어려움'], score:8.8 },
+        { name:`상황 맞춤 대칭파괴`, desc:`현재 모든 ${대상}에게 동일하게 적용되는 방식을 상황·성과에 따라 차별적으로 적용합니다. 획일성을 제거해 전체 ${지표}를 높입니다.`, pros:['효율 극대화'], cons:['형평성 이슈'], score:7.4 },
+      ],
+    },
+    evaluation: {
+      planner: {
+        summary: `전략 기획 관점에서, "${문제현상}"을 해결하기 위한 핵심은 ${주체}의 구조적 변화입니다. 목표(${목표}) 달성을 위해 즉시 실행 가능한 Quick Win과 3개월 내 구조 개선을 병행해야 합니다.`,
+        top3: [`${주체} 역할 비대칭 재설계`, `${구성요소} 기능 분리·전문화`, `성과 연동 보상 구조`],
+        concern: `변화 속도가 너무 빠를 경우 ${대상}의 저항과 혼란이 발생할 수 있음. 단계적 전환이 중요합니다.`,
+        scores: [
+          {name:`${주체} 역할 재설계`, score:9.0}, {name:'성과 연동 보상', score:8.8}, {name:'기능 통합', score:8.7},
+          {name:'요소 분리', score:8.4}, {name:'복제 확산', score:8.6}, {name:'사전 개입', score:8.2},
+        ]
+      },
+      consultant: {
+        summary: `경쟁·시장 관점에서, "${목표}"를 달성하려면 ${대상}이 자발적으로 참여하는 구조가 필수입니다. 외부 자원 없이 내부 역량만으로 해결하는 ASIT 접근이 가장 현실적입니다.`,
+        top3: [`${대상} 접점 통합`, `고성과 요소 복제 확산`, `성과 연동 보상`],
+        concern: `단기 지표 개선에 집착하다 ${주체}의 장기 역량 저하를 초래할 가능성에 주의해야 합니다.`,
+        scores: [
+          {name:'접점 통합', score:8.6}, {name:'복제 확산', score:8.5}, {name:'성과 연동', score:9.0},
+          {name:'기능 통합', score:8.7}, {name:'역할 분리', score:8.2}, {name:'사전 개입', score:8.1},
+        ]
+      },
+      engineer: {
+        summary: `기술·실행 관점에서, 기존 ${구성요소} 내에서 가장 빠르게 적용 가능한 아이디어는 "역할 분리"와 "성과 피드백 시스템"입니다. 추가 예산 없이 프로세스 변경만으로 가능합니다.`,
+        top3: [`시간대별 역할 분리`, `${지표} 실시간 피드백`, `핵심 요소 제거`],
+        concern: `실시간 피드백 시스템 구축에 데이터 인프라 정비가 선행되어야 합니다.`,
+        scores: [
+          {name:'역할 분리', score:9.0}, {name:'실시간 피드백', score:8.1}, {name:'기능 통합', score:8.7},
+          {name:'요소 분리', score:8.4}, {name:'접점 통합', score:7.0}, {name:'맞춤 대칭파괴', score:7.4},
+        ]
+      },
+      customer: {
+        summary: `${대상} 관점에서, 가장 원하는 것은 자신의 기여가 인정받고 공정하게 평가받는 구조입니다. "성과 연동 보상"과 "부담 요소 제거"가 즉각적인 만족도 향상에 효과적입니다.`,
+        top3: [`성과 연동 보상`, `${대상} 부담 요소 제거`, `맞춤 대칭파괴`],
+        concern: `개인 성과 측정 방식에 대한 ${대상}의 공정성 우려를 사전에 해소해야 합니다.`,
+        scores: [
+          {name:'성과 연동', score:8.8}, {name:'부담 제거', score:8.3}, {name:'맞춤 대칭파괴', score:7.6},
+          {name:'역할 분리', score:8.4}, {name:'실시간 피드백', score:8.1}, {name:'참여 보상', score:7.5},
+        ]
+      }
+    },
+    synthesis: {
+      top10: [
+        {name:`${주체} 역할 비대칭 재설계`, planner:9.0, consultant:9.0, engineer:9.0, customer:8.0, avg:8.75, timing:'즉시', impact:5},
+        {name:'성과 연동 보상 구조', planner:8.8, consultant:8.0, engineer:7.5, customer:8.8, avg:8.28, timing:'1개월', impact:5},
+        {name:`${지표} 실시간 피드백`, planner:8.7, consultant:8.7, engineer:8.7, customer:7.5, avg:8.40, timing:'즉시', impact:5},
+        {name:`${대상} 접점 통합`, planner:8.6, consultant:8.6, engineer:7.0, customer:7.8, avg:8.00, timing:'2개월', impact:4},
+        {name:`${구성요소} 기능 분리`, planner:8.4, consultant:7.5, engineer:8.4, customer:8.4, avg:8.18, timing:'1개월', impact:4},
+        {name:'고성과 요소 복제 확산', planner:8.5, consultant:8.5, engineer:7.8, customer:7.2, avg:8.00, timing:'2개월', impact:4},
+        {name:`부담 요소 완전 제거`, planner:8.3, consultant:7.5, engineer:8.0, customer:8.3, avg:8.03, timing:'즉시', impact:3},
+        {name:'사전 개입 시스템', planner:8.1, consultant:8.1, engineer:8.1, customer:8.1, avg:8.10, timing:'1개월', impact:4},
+        {name:'시간대별 역할 분리', planner:7.9, consultant:7.5, engineer:7.5, customer:7.0, avg:7.48, timing:'즉시', impact:3},
+        {name:'맞춤 대칭파괴 구조', planner:7.3, consultant:7.5, engineer:6.5, customer:7.0, avg:7.08, timing:'2개월', impact:3},
+      ],
+      quickWins: [
+        `${주체} 내 고성과 패턴 즉시 복제 → ${대상} 전체 적용 (예상 효과: ${지표} 단기 개선)`,
+        `부담 요소 제거 → ${대상} 만족도 즉각 향상`,
+        `${지표} 실시간 가시화 → 자발적 행동 변화 유도`,
+      ],
+      insights: [
+        `<strong>핵심 문제: "${문제현상}"</strong> 이 문제의 본질은 기존 구조의 불균형입니다. 외부 자원 없이 내부 재배치만으로 해결 가능합니다.`,
+        `<strong>목표 달성 경로: "${목표}"</strong> ${주체}의 기존 강점을 재조합하는 ASIT 접근이 가장 빠르고 지속 가능한 방법입니다.`,
+        `<strong>실행 원칙: 폐쇄 세계 조건</strong> 새로운 자원을 도입하지 않고, 현재 ${구성요소}만으로 아이디어를 구성해야 실현 가능성이 높습니다.`,
+      ],
+      timeline: [
+        { period:'0~1개월', title:'Quick Win 즉시 실행', desc:`부담 요소 제거, ${지표} 가시화 시스템 구축, 고성과 패턴 복제 적용. 기존 자원만 활용하여 빠른 실행 가능.` },
+        { period:'1~3개월', title:'구조 개선', desc:`${주체} 역할 재설계, 성과 연동 보상 구조 도입, 기능별 분리 운영 시작. ${대상} 반응 모니터링 및 조정.` },
+        { period:'3~6개월', title:'심화 적용', desc:`접점 통합, 맞춤 대칭파괴 구조 정착, 사전 개입 시스템 자동화. "${목표}" 달성 여부 중간 점검.` },
+        { period:'6개월 이후', title:'생태계 안정화', desc:`개선된 구조의 전사 확산, 성과 측정 체계 고도화, 지속적 TRIZ/ASIT 기반 개선 사이클 정착.` },
+      ]
+    }
+  };
+  return maps[step];
+}
+
+/* ===== 전역 아이디어 저장소 ===== */
+const stageData = { triz: [], asit: {}, evaluation: {}, allIdeas: [] };
+let isParsed = false;        // AI 파싱 완료 여부
+let currentFormData = null;  // 마지막 분석 요청 데이터 (전역 보관)
+let demoTriggered = false;   // runDemoMode 중복 실행 방지 플래그
+
+/* ===== 분석 시작 ===== */
+// 로컬에서 접속하면 localhost:8000, 외부 URL(ngrok·tunnel 등)로 접속하면 그 주소를 자동 사용
+const API_BASE = window.location.origin;
+let eventSource = null;
+
+/* ===== 시작 시 AI 백엔드 상태 확인 ===== */
+async function checkBackend() {
+  const badge = $('ai-backend-badge');
+  try {
+    const r = await fetch(`${API_BASE}/api/status`, { signal: AbortSignal.timeout(5000) });
+    const s = await r.json();
+    if (!badge) return true;
+    if (s.ready === true) {
+      badge.textContent = '✨ Gemini AI';
+      badge.style.background = 'rgba(99,102,241,.35)';
+      badge.style.cursor = 'default';
+      badge.title = `모델: ${s.model || 'gemini-2.5-flash'}`;
+      return true;
+    } else {
+      badge.textContent = '⚠️ AI 미연결';
+      badge.style.background = 'rgba(239,68,68,.35)';
+      badge.title = 'API 키가 설정되지 않았습니다. ~/.gemini/triz.env 에 GEMINI_API_KEY=AIza... 를 입력하세요. (클릭하면 재확인)';
+      return false;
+    }
+  } catch {
+    if (badge) {
+      badge.textContent = '⚠️ 서버 미연결';
+      badge.style.background = 'rgba(239,68,68,.35)';
+      badge.title = '서버가 실행 중인지 확인하세요. (클릭하면 재확인)';
+    }
+    return false;
+  }
+}
+
+// 배지 클릭 시 수동 재확인
+(function initBackendCheck() {
+  const badge = $('ai-backend-badge');
+  if (badge) {
+    badge.style.cursor = 'pointer';
+    badge.onclick = () => checkBackend();
+  }
+
+  // 최대 5회, 3초 간격으로 자동 재시도 (서버 기동 직후 페이지 로드 시 대비)
+  let attempts = 0;
+  async function retry() {
+    const ok = await checkBackend();
+    if (!ok && attempts < 5) {
+      attempts++;
+      setTimeout(retry, 3000);
+    }
+  }
+  retry();
+}());
+
+/* ===== AI 문제 추출 패널 토글 ===== */
+function toggleParsedPanel() {
+  const body = $('parsed-fields-body');
+  const arrow = $('parsed-arrow');
+  body.classList.toggle('collapsed');
+  arrow.style.transform = body.classList.contains('collapsed') ? '' : 'rotate(180deg)';
+}
+
+/* ===== 문제 유형 전환 ===== */
+function onProblemTypeChange() {
+  const isOrg = $('pt-org') && $('pt-org').checked;
+  $('fields-product').style.display = isOrg ? 'none' : 'block';
+  $('fields-org').style.display     = isOrg ? 'block' : 'none';
+}
+
+function getProblemType() {
+  return ($('pt-org') && $('pt-org').checked) ? '조직프로세스' : '상품서비스';
+}
+
+function setProblemType(type) {
+  const isOrg = type === '조직프로세스';
+  if ($('pt-org'))      $('pt-org').checked      = isOrg;
+  if ($('pt-product'))  $('pt-product').checked   = !isOrg;
+  onProblemTypeChange();
+}
+
+/* ===== AI 문제 구조 분석 ===== */
+async function parseProblem() {
+  const freeText = ($('f-problem-free') || {value:''}).value.trim();
+  if (!freeText) {
+    showError('문제 상황을 먼저 입력해주세요.');
+    return;
+  }
+  const btn = $('btn-parse');
+  const badge = $('parse-status-badge');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="parse-spinner"></span> AI 분석 중...';
+  badge.className = 'step-badge loading';
+  badge.textContent = '⏳ AI가 문제 구조를 추출 중...';
+
+  addLog('문제 구조 추출 요청', 'progress');
+
+  // 데모 폴백 데이터 — 상품/서비스 타입
+  const demoProduct = {
+    문제유형: '상품서비스',
+    매체: '종합일간신문',
+    상품명: '디지털 뉴스 구독 서비스',
+    하위요소: '기사, 영상, 뉴스레터, 오디오, 댓글',
+    상위요소: '정보 서비스, 미디어 플랫폼',
+    대상: 'MZ세대(25-40세) 직장인',
+    가치: '구독률, 체류시간, 독자 충성도',
+    문제현상: 'MZ세대 디지털 구독 해지율 월 8% 증가, 무료 SNS 뉴스로 이탈',
+    목표: '6개월 내 해지율 3% 이하, 신규 MZ 구독자 20% 증가',
+  };
+  // 데모 폴백 데이터 — 조직/프로세스 타입
+  const demoOrg = {
+    문제유형: '조직프로세스',
+    조직명: '세계일보 편집국',
+    대상부서: '편집국 취재부(150명), 디지털뉴스부(20명)',
+    구성원: '편집국 기자 150명 PV 기여 20%, 디지털팀 20명 PV 기여 80%',
+    핵심지표: '1인당 PV 기여율, 콘텐츠 생산성, AI 활용도',
+    현재구조: '전통적 저널리즘 중심 편집국 + 소규모 디지털팀 이원 구조',
+    제약조건: '기존 기자 고용 유지, 저널리즘 품질 보장',
+    문제현상: '편집국 150명이 PV의 20%만 기여, 디지털팀 20명이 80% 기여 — 극심한 생산성 불균형',
+    목표: 'AI 시대에 맞는 조직 개편, 편집국 PV 기여율 50% 이상으로 향상',
+  };
+
+  let result = null;
+  try {
+    const res = await fetch(`${API_BASE}/api/parse-problem`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ problem_text: freeText }),
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
+    result = await res.json();
+    addLog('AI 문제 구조 추출 완료', 'result');
+  } catch (e) {
+    // ── API 키 없을 때: 입력 텍스트를 그대로 활용한 폴백 ──
+    const orgKeywords = ['명', '부서', '팀', '조직', '인원', '편집국', '기자', '프로세스', '개편', '직원', '부장', '팀장', '인력'];
+    const isOrgFallback = orgKeywords.some(kw => freeText.includes(kw));
+
+    if (isOrgFallback) {
+      result = {
+        문제유형: '조직프로세스',
+        조직명: '',
+        대상부서: '',
+        구성원: '',
+        핵심지표: '',
+        현재구조: '',
+        제약조건: '',
+        문제현상: freeText,   // ← 입력 내용 그대로
+        목표: '',
+      };
+    } else {
+      result = {
+        문제유형: '상품서비스',
+        매체: '',
+        상품명: '',
+        하위요소: '',
+        상위요소: '',
+        대상: '',
+        가치: '',
+        문제현상: freeText,   // ← 입력 내용 그대로
+        목표: '',
+      };
+    }
+    addLog(`API 미연결 → 입력 내용을 문제현상 필드에 반영. 나머지 항목을 직접 입력해주세요.`, 'error');
+  }
+
+  // ① 문제 유형 자동 선택
+  const detectedType = result.문제유형 || '상품서비스';
+  setProblemType(detectedType);
+  $('problem-type-group').style.display = 'block';
+
+  // ② 공통 필드
+  if ($('f-problem')) $('f-problem').value = result.문제현상 || '';
+  if ($('f-goal'))    $('f-goal').value    = result.목표     || '';
+
+  // ③ 상품/서비스 필드
+  if ($('f-media'))   $('f-media').value   = result.매체     || '';
+  if ($('f-product')) $('f-product').value = result.상품명   || '';
+  if ($('f-sub'))     $('f-sub').value     = result.하위요소 || '';
+  if ($('f-super'))   $('f-super').value   = result.상위요소 || '';
+  if ($('f-target'))  $('f-target').value  = result.대상     || '';
+  if ($('f-kpi'))     $('f-kpi').value     = result.가치     || '';
+
+  // ④ 조직/프로세스 필드
+  if ($('f-orgname'))    $('f-orgname').value    = result.조직명   || '';
+  if ($('f-dept'))       $('f-dept').value       = result.대상부서 || '';
+  if ($('f-members'))    $('f-members').value    = result.구성원   || '';
+  if ($('f-kpi-org'))    $('f-kpi-org').value    = result.핵심지표 || '';
+  if ($('f-structure'))  $('f-structure').value  = result.현재구조 || '';
+  if ($('f-constraint')) $('f-constraint').value = result.제약조건 || '';
+
+  // 패널 표시 & 펼치기
+  $('parsed-panel').style.display = 'block';
+  $('parsed-fields-body').classList.remove('collapsed');
+  $('parsed-arrow').style.transform = 'rotate(180deg)';
+
+  // AI가 필드를 채웠는지(목표 값 존재 여부로 판단) 확인
+  const aiParsed = !!(result.목표 && result.목표.length > 0);
+  badge.className = 'step-badge done';
+  const typeLabel = detectedType === '조직프로세스' ? '🏢 조직/프로세스' : '🛒 상품/서비스';
+  if (aiParsed) {
+    badge.textContent = `✅ ${typeLabel} 문제 구조 추출 완료 — 수정 후 분석 시작`;
+  } else {
+    badge.className = 'step-badge loading';
+    badge.textContent = `📝 ${typeLabel}로 분류됨 — 빈 항목을 직접 입력 후 분석 시작`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🔄 다시 분석';
+  isParsed = true;
+}
+
+async function startAnalysis() {
+  // 파싱 미완료 시 자동으로 먼저 실행
+  if (!isParsed) {
+    const freeText = ($('f-problem-free') || {value:''}).value.trim();
+    if (freeText) {
+      await parseProblem();
+    }
+  }
+
+  const btn = $('btn-start');
+  btn.disabled = true;
+  btn.textContent = '⏳ 분석 진행 중...';
+  $('progress-wrapper').style.display = 'block';
+  $('error-banner').style.display = 'none';
+
+  // 모든 에이전트 초기화
+  ['master','triz','asit','evaluation','synthesis'].forEach(k => setAgentState(k, 'idle'));
+  demoTriggered = false;  // 새 분석 시작 시 플래그 초기화
+  addLog('분석 시작 요청', 'progress');
+
+  const selectedTools = [];
+  if ($('c-ifr') && $('c-ifr').checked) selectedTools.push('IFR');
+  if ($('c-sep') && $('c-sep').checked) selectedTools.push('분리원리');
+  if ($('c-inv') && $('c-inv').checked) selectedTools.push('발명원리');
+  if ($('c-asit') && $('c-asit').checked) selectedTools.push('ASIT');
+
+  const problemType = getProblemType();
+  const isOrg = problemType === '조직프로세스';
+
+  // ── 폼에서 읽기 (폴백은 빈 문자열만 — 하드코딩 절대 금지) ──
+  const v = id => ($(id) || {value:''}).value.trim();
+
+  let formData;
+  if (isOrg) {
+    formData = {
+      문제유형:  '조직프로세스',
+      문제현상:  v('f-problem') || v('f-problem-free') || '(문제현상 미입력)',
+      목표:      v('f-goal')    || '(목표 미입력)',
+      조직명:    v('f-orgname') || '',
+      대상부서:  v('f-dept')    || '',
+      구성원:    v('f-members') || '',
+      핵심지표:  v('f-kpi-org') || '',
+      현재구조:  v('f-structure')  || '',
+      제약조건:  v('f-constraint') || '',
+      selected_tools: selectedTools.length > 0 ? selectedTools : ['IFR', '분리원리', '발명원리', 'ASIT'],
+    };
+  } else {
+    formData = {
+      문제유형:  '상품서비스',
+      문제현상:  v('f-problem') || v('f-problem-free') || '(문제현상 미입력)',
+      목표:      v('f-goal')    || '(목표 미입력)',
+      매체:      v('f-media')   || '',
+      상품명:    v('f-product') || '',
+      하위요소:  v('f-sub')     || '',
+      상위요소:  v('f-super')   || '',
+      대상:      v('f-target')  || '',
+      가치:      v('f-kpi')     || '',
+      selected_tools: selectedTools.length > 0 ? selectedTools : ['IFR', '분리원리', '발명원리', 'ASIT'],
+    };
+  }
+
+  // 전역에 저장 (handleEvent·onerror 어디서든 접근 가능)
+  currentFormData = formData;
+  addLog(`문제 유형: ${isOrg ? '🏢 조직/프로세스' : '🛒 상품/서비스'} | 문제: ${formData.문제현상.slice(0,30)}...`, 'progress');
+
+  let useDemo = false;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+      signal: AbortSignal.timeout(30000)  // 30초 — task_id만 즉시 반환되지만 안전마진
+    });
+    if (!res.ok) throw new Error('서버 응답 오류');
+    const { task_id } = await res.json();
+    addLog(`task_id 수신: ${task_id}`, 'progress');
+    connectSSE(task_id, btn, formData);
+  } catch(e) {
+    addLog('API 서버 미연결 → 데모 모드로 실행', 'error');
+    useDemo = true;
+  }
+
+  if (useDemo) runDemoMode(btn, formData);
+}
+
+/* demo 중복 실행 방지 헬퍼 */
+function triggerDemoMode(btn) {
+  if (demoTriggered) return;
+  demoTriggered = true;
+  runDemoMode(btn, currentFormData);
+}
+
+function connectSSE(taskId, btn, formData) {
+  if (eventSource) eventSource.close();
+  eventSource = new EventSource(`${API_BASE}/api/stream/${taskId}`);
+
+  eventSource.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      handleEvent(msg, btn);
+    } catch {}
+  };
+  eventSource.onerror = () => {
+    if (eventSource) { eventSource.close(); eventSource = null; }
+    addLog('[안내] AI 서버 응답이 없어 데모 모드로 전환되었습니다.', 'error');
+    triggerDemoMode(btn);
+  };
+}
+
+function handleEvent(msg, btn) {
+  const { type, step, agent, data } = msg;
+  if (type === 'progress') {
+    setAgentState(agent || step, 'running');
+    setProgress(step);
+    addLog(`[진행] ${agent || step} 실행 중`, 'progress');
+  } else if (type === 'result') {
+    setAgentState(agent || step, 'done');
+    processResult(step, data);
+    addLog(`[완료] ${step} 결과 수신`, 'result');
+  } else if (type === 'complete') {
+    ['master','triz','asit','evaluation','synthesis'].forEach(k => setAgentState(k, 'done'));
+    btn.disabled = false;
+    btn.textContent = '🚀 AI 에이전트 분석 시작';
+    $('progress-fill').style.width = '100%';
+    $('progress-pct').textContent = '100%';
+    $('progress-label-text').textContent = '분석 완료!';
+    addLog('모든 분석 완료', 'complete');
+    if (eventSource) eventSource.close();
+  } else if (type === 'error') {
+    const detail = (msg && msg.message) ? msg.message : '알 수 없는 오류';
+    addLog(`[오류] ${detail}`, 'error');
+    addLog('[안내] 데모 모드(입력 기반 시뮬레이션)로 전환합니다.', 'error');
+    if (eventSource) { eventSource.close(); eventSource = null; }
+    triggerDemoMode(btn);
+  }
+}
+
+/* ===== 백엔드 응답 → 프론트 렌더 형식 어댑터 =====
+   백엔드는 한글/스네이크케이스 키, 프론트 render는 영문/카멜케이스 기대 → 변환 */
+function pick(o, ...keys) { for (const k of keys) { if (o && o[k] !== undefined && o[k] !== null) return o[k]; } return undefined; }
+function asArray(v) { return Array.isArray(v) ? v : (v == null ? [] : [v]); }
+
+function adaptProblem(d) {
+  if (!d || typeof d !== 'object') return { summary:'', techContradiction:'', physContradiction:'', ifr:[], tools:[] };
+  // IFR이 문자열일 수도, 배열일 수도, 객체일 수도 있음 → 모두 배열로 정규화
+  let ifrRaw = pick(d, 'IFR', 'ifr', 'ideal_final_result');
+  let ifr = [];
+  if (Array.isArray(ifrRaw)) ifr = ifrRaw.map(x => typeof x === 'string' ? x : (x.text || x.description || JSON.stringify(x)));
+  else if (typeof ifrRaw === 'string') ifr = [ifrRaw];
+  else if (ifrRaw && typeof ifrRaw === 'object') ifr = Object.values(ifrRaw).map(v => typeof v === 'string' ? v : JSON.stringify(v));
+  return {
+    summary: pick(d, 'problem_summary', 'summary', '문제요약') || '',
+    techContradiction: pick(d, 'technical_contradiction', 'techContradiction', '기술모순') || '',
+    physContradiction: pick(d, 'physical_contradiction', 'physContradiction', '물리모순') || '',
+    ifr,
+    tools: asArray(pick(d, 'recommended_tools', 'tools', '추천도구')),
+  };
+}
+
+function adaptIdea(d) {
+  return {
+    name: pick(d, 'name', '이름', 'title') || '',
+    principle: pick(d, 'principle', '원리', 'tool') || '',
+    desc: pick(d, 'desc', 'description', '설명') || '',
+    pros: asArray(pick(d, 'pros', '장점')),
+    cons: asArray(pick(d, 'cons', '단점')),
+    score: pick(d, 'score', '점수') ?? 0,
+  };
+}
+
+function adaptTriz(d) {
+  // 백엔드: {ideas:[...]} 또는 배열 자체
+  const ideas = Array.isArray(d) ? d : asArray(pick(d, 'ideas', 'TRIZ', '아이디어'));
+  return ideas.map(adaptIdea);
+}
+
+function adaptAsit(d) {
+  // 백엔드: {ideas:[{tool:"제거"|"복제"|"분할"|"기능통합"|"속성의존성", ...}, ...]}
+  // 프론트 기대: {removal:[...], clone:[...], split:[...], merge:[...], depend:[...]}
+  const out = { removal:[], clone:[], split:[], merge:[], depend:[] };
+  const toolMap = {
+    '제거': 'removal', '복제': 'clone', '분할': 'split', '기능통합': 'merge', '속성의존성': 'depend',
+    'removal':'removal','clone':'clone','split':'split','merge':'merge','depend':'depend'
+  };
+  // 백엔드가 이미 분류된 형태로 보낸 경우 (각 도구가 키로 있는 경우)
+  for (const k of ['removal','clone','split','merge','depend']) {
+    if (Array.isArray(d?.[k])) out[k] = d[k].map(adaptIdea);
+  }
+  // 단일 ideas 배열에서 tool 필드로 분류
+  const ideas = Array.isArray(d) ? d : asArray(pick(d, 'ideas', '아이디어'));
+  ideas.forEach(it => {
+    const adapted = adaptIdea(it);
+    const toolName = pick(it, 'tool', '도구', 'category') || '';
+    const slot = toolMap[toolName];
+    if (slot) out[slot].push(adapted);
+    else out.removal.push(adapted); // 분류 불명은 일단 첫 카테고리에
+  });
+  return out;
+}
+
+function adaptEvaluation(d) {
+  // 백엔드 실제 스키마:
+  //   {기획자|컨설턴트|엔지니어|고객: {
+  //     agent, overall_assessment, evaluations:[{id,name,score,...}], top3_ids:[N,N,N], key_concerns:[]
+  //   }}
+  // 프론트 기대: {planner:{summary, top3:[string], concern, scores:[{name,score}]}, ...}
+  const map = { planner:['기획자','planner'], consultant:['컨설턴트','consultant'], engineer:['엔지니어','engineer'], customer:['고객','customer'] };
+  const out = {};
+  for (const [engKey, [korKey, enKey]] of Object.entries(map)) {
+    const raw = d?.[korKey] ?? d?.[enKey] ?? null;
+    if (!raw || typeof raw !== 'object') { out[engKey] = null; continue; }
+    const summary = pick(raw, 'overall_assessment', 'summary', '종합평가', '평가요약') || '';
+    // evaluations 배열에서 점수 추출
+    const evalArr = asArray(pick(raw, 'evaluations', 'scores', '평가목록', 'idea_scores'));
+    const scores = evalArr.map(e => ({
+      name: pick(e, 'name', 'idea_name', '아이디어명', 'idea') || '',
+      score: Number(pick(e, 'score', 'overall_score', '점수') ?? 0),
+    }));
+    // top3: 백엔드는 top3_ids (숫자) 또는 top3 (객체/문자) 둘 다 가능 — id→name 변환
+    let top3 = [];
+    const top3IdsRaw = pick(raw, 'top3_ids', 'top_3_ids', '최고3개_id');
+    if (Array.isArray(top3IdsRaw)) {
+      // id를 evaluations에서 name으로 매핑
+      const idToName = {};
+      evalArr.forEach(e => { const id = pick(e,'id','idea_id'); if (id != null) idToName[String(id)] = pick(e,'name','idea_name','아이디어명') || ('아이디어 ' + id); });
+      top3 = top3IdsRaw.map(id => idToName[String(id)] || ('ID ' + id));
+    } else {
+      const top3Raw = asArray(pick(raw, 'top3', 'top_3_ideas', '최고3개', 'best_ideas'));
+      top3 = top3Raw.map(t => typeof t === 'string' ? t : (pick(t,'name','title','idea_name') || JSON.stringify(t)));
+    }
+    const concerns = pick(raw, 'key_concerns', 'concerns', '주요우려', '우려사항');
+    const concern = Array.isArray(concerns) ? concerns.join(' / ') : (concerns || '');
+    out[engKey] = { summary, top3, concern, scores };
+  }
+  return out;
+}
+
+function adaptSynthesis(d) {
+  // 백엔드 실제 스키마:
+  //   final_top10: [{rank, id, name, description, avg_score, scores:{기획자,컨설턴트,엔지니어,고객}, consensus, implementation, impact("높음"|"보통"|"낮음"), source}]
+  //   quick_wins: [id, id, ...]    ← 숫자 ID 배열!
+  //   insights: ["문장1", ...]
+  //   next_steps: [{step, action, timeline, owner}]
+  const impactMap = { '매우높음':5, '높음':4, '보통':3, '낮음':2, '매우낮음':1, 'high':4, 'medium':3, 'low':2 };
+  const top10Raw = asArray(pick(d, 'final_top10', 'top10', 'top_10'));
+
+  // id → name 룩업 (quick_wins 변환용)
+  const idToName = {};
+  top10Raw.forEach(t => { const id = pick(t,'id','idea_id'); if (id != null) idToName[String(id)] = pick(t,'name','아이디어명','title') || ''; });
+
+  const top10 = top10Raw.map(t => {
+    const breakdown = pick(t, 'scores', 'score_breakdown', '점수') || {};
+    const planner = Number(pick(breakdown,'기획자','planner') ?? 0);
+    const consultant = Number(pick(breakdown,'컨설턴트','consultant') ?? 0);
+    const engineer = Number(pick(breakdown,'엔지니어','engineer') ?? 0);
+    const customer = Number(pick(breakdown,'고객','customer') ?? 0);
+    const nums = [planner,consultant,engineer,customer].filter(n=>n>0);
+    const avg = Number(pick(t,'avg_score','avg','평균')) || (nums.length ? nums.reduce((a,b)=>a+b,0)/nums.length : 0);
+    let impactRaw = pick(t,'impact','임팩트');
+    let impact = typeof impactRaw === 'number' ? impactRaw : (impactMap[String(impactRaw).toLowerCase?.() || impactRaw] ?? impactMap[impactRaw] ?? 3);
+    return {
+      name: pick(t,'name','아이디어명','title') || '',
+      planner, consultant, engineer, customer,
+      avg,
+      timing: pick(t,'implementation','timing','실행시기','priority') || '',
+      impact: Number(impact) || 3,
+    };
+  });
+
+  // quick_wins: id 배열을 이름 배열로 변환
+  const qwRaw = asArray(pick(d, 'quick_wins', 'quickWins', '즉시실행'));
+  const quickWins = qwRaw.map(q => {
+    if (typeof q === 'string') return q;
+    if (typeof q === 'number') return idToName[String(q)] || ('아이디어 ID ' + q);
+    if (q && typeof q === 'object') return pick(q,'name','title','description','action') || JSON.stringify(q);
+    return String(q);
+  });
+
+  const insights = asArray(pick(d, 'insights', 'key_insights', '인사이트','통찰'))
+    .map(t => typeof t === 'string' ? t : (pick(t,'text','description','insight') || JSON.stringify(t)));
+
+  // next_steps: 백엔드 {step, action, timeline, owner} → 프론트 {period, title, desc}
+  const nextSteps = asArray(pick(d, 'next_steps','nextSteps','timeline','다음단계'));
+  const timeline = nextSteps.map(t => ({
+    period: pick(t,'timeline','period','시기','timeframe') || (pick(t,'step') ? `Step ${pick(t,'step')}` : ''),
+    title: pick(t,'action','title','단계명','step_name','name') || '',
+    desc: pick(t,'owner','desc','description','details','담당') ? `담당: ${pick(t,'owner','담당')||''} ${pick(t,'desc','description','details')||''}`.trim() : '',
+  }));
+
+  return { top10, quickWins, insights, timeline };
+}
+
+function processResult(step, data) {
+  try {
+    // 디버깅용: 백엔드 raw 응답을 window에 저장 (콘솔에서 window.__rawBackend 로 확인)
+    window.__rawBackend = window.__rawBackend || {};
+    window.__rawBackend[step] = data;
+    // raw 폴백이면 화면에 알림 후 데모 모드로 우회
+    if (data && data.raw) {
+      addLog(`[안내] ${step} 단계: AI 응답을 JSON으로 해석하지 못해 본문을 텍스트로 표시합니다.`, 'error');
+    }
+    if (step === 'problem') { renderProblem(adaptProblem(data)); setAgentState('master','done'); switchTab(0); autoFillFrameworkInputs(data); }
+    else if (step === 'triz') { renderTriz(adaptTriz(data)); setAgentState('triz','done'); switchTab(1); }
+    else if (step === 'asit') { renderAsit(adaptAsit(data)); setAgentState('asit','done'); switchTab(2); }
+    else if (step === 'evaluation') { renderEvaluation(adaptEvaluation(data)); setAgentState('evaluation','done'); switchTab(3); }
+    else if (step === 'synthesis') {
+      const adapted = adaptSynthesis(data);
+      renderSynthesis(adapted);
+      setAgentState('synthesis','done');
+      switchTab(4);
+      // 실행 아이디어 자동 생성 (백그라운드)
+      generateActionPlan(adapted);
+    }
+  } catch (e) {
+    addLog(`[렌더 오류] ${step}: ${e.message}`, 'error');
+    console.error('processResult error:', step, e, data);
+  }
+}
+
+/* ===== 프레임워크 피드백 (탭6) ===== */
+async function runFrameworkFeedback() {
+  const ideaName = ($('fw-idea-name') || {value:''}).value.trim();
+  const ideaDesc = ($('fw-idea-desc') || {value:''}).value.trim();
+  const problem  = ($('fw-problem')   || {value:''}).value.trim();
+  if (!ideaName || !ideaDesc) {
+    alert('아이디어명과 설명은 필수입니다.');
+    return;
+  }
+
+  const btn = $('fw-run-btn');
+  btn.disabled = true;
+  btn.textContent = '분석 중...';
+  $('fw-loading').style.display = 'block';
+  $('fw-results').style.display = 'none';
+  $('fw-results').innerHTML = '';
+
+  // 분석 결과에서 문제 요약 자동 채우기
+  const autoSummary = problem || (window.__rawBackend && window.__rawBackend.problem
+    ? (window.__rawBackend.problem.problem_summary || '') : '');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/framework-feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idea_name: ideaName,
+        idea_description: ideaDesc,
+        problem_summary: autoSummary || ideaDesc,
+        physical_contradiction: ($('fw-phys')     || {value:''}).value.trim(),
+        existing_elements:      ($('fw-elements') || {value:''}).value.trim(),
+      })
+    });
+    if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
+    const data = await res.json();
+    renderFrameworkFeedback(data);
+  } catch (e) {
+    $('fw-results').innerHTML = `<div style="color:#ef4444;font-size:13px;padding:12px;background:#fef2f2;border-radius:8px;">
+      오류: ${e.message}<br><small>서버가 실행 중인지, API 키가 설정됐는지 확인하세요.</small></div>`;
+    $('fw-results').style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '3개 프레임워크로 분석하기';
+    $('fw-loading').style.display = 'none';
+  }
+}
+
+function renderFrameworkFeedback(data) {
+  const feedback = data.feedback || {};
+  const labels = {
+    'IFR관점':      { icon:'🎯', title:'IFR 관점', color:'#6366f1', scoreKey:'ideality_score',  scoreLabel:'이상도' },
+    'ASIT폐쇄세계': { icon:'🔒', title:'ASIT 폐쇄 세계', color:'#059669', scoreKey:'asit_score',     scoreLabel:'ASIT' },
+    '분리원리':     { icon:'✂️', title:'분리원리',  color:'#d97706', scoreKey:'separation_score', scoreLabel:'분리' },
+  };
+
+  let html = `<h4 style="font-size:13px;font-weight:700;margin-bottom:12px;">📊 "${data.idea_name}" 프레임워크 평가 결과</h4>
+  <div style="display:grid;gap:12px;">`;
+
+  for (const [key, cfg] of Object.entries(labels)) {
+    const r = feedback[key] || {};
+    if (r.error) {
+      html += `<div style="border:1px solid #fca5a5;border-radius:10px;padding:14px;background:#fef2f2;">
+        <span style="font-weight:700;color:#ef4444;">${cfg.icon} ${cfg.title}</span>
+        <p style="font-size:12px;color:#b91c1c;margin:6px 0 0;">${r.error}</p></div>`;
+      continue;
+    }
+    const score = r[cfg.scoreKey] ?? '—';
+    const summary = r.summary || r.ifr_analysis || r.tool_justification || r.principle_justification || '';
+
+    // 핵심 세부 정보
+    let detail = '';
+    if (key === 'IFR관점') {
+      detail = `<div style="margin-top:8px;font-size:11px;color:#6b7280;">
+        <strong>IFR 정렬:</strong> ${r.ifr_alignment || '—'} &nbsp;|&nbsp;
+        <strong>개선 방향:</strong> ${r.improvement_toward_ifr || '—'}
+      </div>`;
+    } else if (key === 'ASIT폐쇄세계') {
+      const compliant = r.closed_world_compliant;
+      const badge = compliant === true ? '<span style="color:#059669;font-weight:700;">✅ 준수</span>'
+                  : compliant === false ? '<span style="color:#ef4444;font-weight:700;">❌ 위반</span>'
+                  : '';
+      detail = `<div style="margin-top:8px;font-size:11px;color:#6b7280;">
+        <strong>폐쇄 세계:</strong> ${badge} &nbsp;|&nbsp;
+        <strong>ASIT 도구:</strong> ${r.asit_tool || '—'}<br>
+        <strong>개선안:</strong> ${r.closed_world_rewrite || '—'}
+      </div>`;
+    } else if (key === '분리원리') {
+      detail = `<div style="margin-top:8px;font-size:11px;color:#6b7280;">
+        <strong>적용 원리:</strong> ${r.applied_principle || '—'} &nbsp;|&nbsp;
+        <strong>분리 방법:</strong> ${r.separation_detail || '—'}
+      </div>`;
+    }
+
+    html += `<div style="border:1px solid ${cfg.color}33;border-radius:10px;padding:14px;background:${cfg.color}08;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-weight:700;color:${cfg.color};font-size:13px;">${cfg.icon} ${cfg.title}</span>
+        <span style="background:${cfg.color}20;color:${cfg.color};font-weight:700;font-size:12px;padding:2px 10px;border-radius:99px;">${cfg.scoreLabel} ${score}/10</span>
+      </div>
+      <p style="font-size:12px;color:#374151;margin:0;line-height:1.5;">${summary}</p>
+      ${detail}
+    </div>`;
+  }
+
+  html += '</div>';
+  $('fw-results').innerHTML = html;
+  $('fw-results').style.display = 'block';
+}
+
+// 분석 완료 후 문제 요약을 프레임워크 피드백 폼에 자동 채우기
+function autoFillFrameworkInputs(problemData) {
+  const el = $('fw-problem');
+  if (el && !el.value && problemData && problemData.problem_summary) {
+    el.value = problemData.problem_summary;
+  }
+}
+
+/* ===== 데모 모드 (API 없을 때) — 입력 내용 기반으로 결과 생성 ===== */
+async function runDemoMode(btn, formData) {
+  // formData가 없으면 폼에서 직접 읽기
+  if (!formData) {
+    const isOrg = getProblemType() === '조직프로세스';
+    formData = isOrg ? {
+      문제유형: '조직프로세스',
+      문제현상: ($('f-problem')||{value:''}).value || '조직 생산성 문제',
+      목표:     ($('f-goal')||{value:''}).value    || '조직 효율화',
+      조직명:   ($('f-orgname')||{value:''}).value || '조직',
+      대상부서: ($('f-dept')||{value:''}).value    || '전 부서',
+      구성원:   ($('f-members')||{value:''}).value || '',
+      핵심지표: ($('f-kpi-org')||{value:''}).value || 'KPI',
+      현재구조: ($('f-structure')||{value:''}).value|| '',
+      제약조건: ($('f-constraint')||{value:''}).value|| '',
+    } : {
+      문제유형: '상품서비스',
+      문제현상: ($('f-problem')||{value:''}).value || '서비스 문제',
+      목표:     ($('f-goal')||{value:''}).value    || '개선',
+      매체:     ($('f-media')||{value:''}).value   || '미디어',
+      상품명:   ($('f-product')||{value:''}).value || '서비스',
+      하위요소: ($('f-sub')||{value:''}).value     || '콘텐츠',
+      대상:     ($('f-target')||{value:''}).value  || '사용자',
+      가치:     ($('f-kpi')||{value:''}).value     || 'KPI',
+    };
+  }
+
+  const sequence = [
+    { agent:'master',     step:'problem',    delay:1500 },
+    { agent:'triz',       step:'triz',       delay:2000 },
+    { agent:'asit',       step:'asit',       delay:2000 },
+    { agent:'evaluation', step:'evaluation', delay:2500 },
+    { agent:'synthesis',  step:'synthesis',  delay:2000 },
+  ];
+
+  for (const s of sequence) {
+    setAgentState(s.agent, 'running');
+    setProgress(s.step);
+    addLog(`[분석] ${s.step} 처리 중...`, 'progress');
+    await sleep(s.delay);
+    const data = getMockData(s.step, formData);   // ← formData 전달
+    processResult(s.step, data);
+    addLog(`[완료] ${s.step} 결과 반영`, 'result');
+    await sleep(300);
+  }
+
+  ['master','triz','asit','evaluation','synthesis'].forEach(k => setAgentState(k,'done'));
+  btn.disabled = false;
+  btn.textContent = '🚀 AI 에이전트 분석 시작';
+  $('progress-fill').style.width = '100%';
+  $('progress-pct').textContent = '100%';
+  $('progress-label-text').textContent = '분석 완료!';
+  addLog('분석 완료', 'complete');
+
+  // 데모 모드에서도 실행 아이디어 자동 생성
+  const synthData = getMockData('synthesis', formData);
+  const adaptedSynth = adaptSynthesis(synthData);
+  generateActionPlan(adaptedSynth);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ===== 탭6: 실행 아이디어 ===== */
+async function generateActionPlan(synthesisData) {
+  $('tab6-placeholder').style.display = 'none';
+  $('tab6-loading').style.display = 'block';
+  $('tab6-content').style.display = 'none';
+  addLog('[실행 아이디어] 생성 시작...', 'progress');
+
+  const rawProblem = window.__rawBackend && window.__rawBackend.problem;
+  const existingEl = currentFormData
+    ? (currentFormData.하위요소 || currentFormData.현재구조 || '')
+    : '';
+
+  const top10 = (synthesisData.top10 || []).map(t => ({
+    name: t.name,
+    avg_score: t.avg,
+    timing: t.timing,
+    scores: { 기획자: t.planner, 컨설턴트: t.consultant, 엔지니어: t.engineer, 고객: t.customer }
+  }));
+
+  try {
+    const res = await fetch(`${API_BASE}/api/action-plan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        top10,
+        problem_summary: (rawProblem && rawProblem.problem_summary) || (currentFormData && currentFormData.문제현상) || '',
+        goal: (currentFormData && currentFormData.목표) || '',
+        existing_elements: existingEl,
+        insights: synthesisData.insights || [],
+      }),
+      signal: AbortSignal.timeout(60000),
+    });
+    if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
+    const data = await res.json();
+    renderActionPlan(data);
+    addLog('[실행 아이디어] 생성 완료', 'complete');
+  } catch (e) {
+    addLog(`[실행 아이디어] API 실패 → 데모 데이터 사용: ${e.message}`, 'error');
+    renderActionPlan(getMockActionPlan(synthesisData));
+  } finally {
+    $('tab6-loading').style.display = 'none';
+  }
+}
+
+function getMockActionPlan(synthesisData) {
+  const top10 = synthesisData.top10 || [];
+  const goal = (currentFormData && currentFormData.목표) || '목표 달성';
+  const action_plans = top10.map((t, i) => ({
+    rank: i + 1,
+    name: t.name,
+    avg_score: t.avg || 0,
+    timing: t.timing || '즉시',
+    first_action: `${t.name} 담당자를 지정하고 이번 주 킥오프 미팅 일정을 잡는다`,
+    steps: [
+      { step: 1, action: '현황 파악 및 책임자 지정', detail: '현재 상태를 측정하고 담당팀과 책임자를 확정한다', who: '팀장', when: '1주 내' },
+      { step: 2, action: '파일럿 범위 설정', detail: '리스크를 최소화하는 소규모 실험 대상을 선정한다', who: '담당팀', when: '2주 내' },
+      { step: 3, action: '파일럿 실행 및 지표 측정', detail: '결과를 주 단위로 측정하고 기록한다', who: '전담자', when: '1개월 내' },
+      { step: 4, action: '결과 리뷰 및 전사 확산 결정', detail: '파일럿 성과를 바탕으로 전면 적용 여부를 결정한다', who: '의사결정권자', when: '2개월 내' },
+    ],
+    resources_needed: ['기존 인력', '현재 시스템·데이터', '내부 협업 채널'],
+    success_metrics: [`${t.name} 적용 후 핵심 지표 10% 이상 개선`, '담당자 정착률 80% 이상'],
+    obstacles: [
+      { problem: '구성원의 변화 저항', solution: '파일럿 성과를 수치로 공유하고 자발적 참여를 유도한다' },
+      { problem: '초기 실행 리소스 부족', solution: '기존 업무 중 우선순위가 낮은 항목을 잠시 보류하고 집중한다' },
+    ],
+  }));
+
+  return {
+    quick_start: `지금 당장 "${top10[0] ? top10[0].name : '1순위 아이디어'}" 담당자를 지정하고 이번 주 안에 킥오프 미팅을 예약하라`,
+    action_plans,
+  };
+}
+
+function renderActionPlan(data) {
+  const c = $('tab6-content');
+  const plans = data.action_plans || [];
+  if (!plans.length) {
+    c.innerHTML = '<div class="placeholder-box"><div class="placeholder-icon">⚠️</div><div class="placeholder-text">실행 계획 데이터가 없습니다</div></div>';
+    c.style.display = 'block';
+    return;
+  }
+
+  const rankCls = i => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+
+  // 타이밍별 그룹 분류
+  const groups = { immediate: [], month1: [], long: [] };
+  plans.forEach((p, i) => {
+    const t = (p.timing || '').toLowerCase();
+    if (t.includes('즉시') || t.includes('immediate') || t.includes('단기')) groups.immediate.push([p, i]);
+    else if (t.includes('1개월') || t.includes('1 month') || t.includes('중기')) groups.month1.push([p, i]);
+    else groups.long.push([p, i]);
+  });
+
+  function renderCard(p, i) {
+    const steps = (p.steps || []).map(s => `
+      <div class="ap-step">
+        <div class="ap-step-num">${s.step}</div>
+        <div class="ap-step-content">
+          <div class="ap-step-action">${s.action}</div>
+          <div class="ap-step-detail">${s.detail || ''}</div>
+          <div class="ap-step-meta">
+            ${s.who ? `<span class="ap-step-who">👤 ${s.who}</span>` : ''}
+            ${s.when ? `<span class="ap-step-when">📅 ${s.when}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    const metrics = (p.success_metrics || []).map(m => `<div class="ap-metric">${m}</div>`).join('');
+    const obstacles = (p.obstacles || []).map(o => `
+      <div class="ap-obstacle">
+        <div class="ap-obs-problem">⚠️ ${o.problem}</div>
+        <div class="ap-obs-solution">${o.solution}</div>
+      </div>
+    `).join('');
+    const resources = (p.resources_needed || []).map(r => `<span class="ap-resource-tag">${r}</span>`).join('');
+
+    return `
+      <div class="ap-card" id="ap-card-${i}">
+        <div class="ap-card-header" onclick="toggleApCard(${i})">
+          <div class="ap-rank-badge ${rankCls(i)}">${p.rank}</div>
+          <div class="ap-card-title">${p.name}</div>
+          <div class="ap-score-chip">avg ${(p.avg_score||0).toFixed(1)}</div>
+          <div class="ap-chevron">▼</div>
+        </div>
+        <div class="ap-card-body">
+          <div class="ap-first-action">
+            <div class="ap-fa-icon">🎯</div>
+            <div>
+              <div class="ap-fa-label">이번 주 첫 행동</div>
+              <div class="ap-fa-text">${p.first_action || ''}</div>
+            </div>
+          </div>
+
+          <div class="ap-section-label">실행 단계</div>
+          <div class="ap-steps">${steps}</div>
+
+          <div class="ap-grid-2" style="margin-top:16px;">
+            <div>
+              <div class="ap-section-label">성공 지표</div>
+              <div class="ap-metrics">${metrics}</div>
+            </div>
+            <div>
+              <div class="ap-section-label">필요 자원 (기존만)</div>
+              <div class="ap-resources">${resources}</div>
+            </div>
+          </div>
+
+          ${obstacles ? `<div class="ap-section-label" style="margin-top:14px;">예상 장애물 & 대처법</div><div class="ap-obstacles">${obstacles}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderGroup(label, badge, items) {
+    if (!items.length) return '';
+    return `
+      <div class="ap-timeline-group">
+        <div class="ap-timeline-header">
+          <span class="ap-timing-badge ${badge}">${label}</span>
+          <span class="ap-count-text">${items.length}개 아이디어</span>
+        </div>
+        ${items.map(([p, i]) => renderCard(p, i)).join('')}
+      </div>
+    `;
+  }
+
+  c.innerHTML = `
+    <div class="ap-quick-start">
+      <div class="ap-qs-icon">⚡</div>
+      <div>
+        <div class="ap-qs-label">지금 바로 시작 — 단 하나의 행동</div>
+        <div class="ap-qs-text">${data.quick_start || ''}</div>
+      </div>
+    </div>
+
+    ${renderGroup('⚡ 즉시 실행', 'ap-timing-immediate', groups.immediate)}
+    ${renderGroup('📅 1개월 내', 'ap-timing-1month', groups.month1)}
+    ${renderGroup('🔭 2개월+', 'ap-timing-long', groups.long)}
+
+    <div style="text-align:center;padding:16px 0;">
+      <button onclick="exportActionPlan()"
+        style="background:#2367d7;color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:600;cursor:pointer;">
+        📥 실행 계획 내보내기 (Markdown)
+      </button>
+    </div>
+  `;
+  $('tab6-content').style.display = 'block';
+
+  // 1순위 카드 자동 열기
+  if (plans.length > 0) toggleApCard(0);
+  window.__actionPlanData = data;
+}
+
+function toggleApCard(i) {
+  const card = $(`ap-card-${i}`);
+  if (card) card.classList.toggle('open');
+}
+
+function exportActionPlan() {
+  const d = window.__actionPlanData;
+  if (!d) { showError('내보낼 실행 계획 데이터가 없습니다.'); return; }
+  let md = `# TRIZ/ASIT 실행 아이디어 계획\n생성일시: ${kstDate()}\n\n`;
+  md += `## ⚡ 지금 바로 시작\n${d.quick_start}\n\n---\n\n`;
+  (d.action_plans || []).forEach(p => {
+    md += `## ${p.rank}위. ${p.name} (avg ${(p.avg_score||0).toFixed(1)}점 / ${p.timing})\n\n`;
+    md += `### 🎯 이번 주 첫 행동\n${p.first_action}\n\n`;
+    md += `### 📋 실행 단계\n`;
+    (p.steps || []).forEach(s => {
+      md += `${s.step}. **${s.action}**\n   - 방법: ${s.detail}\n   - 담당: ${s.who} | 일정: ${s.when}\n\n`;
+    });
+    md += `### ✅ 성공 지표\n${(p.success_metrics||[]).map(m=>`- ${m}`).join('\n')}\n\n`;
+    md += `### ⚠️ 예상 장애물\n${(p.obstacles||[]).map(o=>`- ${o.problem} → ${o.solution}`).join('\n')}\n\n---\n\n`;
+  });
+
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `TRIZ_ASIT_실행계획_${new Date().toISOString().slice(0,10)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

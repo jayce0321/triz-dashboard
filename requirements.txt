@@ -1,0 +1,13 @@
+# TRIZ/ASIT 대시보드 의존성
+# 설치: python3 -m venv ~/.venv/triz && source ~/.venv/triz/bin/activate && pip install -r requirements.txt
+# Python 3.10 이상 권장
+#
+# API 키 설정:
+#   mkdir -p ~/.gemini && echo "GEMINI_API_KEY=AIza..." > ~/.gemini/triz.env
+#   키 발급: https://aistudio.google.com/  (Get API key)
+
+google-genai>=0.8
+python-dotenv>=1.0
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.5

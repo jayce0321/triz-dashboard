@@ -1,0 +1,18 @@
+# 환경변수
+.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# 백업
+*.bak
+
+# 가상환경
+.venv/
+venv/
