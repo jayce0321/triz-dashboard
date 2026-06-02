@@ -2130,9 +2130,9 @@ async function checkBackend() {
     }
   } catch {
     if (badge) {
-      badge.textContent = '⚠️ 서버 미연결';
-      badge.style.background = 'rgba(239,68,68,.35)';
-      badge.title = '서버가 실행 중인지 확인하세요. (클릭하면 재확인)';
+      badge.textContent = '🎭 데모 모드';
+      badge.style.background = 'rgba(100,116,139,.35)';
+      badge.title = 'AI 서버 미연결 — 시뮬레이션 데이터로 동작합니다. 로컬 서버 실행 시 실제 Gemini AI 분석이 가능합니다. (클릭하면 재연결 시도)';
     }
     return false;
   }
