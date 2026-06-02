@@ -1637,8 +1637,10 @@ function renderTriz(ideas) {
           <div class="idea-name">${d.name}</div>
         </div>
         <div class="idea-desc">${d.desc}</div>
+        ${d.contradictionResolved ? `<div style="margin-top:6px;padding:5px 8px;background:#eff6ff;border-radius:6px;font-size:11px;color:#1d4ed8"><span style="font-weight:700">🎯 모순 해소:</span> ${d.contradictionResolved}</div>` : ''}
+        ${d.firstAction ? `<div style="margin-top:6px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:11px;color:#166534"><span style="font-weight:700">⚡ 첫 행동:</span> ${d.firstAction}</div>` : ''}
         <div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:5px">장점 / 단점</div>
+          <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:5px;margin-top:8px">장점 / 단점</div>
           <div class="pros-cons">
             ${d.pros.map(p=>`<span class="pros-tag">✓ ${p}</span>`).join('')}
             ${d.cons.map(p=>`<span class="cons-tag">✗ ${p}</span>`).join('')}
@@ -1655,11 +1657,11 @@ function renderTriz(ideas) {
 
 /* ===== 탭3: ASIT 아이디어 렌더 ===== */
 const asitTools = [
-  { key:'removal',  label:'제거',     icon:'🗑', bg:'#fff7ed', color:'#c2410c' },
-  { key:'clone',    label:'복제',     icon:'🪞', bg:'#f0fdf4', color:'#166534' },
-  { key:'split',    label:'분할',     icon:'✂️', bg:'#eff6ff', color:'#1d4ed8' },
-  { key:'merge',    label:'기능통합', icon:'🔗', bg:'#faf5ff', color:'#7c3aed' },
-  { key:'depend',   label:'속성의존성',icon:'📐', bg:'#fef9c3', color:'#854d0e' },
+  { key:'removal',  label:'제거',       icon:'🗑', bg:'#fff7ed', color:'#c2410c' },
+  { key:'clone',    label:'복제',       icon:'🪞', bg:'#f0fdf4', color:'#166534' },
+  { key:'split',    label:'분할',       icon:'✂️', bg:'#eff6ff', color:'#1d4ed8' },
+  { key:'merge',    label:'기능통합',   icon:'🔗', bg:'#faf5ff', color:'#7c3aed' },
+  { key:'depend',   label:'대칭파괴',   icon:'⚖️', bg:'#fef9c3', color:'#854d0e' },
 ];
 function renderAsit(data) {
   stageData.asit = data;
@@ -1683,13 +1685,18 @@ function renderAsit(data) {
         <div class="grid-3">
           ${ideas.map((d,i)=>`
             <div class="idea-card" data-idea="${encodeURIComponent(d.name)}">
-              <span class="idea-principle-badge" style="background:${tool.bg};color:${tool.color}">${tool.label}</span>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span class="idea-principle-badge" style="background:${tool.bg};color:${tool.color}">${tool.icon} ${tool.label}</span>
+                ${d.closedWorldCheck === 'YES' ? `<span style="font-size:10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:4px;padding:2px 6px">✅ 폐쇄세계</span>` : ''}
+              </div>
               <div>
                 <div class="idea-num">아이디어 A-${tool.key.slice(0,3).toUpperCase()}${String(i+1).padStart(2,'0')}</div>
                 <div class="idea-name">${d.name}</div>
               </div>
+              ${d.transformation ? `<div style="margin-top:4px;padding:5px 8px;background:#faf5ff;border-radius:6px;font-size:11px;color:#7c3aed"><span style="font-weight:700">🔧 변환:</span> ${d.transformation}</div>` : ''}
               <div class="idea-desc">${d.desc}</div>
-              <div class="pros-cons">
+              ${d.userScenario ? `<div style="margin-top:6px;padding:5px 8px;background:#fffbeb;border-radius:6px;font-size:11px;color:#92400e;line-height:1.5"><span style="font-weight:700">👤 시나리오:</span> ${d.userScenario}</div>` : ''}
+              <div class="pros-cons" style="margin-top:8px">
                 ${d.pros.map(p=>`<span class="pros-tag">✓ ${p}</span>`).join('')}
                 ${d.cons.map(p=>`<span class="cons-tag">✗ ${p}</span>`).join('')}
               </div>
@@ -1844,6 +1851,7 @@ function impactDots(n) {
   return h + '</div>';
 }
 function renderSynthesis(data) {
+  stageData.synth = data;  // 다른 탭·함수에서 참조 가능하도록 저장
   const c = $('tab4-content');
   const rows = data.top10.map((d,i)=>{
     const rankCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
@@ -1851,10 +1859,18 @@ function renderSynthesis(data) {
     const srcBadge = srcInfo
       ? `<span class="src-badge ${srcInfo.source==='TRIZ'?'triz':'asit'}">${srcInfo.sourceFull}</span>`
       : `<span class="src-badge">—</span>`;
+    const principleLabel = d.principleOrTool
+      ? `<div style="font-size:10px;color:#6366f1;margin-top:3px">🔑 ${d.principleOrTool}</div>` : '';
+    const rationale = d.trizRationale
+      ? `<div style="font-size:10px;color:#64748b;margin-top:3px;line-height:1.4">${d.trizRationale.slice(0,80)}${d.trizRationale.length>80?'…':''}</div>` : '';
     return `
       <tr>
         <td><span class="rank-badge ${rankCls}">${i+1}</span></td>
-        <td style="text-align:left;font-weight:600">${d.name}</td>
+        <td style="text-align:left">
+          <div style="font-weight:600">${d.name}</div>
+          ${principleLabel}
+          ${rationale}
+        </td>
         <td>${srcBadge}</td>
         <td><span class="score-cell ${scoreClass(d.planner)}">${d.planner}</span></td>
         <td><span class="score-cell ${scoreClass(d.consultant)}">${d.consultant}</span></td>
@@ -1873,7 +1889,7 @@ function renderSynthesis(data) {
       <table class="report-table">
         <thead>
           <tr>
-            <th>순위</th><th>아이디어명</th><th>출처</th>
+            <th>순위</th><th>아이디어명 / TRIZ·ASIT 근거</th><th>출처</th>
             <th style="color:#c4b5fd">기획자</th>
             <th style="color:#6ee7b7">컨설턴트</th>
             <th style="color:#fcd34d">엔지니어</th>
@@ -1993,37 +2009,34 @@ function getMockData(step, formData) {
       ],
       tools: ['TRIZ 분리원리 (시간/공간)', 'TRIZ 발명원리 #1 분할', 'TRIZ 발명원리 #10 선행조치', 'ASIT 제거', 'ASIT 대칭파괴', 'ASIT 기능통합']
     },
-    triz: [
-      { principle:'분할 원리', name:`${주체} 역할 분리`, desc:`${구성요소}를 기능별로 분리하여, 각 역할이 독립적으로 최적화되도록 구조를 재편합니다. 한쪽이 성장해도 다른 쪽에 부담이 없는 구조를 만듭니다.`, pros:['역할 명확화','독립적 최적화'], cons:['조율 비용 증가','분리 저항'], score:8.2 },
-      { principle:'비대칭 원리', name:`${대상} 맞춤 차별 적용`, desc:`현재 동일하게 적용되는 방식을 ${대상}의 특성·성과·역할에 따라 비대칭적으로 설계합니다. 성과가 높은 쪽에 더 많은 자원을 집중합니다.`, pros:['효율 극대화','성과 기반 운영'], cons:['형평성 이슈','기준 설정 어려움'], score:8.7 },
-      { principle:'통합 원리', name:'직장인 인사이트 레포트', desc:'뉴스를 소비하는 것이 아닌, 직장인의 업무에 직결되는 산업 분석·경쟁사 동향을 주1회 리포트로 통합 제공합니다.', pros:['B2B 확장 가능','실용적 가치'], cons:['전문 에디터 필요','발행 주기 제약'], score:8.5 },
-      { principle:'선행조치 원리', name:'이탈 예측 리텐션 캠페인', desc:'구독 이탈 30일 전 패턴을 AI로 감지하여 선제적으로 맞춤 혜택·콘텐츠 추천을 자동 발송합니다.', pros:['해지율 직접 감소','자동화 가능'], cons:['예측 정확도 의존','남용 시 역효과'], score:9.0 },
-      { principle:'선행조치 원리', name:`${주체} 사전 개입 시스템`, desc:`${지표} 저하 신호를 사전에 감지하여 30일 전부터 맞춤형 개입을 시작합니다. ${대상}이 문제를 인식하기 전에 선제적으로 대응합니다.`, pros:['선제 대응','자동화 가능'], cons:['예측 정확도 의존','남용 시 역효과'], score:9.0 },
-      { principle:'복제 원리', name:`${구성요소} 복제 확장`, desc:`기존 ${구성요소} 중 성과가 높은 요소를 복제·변형하여 다른 맥락에 적용합니다. 새로운 자원 없이 기존 강점을 배가시킵니다.`, pros:['빠른 확장','리스크 낮음'], cons:['차별화 약화'], score:7.8 },
-      { principle:'전환 원리', name:`${대상} 참여 보상 구조`, desc:`${대상}의 활동 자체를 ${지표} 향상에 연결시킵니다. 기여도에 따라 인센티브가 자동으로 부여되는 구조를 만듭니다.`, pros:['자발적 참여','지속가능'], cons:['남발 시 역효과','운영 비용'], score:7.5 },
-      { principle:'통합 원리', name:`${주체} 기능 통합`, desc:`현재 분리된 두 기능을 하나의 주체가 동시에 수행하도록 통합합니다. ${대상}의 접점을 단일화하여 효율을 높입니다.`, pros:['복잡도 감소','효율화'], cons:['단일 실패점'], score:8.1 },
-      { principle:'피드백 원리', name:`${지표} 실시간 피드백`, desc:`${대상}에게 자신의 기여가 ${지표}에 미치는 영향을 실시간으로 보여줍니다. 가시성이 행동 변화를 유도합니다.`, pros:['투명성 향상','동기 부여'], cons:['데이터 인프라 필요'], score:7.3 },
-    ],
+    triz: {ideas:[
+      { principle:'#1 분할 원리', name:`[분할] ${주체} 역할 세분화 구조`, description:`① 메커니즘: 분할 원리(#1)를 적용해 ${구성요소}를 기능별 독립 단위로 분리함으로써 '전체 최적화 vs 개별 성과' 기술 모순을 해소합니다. ② 사용자 경험: 나는 내가 맡은 영역만 집중하면 되기 때문에 시간 낭비 없이 ${지표}에 직접 기여할 수 있습니다. ③ 핵심 변화: 현재 통합 운영 → 기능별 분리 운영으로 각 단위가 독립적으로 최적화됩니다.`, contradiction_resolved:'기술모순 — 전체 통합 vs 개별 최적화', first_action:`이번 주 화요일, 팀장이 ${구성요소}의 역할을 3~5개 범주로 분류하는 워크숍(30분)을 진행한다`, pros:['역할 명확화','독립적 최적화'], cons:['조율 비용 증가','분리 저항'], initial_score:8 },
+      { principle:'#4 비대칭 원리', name:`[비대칭] ${대상} 성과 기반 차별 설계`, description:`① 메커니즘: 비대칭 원리(#4)로 균일 적용 구조를 비대칭화해 '모두에게 동일 vs 성과에 맞게 차별' 물리 모순을 해소합니다. ② 사용자 경험: 나는 내 기여도에 맞는 처우를 받기 때문에 더 열심히 하고 싶다는 동기가 생깁니다. ③ 핵심 변화: 현재 균일 방식 → 성과 기반 비대칭 방식으로 자발적 향상이 유도됩니다.`, contradiction_resolved:'물리모순 — 균일성과 차별성의 동시 충족', first_action:`이번 주 금요일, ${대상} 중 상위 20%의 행동 패턴 데이터를 뽑아 차별화 기준 3가지를 도출한다`, pros:['효율 극대화','성과 기반 운영'], cons:['형평성 이슈','기준 설정 어려움'], initial_score:9 },
+      { principle:'#10 사전 조치 원리', name:`[사전조치] 이탈 신호 30일 전 선제 개입`, description:`① 메커니즘: 사전 조치 원리(#10)를 적용해 ${지표} 저하 징후를 30일 전에 감지하고 선제 대응함으로써 '이탈 발생 후 대응 vs 이탈 전 방지' 기술 모순을 해소합니다. ② 사용자 경험: 내가 불만을 표출하기 전에 이미 맞춤 혜택이 제공되어 "알아서 챙겨주는구나"라는 신뢰가 형성됩니다. ③ 핵심 변화: 현재 사후 대응 → 30일 전 사전 인터셉트로 해지율이 직접 감소합니다.`, contradiction_resolved:'기술모순 — 대응 속도 vs 개입 정확도 / IFR-1 근접', first_action:`기존 ${구성요소} 데이터에서 해지 30일 전 행동 패턴 상위 5개를 이번 주 내 추출해 기준으로 설정한다`, pros:['해지율 직접 감소','자동화 가능'], cons:['예측 정확도 의존','남용 시 역효과'], initial_score:9 },
+      { principle:'#25 자기서비스 원리', name:`[자기서비스] ${주체} 자율 최적화 루프`, description:`① 메커니즘: 자기서비스 원리(#25)를 적용해 시스템이 스스로 ${지표}를 개선하는 피드백 루프를 만듭니다. IFR-1(시스템 스스로 해결)에 가장 근접한 아이디어입니다. ② 사용자 경험: 내가 특별히 요청하지 않아도 내 사용 패턴에 맞는 최적 상태가 자동으로 유지됩니다. ③ 핵심 변화: 현재 수동 개입 → 자동 최적화 루프로 운영 부담 없이 지속 개선됩니다.`, contradiction_resolved:'IFR-1 — 시스템이 스스로 해결', first_action:`현재 ${구성요소}에서 자동화 가능한 반복 작업 2가지를 이번 주에 식별하고 자동화 범위를 확정한다`, pros:['운영 부담 최소화','IFR-1 달성'], cons:['초기 설정 비용','예외 처리 필요'], initial_score:8 },
+      { principle:'#23 피드백 원리', name:`[피드백] ${지표} 실시간 가시화`, description:`① 메커니즘: 피드백 원리(#23)로 ${대상}이 자신의 행동이 ${지표}에 미치는 영향을 실시간으로 볼 수 있게 합니다. ② 사용자 경험: 내가 취한 행동의 결과를 즉시 숫자로 확인할 수 있어 무엇을 더 하고 덜 해야 하는지 스스로 조정합니다. ③ 핵심 변화: 현재 블랙박스 운영 → 투명한 실시간 피드백으로 자발적 행동 변화가 유도됩니다.`, contradiction_resolved:'기술모순 — 투명성 향상 vs 데이터 인프라 부담', first_action:`이번 주 목요일, 기존 데이터베이스에서 ${지표} 관련 지표 3개를 선정하고 간단한 대시보드 초안을 만든다`, pros:['투명성 향상','자발적 동기 부여'], cons:['데이터 인프라 필요','과잉 측정 위험'], initial_score:7 },
+      { principle:'분리원리 (시간 분리)', name:`[시간분리] 기능 단계별 시간 분리 운영`, description:`① 메커니즘: 시간 분리 원리로 '전체 동시 제공 vs 순차 제공' 물리 모순을 해소합니다. ${구성요소}를 동시에 제공하는 대신 단계별로 제공해 각 시점에 최적화된 가치를 전달합니다. ② 사용자 경험: 나는 지금 단계에 꼭 필요한 것만 받기 때문에 정보 과부하 없이 핵심에 집중할 수 있습니다. ③ 핵심 변화: 현재 일괄 제공 → 시간 단계별 최적 제공으로 체험 만족도가 향상됩니다.`, contradiction_resolved:'물리모순 — 많은 정보 vs 간단한 경험의 시간 분리', first_action:`이번 주에 ${대상}의 이용 흐름을 3단계로 구분하고 각 단계에서 가장 필요한 기능 1개를 매핑한다`, pros:['집중도 향상','단계별 최적화'], cons:['전체 그림 파악 어려움'], initial_score:7 },
+    ]},
     asit: {
       removal: [
-        { name:`${구성요소} 핵심 제거`, desc:`현재 ${주체}에서 당연하게 여기던 요소를 제거했을 때 오히려 ${지표}가 향상되는 경우를 탐색합니다. 불필요한 복잡도를 없애 본질에 집중합니다.`, pros:['단순화','비용 절감'], cons:['기존 사용자 저항'], score:8.3 },
-        { name:`${대상} 부담 요소 제거`, desc:`${대상}이 가장 불편하게 느끼는 요소를 완전히 제거합니다. 제거만으로도 ${지표}가 개선되는 효과를 기대할 수 있습니다.`, pros:['즉각적 만족도 향상'], cons:['대체 가치 필요'], score:7.6 },
+        { name:`[제거] 구독 결제 마찰 요소 제거`, tool:'제거', target_element:구성요소, used_elements:[구성요소], transformation:`${구성요소} 중 '구독 관리 UI'를 제거하고, 사용량 기반 자동 갱신으로 대체합니다. 결제 행위 자체를 없애 마찰을 제거합니다.`, description:`AS-IS: 매달 갱신 결제 버튼을 클릭해야 함 → TO-BE: 사용량이 임계치를 넘으면 자동 갱신되어 구독이 끊기지 않습니다. 결제 마찰이 사라지면 해지 이탈의 주요 계기가 제거됩니다.`, user_scenario:`나는 다음 달 구독을 갱신하는 것을 잊고 있었는데, 자동으로 이어져 있어서 끊김 없이 서비스를 이용한다. "요금이 자동으로 처리됐네"라고 확인하고 별다른 불편 없이 계속 사용한다.`, closed_world_check:'YES', pros:['해지 기회 차단','마찰 제로'], cons:['사용자 제어권 감소'], initial_score:8 },
+        { name:`[제거] 불필요 알림 제거`, tool:'제거', target_element:'알림', used_elements:[구성요소], transformation:`현재 발송하는 알림 중 ${지표}와 무관한 알림을 전면 제거합니다. 남은 알림만으로 핵심 가치를 집중 전달합니다.`, description:`AS-IS: 다양한 알림이 무차별 발송됨 → TO-BE: ${지표}에 직접 기여하는 알림 2~3가지만 유지합니다. 알림 피로도가 줄어 실제 클릭률이 향상됩니다.`, user_scenario:`나는 이전보다 알림이 훨씬 줄었는데, 오히려 중요한 알림을 더 잘 확인하게 됐다. 알림이 오면 거의 항상 열어본다.`, closed_world_check:'YES', pros:['알림 피로도 감소','주목도 향상'], cons:['일부 정보 누락 우려'], initial_score:7 },
       ],
       clone: [
-        { name:`고성과 요소 복제`, desc:`${주체} 내에서 ${지표} 기여도가 높은 요소를 복제하여 다른 영역에도 동일하게 적용합니다. 성공 패턴을 시스템화합니다.`, pros:['검증된 방식 확산','빠른 실행'], cons:['맥락 차이 간과'], score:7.9 },
-        { name:`${대상} 역할 복제 분화`, desc:`가장 성과가 좋은 ${대상}의 방식을 다른 구성원에게 복제·적용합니다. 개인 역량을 조직 역량으로 전환합니다.`, pros:['우수 사례 확산'], cons:['표준화 저항'], score:7.2 },
+        { name:`[복제] 기사 요약본 병행 서비스`, tool:'복제', target_element:'기사 콘텐츠', used_elements:['기사 콘텐츠'], transformation:`기존 기사 콘텐츠를 '3문장 요약본'으로 변형 복제해 시간이 없는 독자를 위한 병행 서비스를 만듭니다. 단순 복사가 아닌 역할 차별화(원본 vs 요약)입니다.`, description:`AS-IS: 모든 기사가 동일한 길이로 제공됨 → TO-BE: 각 기사에 원본 + 3문장 요약 병행 제공. 시간이 없는 독자도 핵심을 빠르게 파악할 수 있어 이탈이 줄어듭니다.`, user_scenario:`나는 출근길에 10분밖에 없는데, 요약 버전으로 5개 기사의 핵심을 모두 확인한다. 더 읽고 싶은 기사 1개를 북마크해 저녁에 원본으로 읽는다.`, closed_world_check:'YES', pros:['독자 이탈 감소','체류 시간 향상'], cons:['요약 품질 관리 필요'], initial_score:9 },
+        { name:`[복제] 고성과 ${구성요소} 패턴 복제`, tool:'복제', target_element:구성요소, used_elements:[구성요소], transformation:`${지표} 기여도가 높은 ${구성요소}를 변형 복제해 다른 맥락에 적용합니다. 검증된 성공 패턴을 시스템화합니다.`, description:`AS-IS: 각 요소가 독립적으로 운영됨 → TO-BE: 고성과 패턴을 변형해 다른 영역에 이식합니다.`, user_scenario:`나는 서비스를 이용할 때 예전에 좋았던 경험이 다른 기능에서도 비슷하게 느껴진다. 익숙하고 편안한 느낌이 지속됩니다.`, closed_world_check:'YES', pros:['빠른 품질 향상'], cons:['획일화 위험'], initial_score:7 },
       ],
       split: [
-        { name:`${구성요소} 기능 분리`, desc:`하나의 ${구성요소}가 담당하던 역할을 기능별로 분리하여, 각각 최적화된 형태로 운영합니다. 집중과 전문화를 통해 전체 성과를 높입니다.`, pros:['전문화','최적화'], cons:['조율 비용'], score:8.0 },
-        { name:`시간대별 역할 분리`, desc:`동일한 ${대상}이 시간대·상황에 따라 다른 역할을 수행하도록 분리합니다. 같은 자원으로 더 많은 ${지표}를 달성합니다.`, pros:['자원 효율화'], cons:['집중력 분산'], score:8.4 },
+        { name:`[분할] 뉴스레터-기사 채널 분리`, tool:'분할', target_element:'뉴스레터', used_elements:['뉴스레터','기사 콘텐츠'], transformation:`현재 뉴스레터와 기사가 혼합된 구조를 '발견용 뉴스레터'와 '심화 기사' 두 채널로 기능적 분할합니다.`, description:`AS-IS: 뉴스레터가 기사 본문을 축약해 전달 → TO-BE: 뉴스레터는 발견·탐색 전용, 기사는 심화 독서 전용으로 분리. 각 채널이 역할에 집중해 효과가 극대화됩니다.`, user_scenario:`나는 아침에 뉴스레터로 오늘의 주요 이슈 5개를 훑어보고, 점심에 1~2개만 골라 기사 전문을 읽는다. 정보를 소화하는 리듬이 생겼다.`, closed_world_check:'YES', pros:['채널 역할 명확화','각 채널 효과 극대화'], cons:['채널 간 연결 관리 필요'], initial_score:8 },
+        { name:`[분할] 구독 카테고리 독립 분리`, tool:'분할', target_element:'카테고리 분류', used_elements:['카테고리 분류','기사 콘텐츠'], transformation:`전체 구독을 카테고리별 미니 구독으로 분할합니다. 독자가 관심 분야만 선택해 집중 구독합니다.`, description:`AS-IS: 전체 뉴스를 하나의 구독으로 제공 → TO-BE: 경제/정치/기술 등 카테고리별 독립 구독. 독자가 원하는 것만 받아 만족도가 향상됩니다.`, user_scenario:`나는 경제 뉴스만 필요한데, 경제 카테고리만 구독하니 원치 않는 기사로 피로하지 않다. 구독료도 합리적으로 느껴진다.`, closed_world_check:'YES', pros:['개인화 극대화','가격 유연성'], cons:['수익 분산 우려'], initial_score:8 },
       ],
       merge: [
-        { name:`${주체} 기능 통합`, desc:`현재 분리된 두 역할을 하나의 ${주체}가 동시에 수행하게 합니다. 병목을 제거하고 전달 속도를 높입니다.`, pros:['속도 향상','소통 간소화'], cons:['과부하 위험'], score:7.7 },
-        { name:`${대상} 접점 통합`, desc:`${대상}이 여러 채널을 통해 분산 접근하던 것을 하나로 통합합니다. 일관된 경험과 높은 ${지표}를 동시에 달성합니다.`, pros:['일관성','편의성'], cons:['통합 구현 복잡도'], score:8.6 },
+        { name:`[기능통합] 댓글이 독자 구독 프로필 역할 겸임`, tool:'기능통합', target_element:'댓글', used_elements:['댓글','추천 알고리즘'], transformation:`기존 댓글 섹션이 독자 관심사 프로파일링 기능도 동시에 수행하도록 역할을 추가합니다. 외부 데이터 수집 없이 댓글 참여만으로 개인화가 강화됩니다.`, description:`AS-IS: 댓글은 단순 의견 표출 기능 → TO-BE: 댓글 참여 패턴이 추천 알고리즘 입력값으로도 활용됩니다. 참여할수록 추천 정확도가 높아지는 선순환이 만들어집니다.`, user_scenario:`나는 댓글을 달수록 내 취향에 맞는 기사가 더 잘 추천되는 것을 느낀다. "내가 참여할수록 더 좋아진다"는 생각에 댓글 참여가 늘어난다.`, closed_world_check:'YES', pros:['참여 동기 강화','개인화 정확도 향상'], cons:['댓글 품질 관리 필요'], initial_score:9 },
+        { name:`[기능통합] 검색이 구독 갱신 계기 역할 겸임`, tool:'기능통합', target_element:'검색 기능', used_elements:['검색 기능','구독 관리 UI'], transformation:`검색 결과에서 구독자만 볼 수 있는 기사에 접근 시도 시, 자연스러운 구독 갱신 안내가 나타납니다.`, description:`AS-IS: 검색과 구독 갱신이 분리된 경험 → TO-BE: 검색 행위 자체가 구독 가치를 환기하는 계기가 됩니다.`, user_scenario:`나는 원하는 기사를 검색하다가 구독 전용 콘텐츠를 발견한다. "이게 있었구나" 하며 구독을 갱신하게 된다.`, closed_world_check:'YES', pros:['갱신 동기 자연스럽게 창출'], cons:['불필요한 개입감 주의'], initial_score:7 },
       ],
       depend: [
-        { name:`성과 연동 보상`, desc:`${지표} 달성 수준에 따라 ${대상}의 처우·자원 배분이 자동으로 변화하는 구조를 만듭니다. 성과와 보상의 연동이 자발적 향상을 유도합니다.`, pros:['자발적 동기','공정성'], cons:['기준 설정 어려움'], score:8.8 },
-        { name:`상황 맞춤 대칭파괴`, desc:`현재 모든 ${대상}에게 동일하게 적용되는 방식을 상황·성과에 따라 차별적으로 적용합니다. 획일성을 제거해 전체 ${지표}를 높입니다.`, pros:['효율 극대화'], cons:['형평성 이슈'], score:7.4 },
+        { name:`[대칭파괴] 구독 기간별 비대칭 콘텐츠 우선순위`, tool:'대칭파괴', target_element:'추천 알고리즘', used_elements:['추천 알고리즘','기사 콘텐츠','카테고리 분류'], transformation:`현재 모든 구독자에게 동일하게 적용되는 추천 알고리즘을 구독 기간·참여도에 따라 비대칭적으로 차별화합니다. 장기 구독자에게는 심화 콘텐츠를, 신규 구독자에게는 입문 콘텐츠를 우선 노출합니다.`, description:`AS-IS: 모든 구독자에게 동일한 추천 알고리즘 적용 → TO-BE: 구독 기간(신규/3개월/1년+)에 따라 추천 알고리즘이 달라집니다. 각 구독자 단계에 최적화된 콘텐츠가 제공되어 이탈 동기가 감소합니다.`, user_scenario:`나는 1년째 구독자인데, 처음 구독할 때보다 훨씬 심화된 분석 기사가 추천된다. 나의 성장 수준에 맞게 서비스가 진화하는 느낌이 들어 계속 구독하고 싶다.`, closed_world_check:'YES', pros:['단계별 최적화','장기 구독 동기 강화'], cons:['알고리즘 분기 관리 복잡'], initial_score:8 },
+        { name:`[대칭파괴] 열람 시간대별 비대칭 뉴스레터`, tool:'대칭파괴', target_element:'뉴스레터', used_elements:['뉴스레터','기사 콘텐츠'], transformation:`현재 모든 구독자에게 동일 시간에 발송되는 뉴스레터를 개인의 열람 패턴에 따라 발송 시간을 비대칭화합니다.`, description:`AS-IS: 전체 구독자에게 오전 7시 일괄 발송 → TO-BE: 개인별 최다 열람 시간대에 발송. 열람률과 체류 시간이 모두 향상됩니다.`, user_scenario:`나는 점심 시간에 뉴스를 주로 읽는데, 딱 12시에 뉴스레터가 도착한다. 타이밍이 정확해서 항상 열어보게 된다.`, closed_world_check:'YES', pros:['열람률 향상','개인화 강화'], cons:['발송 스케줄 관리 복잡'], initial_score:8 },
       ],
     },
     evaluation: {
@@ -2117,22 +2130,23 @@ async function checkBackend() {
     const s = await r.json();
     if (!badge) return true;
     if (s.ready === true) {
-      badge.textContent = '✨ Gemini AI';
-      badge.style.background = 'rgba(99,102,241,.35)';
+      const isClaude = s.backend === 'claude';
+      badge.textContent = isClaude ? '✨ Claude AI' : '✨ Gemini AI';
+      badge.style.background = isClaude ? 'rgba(217,119,6,.35)' : 'rgba(99,102,241,.35)';
       badge.style.cursor = 'default';
-      badge.title = `모델: ${s.model || 'gemini-2.5-flash'}`;
+      badge.title = `모델: ${s.model || (isClaude ? 'claude-sonnet-4-6' : 'gemini-2.5-flash')}`;
       return true;
     } else {
       badge.textContent = '⚠️ AI 미연결';
       badge.style.background = 'rgba(239,68,68,.35)';
-      badge.title = 'API 키가 설정되지 않았습니다. ~/.gemini/triz.env 에 GEMINI_API_KEY=AIza... 를 입력하세요. (클릭하면 재확인)';
+      badge.title = 'API 키가 설정되지 않았습니다. (클릭하면 재확인)';
       return false;
     }
   } catch {
     if (badge) {
       badge.textContent = '🎭 데모 모드';
       badge.style.background = 'rgba(100,116,139,.35)';
-      badge.title = 'AI 서버 미연결 — 시뮬레이션 데이터로 동작합니다. 로컬 서버 실행 시 실제 Gemini AI 분석이 가능합니다. (클릭하면 재연결 시도)';
+      badge.title = 'AI 서버 미연결 — 시뮬레이션 데이터로 동작합니다. 로컬 서버 실행 시 Claude / Gemini AI 분석이 가능합니다. (클릭하면 재연결 시도)';
     }
     return false;
   }
@@ -2428,6 +2442,7 @@ function connectSSE(taskId, btn, formData) {
 
 function handleEvent(msg, btn) {
   const { type, step, agent, data } = msg;
+  if (type === 'ping') return;  // 서버 keepalive — 무시
   if (type === 'progress') {
     setAgentState(agent || step, 'running');
     setProgress(step);
@@ -2483,7 +2498,14 @@ function adaptIdea(d) {
     desc: pick(d, 'desc', 'description', '설명') || '',
     pros: asArray(pick(d, 'pros', '장점')),
     cons: asArray(pick(d, 'cons', '단점')),
-    score: pick(d, 'score', '점수') ?? 0,
+    score: pick(d, 'score', '점수', 'initial_score') ?? 0,
+    // 고도화된 필드 추가
+    contradictionResolved: pick(d, 'contradiction_resolved', 'contradictionResolved') || '',
+    firstAction: pick(d, 'first_action', 'firstAction') || '',
+    userScenario: pick(d, 'user_scenario', 'userScenario') || '',
+    transformation: pick(d, 'transformation', '변환') || '',
+    usedElements: asArray(pick(d, 'used_elements', 'usedElements')),
+    closedWorldCheck: pick(d, 'closed_world_check', 'closedWorldCheck') || '',
   };
 }
 
@@ -2498,7 +2520,8 @@ function adaptAsit(d) {
   // 프론트 기대: {removal:[...], clone:[...], split:[...], merge:[...], depend:[...]}
   const out = { removal:[], clone:[], split:[], merge:[], depend:[] };
   const toolMap = {
-    '제거': 'removal', '복제': 'clone', '분할': 'split', '기능통합': 'merge', '속성의존성': 'depend',
+    '제거': 'removal', '복제': 'clone', '분할': 'split', '기능통합': 'merge',
+    '속성의존성': 'depend', '대칭파괴': 'depend', 'Breaking Symmetry': 'depend',
     'removal':'removal','clone':'clone','split':'split','merge':'merge','depend':'depend'
   };
   // 백엔드가 이미 분류된 형태로 보낸 경우 (각 도구가 키로 있는 경우)
@@ -2583,6 +2606,9 @@ function adaptSynthesis(d) {
       avg,
       timing: pick(t,'implementation','timing','실행시기','priority') || '',
       impact: Number(impact) || 3,
+      trizRationale: pick(t,'triz_asit_rationale','trizRationale') || '',
+      principleOrTool: pick(t,'principle_or_tool','principleOrTool') || '',
+      agentTop3Count: Number(pick(t,'agent_top3_count','agentTop3Count') ?? 0),
     };
   });
 
