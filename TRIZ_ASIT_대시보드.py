@@ -733,7 +733,7 @@ async def step_asit(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
 - 5-6: 폐쇄 세계 준수하나 효과 제한적
 - 3-4: 폐쇄 세계 준수 의심 또는 기존 방식 재서술"""
 
-    raw = await call_claude_async(system, user, max_tokens=8192)
+    raw = await call_claude_async(system, user, max_tokens=10000)  # ASIT 10개 × 다필드 (16000은 연결 중단 위험)
     result = parse_json_safe(raw)
 
     await queue.put(sse_event({
@@ -1091,8 +1091,8 @@ async def step_synthesis(
   ]
 }}"""
 
-    # 종합 응답은 Top10 + 인사이트 + next_steps + roadmap 등 매우 김 → 16000 토큰 (Haiku 4.5는 32K 지원)
-    raw = await call_claude_async(system, user, max_tokens=16000)
+    # Top10 + 인사이트 + next_steps 기준 8192 토큰으로 충분 (16000은 연결 중단 위험)
+    raw = await call_claude_async(system, user, max_tokens=8192)
     result = parse_json_safe(raw)
 
     await queue.put(sse_event({
@@ -1477,78 +1477,56 @@ async def action_plan(req: ActionPlanRequest):
         "- '팀 협의 후 진행' → 누가, 언제, 어떤 결정을 내려야 하는가?\n"
     )
 
-    user = f"""아래 Top 10 아이디어를 현장에서 바로 실행 가능한 구체적 계획으로 변환하세요.
+    user = f"""아래 Top 아이디어를 즉시 실행 가능한 계획으로 변환하세요.
 
-## 실행 컨텍스트
-핵심 문제: {req.problem_summary}
-목표: {req.goal}
-현재 보유 자원: {req.existing_elements or "기존 시스템·인력·데이터·콘텐츠"}
-핵심 인사이트:
-{insights_text}
+컨텍스트: {req.problem_summary} / 목표: {req.goal} / 자원: {req.existing_elements or "기존 인력·시스템·데이터"}
 
-## Top 10 아이디어
+아이디어:
 {ideas_text}
 
-## 각 아이디어별 실행 계획 작성 요건
+⚠️ 응답 길이 제한 — 각 항목을 최대한 간결하게 작성:
+- first_action: 1문장 (이번 주 [요일] [역할]이 [행동])
+- application_ideas: 1개만 (title 10자 이내, scenario 1문장, value 1문장)
+- steps: 정확히 3개 (action+who+when만, detail 생략)
+- success_metrics: 1개 ("[지표]: 현재X→목표Y")
+- obstacles: 1개 (problem+solution 각 1문장)
+- resources_needed: 2개 이내
 
-### first_action (첫 행동)
-- 형식: [이번 주/오늘] [누가] [무엇을] [어떻게] 한다
-- 예시: "이번 주 목요일, 편집팀장이 기존 구독 해지 데이터에서 해지 7일 전 행동 패턴 3가지를 뽑아 팀 공유"
-
-### application_ideas (구체적 적용 아이디어, 2~3개)
-각각:
-- title: 구체적 기능/서비스/콘텐츠명 (예: '이탈 예측 이메일 시퀀스')
-- scenario: 사용자가 실제로 경험하는 구체적 장면 (1인칭 현재 시제, 2~3문장)
-  예시: "나는 구독 해지 버튼을 클릭하려는 순간 '당신이 읽은 기사 50개 중 TOP 5'를 보여주는 팝업을 만난다. 잠깐 멈추고 내가 실제로 유익한 정보를 얻었음을 인식한다. '다음 달 한 번 더 해보자'고 마음을 바꾼다."
-- value: 기대 효과 (반드시 수치 목표 포함)
-
-### steps (순차 실행 단계, 3~5개)
-각 단계: action(구체적 행동), detail(어떻게 하는지), who(역할 구체화), when(상대 일정)
-
-### success_metrics (성공 지표, 2개)
-형식: [지표명]: 현재 [현재 값] → 목표 [목표 값] (측정 방법: [어떻게 측정하는가])
-
-### obstacles (예상 장애물과 해결책, 1~2개)
-형식: problem(구체적 장애), solution(구체적 해결책, 현재 자원 기반)
-
-출력 형식 (JSON만):
+출력 JSON (간결하게):
 {{
   "action_plans": [
     {{
       "rank": 1,
       "name": "아이디어명",
-      "avg_score": 8.8,
-      "timing": "즉시(1주 이내)/단기(1개월)/중기(3개월)/장기(6개월)",
-      "triz_asit_principle": "적용된 TRIZ 발명원리 또는 ASIT 도구",
-      "first_action": "이번 주 [요일], [역할]이 [구체적 행동]을 [어떻게] 한다",
+      "avg_score": 8.0,
+      "timing": "즉시/단기/중기/장기",
+      "triz_asit_principle": "원리명",
+      "first_action": "이번 주 [요일], [역할]이 [구체적 행동]",
       "application_ideas": [
         {{
-          "title": "구체적 기능/서비스명",
-          "scenario": "나는(사용자는) [상황]에서 [구체적 경험]을 한다. [그 결과로 일어나는 일]",
-          "value": "[지표]: 현재 [X] → 예상 [Y], 근거: [왜 이 수치가 가능한가]"
+          "title": "서비스명",
+          "scenario": "나는 [상황]에서 [경험]을 한다.",
+          "value": "[지표]: 현재X → 예상Y"
         }}
       ],
       "steps": [
-        {{"step": 1, "action": "구체적 행동명", "detail": "어떻게 하는지 (도구, 방법 포함)", "who": "구체적 역할/부서", "when": "1주차/2주차/1개월 내"}}
+        {{"step":1,"action":"행동명","who":"역할","when":"1주차"}},
+        {{"step":2,"action":"행동명","who":"역할","when":"2주차"}},
+        {{"step":3,"action":"행동명","who":"역할","when":"1개월 내"}}
       ],
-      "resources_needed": ["현재 보유한 구체적 자원 (새 예산 필요시 표기)", "자원2"],
-      "success_metrics": [
-        "[지표명]: 현재 [X] → 목표 [Y] (측정: [방법])",
-        "[지표2]: 현재 [X] → 목표 [Y]"
-      ],
-      "obstacles": [
-        {{"problem": "구체적 예상 장애물", "solution": "현재 자원 기반 구체적 해결책"}}
-      ]
+      "resources_needed": ["자원1","자원2"],
+      "success_metrics": ["[지표]: 현재X → 목표Y"],
+      "obstacles": [{{"problem":"장애물","solution":"해결책"}}]
     }}
   ],
-  "quick_start": "모든 아이디어 중 가장 먼저 할 단 하나의 행동 (오늘 또는 이번 주, 1문장, 매우 구체적)",
-  "30day_sprint": "처음 30일 안에 가시적 결과를 보여줄 수 있는 집중 실행 계획 (3문장)"
+  "quick_start": "오늘 당장 할 1가지 행동 (1문장)",
+  "30day_sprint": "30일 집중 계획 (1문장)"
 }}"""
 
     try:
-        raw = await call_ai_async(system, user, max_tokens=8192)
+        raw = await call_ai_async(system, user, max_tokens=3000)  # Top3 × 간결 계획 완전 출력
         result = parse_json_safe(raw)
-        if "raw" in result:
+        if "raw" in result and len(result) == 1:
             raise ValueError("JSON 파싱 실패")
         return result
     except Exception as e:
