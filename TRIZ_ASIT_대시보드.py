@@ -249,11 +249,18 @@ def _repair_truncated_json(s: str) -> dict:
         raise
 
 
-async def call_ai_async(system: str, user: str, max_tokens: int = 8192) -> str:
-    """AI API 비동기 호출 — Claude 우선, Gemini 폴백."""
+async def call_ai_async(system, user, max_tokens: int = 8192) -> str:
+    """AI API 비동기 호출 — Claude 우선, Gemini 폴백.
+    system/user: str 또는 content blocks list (Claude 프롬프트 캐싱용)
+    """
     if AI_BACKEND == "claude":
         return await _call_claude(system, user, max_tokens)
     elif AI_BACKEND == "gemini":
+        # Gemini는 content blocks 미지원 → plain text로 변환
+        if isinstance(user, list):
+            user = "\n".join(b.get("text", "") for b in user if b.get("type") == "text")
+        if isinstance(system, list):
+            system = "\n".join(b.get("text", "") for b in system if b.get("type") == "text")
         return await _call_gemini(system, user, max_tokens)
     else:
         raise RuntimeError(
@@ -262,15 +269,23 @@ async def call_ai_async(system: str, user: str, max_tokens: int = 8192) -> str:
         )
 
 
-def _call_claude_sync(system: str, user: str, max_tokens: int = 8192) -> str:
-    """Claude Sonnet 동기 호출.
-    - temperature=1 (Claude 기본값, extended thinking 미사용)
+def _call_claude_sync(system, user, max_tokens: int = 8192) -> str:
+    """Claude Sonnet 동기 호출 (프롬프트 캐싱 적용).
+    - system: str → cache_control 자동 적용 / list → content blocks 그대로 전달
+    - user: str → 그대로 전달 / list → content blocks (캐시 분할용)
     - 429/529 과부하는 10→30→60초 재시도 (4회)
     """
     if not client:
         raise RuntimeError("Anthropic 클라이언트가 초기화되지 않았습니다.")
 
     import time
+
+    # system prompt → cache_control 포함 list로 변환 (str인 경우)
+    system_param = (
+        [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+        if isinstance(system, str)
+        else system
+    )
 
     retry_waits = [10, 30, 60, 60]  # 재시도 간격 (초)
     last_err = None
@@ -284,9 +299,16 @@ def _call_claude_sync(system: str, user: str, max_tokens: int = 8192) -> str:
                 model=CLAUDE_MODEL,
                 max_tokens=max_tokens,
                 temperature=1,
-                system=system,
+                system=system_param,
                 messages=[{"role": "user", "content": user}],
             )
+            # 캐시 사용 통계 로깅
+            u = getattr(response, "usage", None)
+            if u:
+                cr = getattr(u, "cache_read_input_tokens", 0) or 0
+                cc = getattr(u, "cache_creation_input_tokens", 0) or 0
+                if cr or cc:
+                    print(f"💾 캐시: 생성={cc:,} / 히트={cr:,} tokens")
             return response.content[0].text
 
         except Exception as e:
@@ -388,7 +410,7 @@ async def _call_gemini(system: str, user: str, max_tokens: int = 8192) -> str:
 
 
 # 하위 호환성 유지 (기존 step_* 함수들이 이 이름으로 호출)
-async def call_claude_async(system: str, user: str, max_tokens: int = 8192) -> str:
+async def call_claude_async(system, user, max_tokens: int = 8192) -> str:
     return await call_ai_async(system, user, max_tokens)
 
 
@@ -562,42 +584,34 @@ async def step_triz(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
 ## IFR (아이디어가 이 방향을 향해야 함)
 {ifr_text}
 
-## 아이디어 도출 요건
-- 최소 3개는 기술 모순 해소 아이디어 (발명원리 적용)
-- 최소 2개는 물리 모순 해소 아이디어 (분리원리 적용)
-- 최소 2개는 IFR-1 또는 IFR-2 수준에 근접하는 아이디어
-- 각 아이디어는 서로 다른 발명원리/분리원리 적용
-- 아이디어명은 추상적 개념이 아닌 구체적 행동명으로 (예: '독자 이탈신호 7일 전 피드백 인터셉트 시스템')
+## 아이디어 도출 요건 (정확히 6개)
+- 2개: 기술 모순 해소 (발명원리 적용)
+- 2개: 물리 모순 해소 (분리원리 적용)
+- 2개: IFR-1 또는 IFR-2 수준에 근접
+- 각 아이디어: 서로 다른 원리 적용
+- 아이디어명: 구체적 행동명 (예: '이탈신호 7일 전 인터셉트')
 
-각 아이디어의 description은 다음 3가지를 포함해야 함:
-  ① 메커니즘: 발명원리가 어떻게 모순을 해소하는지
-  ② 사용자 경험: 최종 사용자가 실제로 경험하는 것 (1인칭 현재 시제)
-  ③ 핵심 변화: 현재 시스템에서 무엇이 어떻게 바뀌는지
+description은 2문장으로 간결하게:
+  ① 메커니즘(모순 해소 방식) ② 핵심 변화(현재→개선)
 
-출력 형식 (JSON만, 최소 9개 아이디어):
+출력 형식 (JSON만, 정확히 6개):
 {{
   "ideas": [
     {{
       "id": 1,
-      "name": "구체적 아이디어명 (행동 기반)",
-      "description": "① 메커니즘: [발명원리가 모순을 어떻게 해소하는가] ② 사용자 경험: [나는 / 독자는 / 직원은 ...한다] ③ 핵심 변화: [현재 A → 개선 후 B]",
-      "principle": "발명원리명 또는 분리원리명 (#번호 포함)",
-      "contradiction_resolved": "기술모순/물리모순/IFR-1/IFR-2/IFR-3 중 어떤 모순을 해소하는가",
-      "first_action": "이번 주에 당장 할 수 있는 가장 작은 행동 (1문장, 동사 시작)",
-      "pros": ["구체적 장점1 (수치 예측 가능하면 포함)", "장점2"],
-      "cons": ["구체적 단점1", "단점2"],
+      "name": "구체적 아이디어명",
+      "description": "① 메커니즘: [해소 방식] ② 핵심 변화: [현재 A → 개선 B]",
+      "principle": "발명원리명 (#번호)",
+      "contradiction_resolved": "기술모순/물리모순/IFR-1/IFR-2 중 하나",
+      "first_action": "이번 주 할 수 있는 행동 1문장",
+      "pros": ["장점1", "장점2"],
+      "cons": ["단점1"],
       "initial_score": 6
     }}
   ]
-}}
+}}"""
 
-점수 기준 (편향 주의 — 7-8점으로 몰아주지 말 것):
-- 9-10: 모순을 완전히 해소하고 IFR에 근접. 즉시 실행 가능. 기존 사례 없음
-- 7-8: 모순을 상당 부분 해소. 6개월 내 실행 가능. 타업계 사례 있음
-- 5-6: 모순을 부분적으로 해소. 구현 난이도 높음
-- 3-4: 모순 해소가 불명확. 기존 방법의 재서술 수준"""
-
-    raw = await call_claude_async(system, user, max_tokens=12000)  # TRIZ 상세 응답 수용
+    raw = await call_claude_async(system, user, max_tokens=4000)  # 6개 × 간결 → 4000
     result = parse_json_safe(raw)
 
     await queue.put(sse_event({
@@ -693,47 +707,35 @@ async def step_asit(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
 ## 폐쇄 세계 목록 (이 요소들만 사용 가능 — ASIT 절대 원칙)
 {elements_label}: {elements_display}
 
-## 도구별 아이디어 배분 요건
-- 제거(Subtraction): 최소 2개
-- 복제(Multiplication): 최소 2개
-- 분할(Division): 최소 2개
-- 기능통합(Task Unification): 최소 2개
-- 대칭파괴(Breaking Symmetry): 최소 2개
+## 도구별 아이디어 배분 (총 6개, 각 도구당 1~2개)
+- 제거·복제·분할·기능통합·대칭파괴 중 6개 선택
 
-## 각 아이디어 필수 포함 내용
-① used_elements: 사용한 폐쇄 세계 요소 목록 (배열)
-② transformation: 요소가 어떻게 변형/재조합되는지 (도구 적용 메커니즘)
-③ description: 변화 전(AS-IS) → 변화 후(TO-BE) 구체적 기술
-④ user_scenario: 최종 사용자가 실제로 경험하는 장면 (1인칭 현재 시제, 2문장)
-⑤ closed_world_check: YES/NO — 모든 요소가 폐쇄 세계 목록 안에 있는가
+## 각 아이디어 필수 (간결하게)
+- used_elements: 사용한 폐쇄 세계 요소 배열
+- transformation: 도구 적용 메커니즘 1문장
+- description: AS-IS → TO-BE 1~2문장
+- closed_world_check: YES/NO
 
-출력 형식 (JSON만, 최소 10개 아이디어):
+출력 형식 (JSON만, 정확히 6개):
 {{
   "ideas": [
     {{
       "id": 1,
-      "name": "구체적 아이디어명 (도구명 포함, 예: '[복제] 요약본 병행 서비스')",
+      "name": "[도구명] 아이디어명",
       "tool": "제거/복제/분할/기능통합/대칭파괴",
-      "target_element": "적용 대상 요소 (폐쇄 세계 목록 내 요소명 그대로)",
-      "used_elements": ["사용한 요소1", "사용한 요소2"],
-      "transformation": "이 도구가 해당 요소에 어떻게 작용하는지 (메커니즘, 1~2문장)",
-      "description": "AS-IS: [현재 상태] → TO-BE: [변화 후 상태]. [추가 설명]",
-      "user_scenario": "나는(또는 독자/직원은) [구체적 행동]을 한다. [그 결과로 경험하는 것]",
+      "target_element": "폐쇄 세계 요소명",
+      "used_elements": ["요소1", "요소2"],
+      "transformation": "도구 적용 메커니즘 1문장",
+      "description": "AS-IS: [현재] → TO-BE: [변화]",
       "closed_world_check": "YES",
-      "pros": ["구체적 장점 (수치 예측 포함)", "장점2"],
-      "cons": ["구체적 단점"],
+      "pros": ["장점1", "장점2"],
+      "cons": ["단점1"],
       "initial_score": 7
     }}
   ]
-}}
+}}"""
 
-점수 기준 (편향 주의):
-- 9-10: 폐쇄 세계 완벽 준수 + 모순 해소 명확 + 즉시 실행 가능
-- 7-8: 폐쇄 세계 준수 + 상당한 가치 창출 + 3개월 내 실행
-- 5-6: 폐쇄 세계 준수하나 효과 제한적
-- 3-4: 폐쇄 세계 준수 의심 또는 기존 방식 재서술"""
-
-    raw = await call_claude_async(system, user, max_tokens=10000)  # ASIT 10개 × 다필드 (16000은 연결 중단 위험)
+    raw = await call_claude_async(system, user, max_tokens=4000)  # 6개 × 간결 → 4000
     result = parse_json_safe(raw)
 
     await queue.put(sse_event({
@@ -745,7 +747,7 @@ async def step_asit(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
 
 
 # ──────────────────────────────────────────────
-# Step 4: 4명 에이전트 동시 평가
+# Step 4: 3명 에이전트 동시 평가 (전략기획자·TRIZ전문가·고객)
 # ──────────────────────────────────────────────
 # 평가 루브릭 — 주관성 제거를 위한 객관 기준 (Altshuller 발명수준 + TRIZ/ASIT 특화)
 EVAL_RUBRIC = """
@@ -782,39 +784,36 @@ EVAL_RUBRIC = """
 최종 점수 = A(30%) + B(20%) + C(35%) + D(15%) 가중평균
 """
 
+# ──────────────────────────────────────────────
+# 3인 평가 에이전트 선정 이유
+#  1. 전략기획자 — 조직 실행 가능성(C 가중치 35%) 집중 검증, 실행 주체·타임라인·예산 제약 판단
+#  2. TRIZ전문가  — 방법론 핵심(A 가중치 30%) 집중 검증, 모순 해소력·발명수준·IFR 이상성 판단
+#  3. 고객        — 최종 가치(D 가중치 15%) 집중 검증, 실사용 체감·전환 의향·편의성 판단
+# ──────────────────────────────────────────────
 AGENT_CONFIGS = {
-    "기획자": (
-        "당신은 미디어·서비스 분야 15년 경력의 전략 기획 전문가입니다.\n"
-        "TRIZ/ASIT를 실무에서 활용한 경험이 있으며, 아이디어의 '조직 실행 가능성'에 가장 엄격합니다.\n"
-        "<role>전략적 방향성, 브랜드 일관성, 실행 주체와 타임라인, 인력/예산 제약 관점에서 평가합니다.\n"
-        "특히 '이 아이디어를 실제로 누가, 언제, 어떻게 실행할 수 있는가'를 집중 검토합니다.\n"
-        "아이디어가 너무 추상적이거나 실행 주체가 불명확하면 가차없이 낮은 점수를 줍니다.</role>\n"
+    "전략기획자": (
+        "당신은 미디어·서비스 분야 15년 경력의 전략 기획·혁신 전문가입니다.\n"
+        "TRIZ/ASIT를 실무에서 활용한 경험이 있으며, 아이디어의 '조직 실행 가능성'과 '전략 정합성'에 가장 엄격합니다.\n"
+        "<role>전략 방향성, 브랜드 일관성, 실행 주체·타임라인, 예산/인력 제약, 조직 변화 저항을 평가합니다.\n"
+        "특히 '이 아이디어를 실제로 누가·언제·어떻게 실행할 수 있는가'를 집중 검토합니다.\n"
+        "아이디어가 추상적이거나 실행 주체가 불명확하면 가차없이 낮은 점수를 줍니다.</role>\n"
         "<output_format>반드시 valid JSON만 출력. 마크다운 코드블록 없이.</output_format>\n"
         + EVAL_RUBRIC
     ),
-    "컨설턴트": (
-        "당신은 McKinsey 출신 10년 경력의 디지털 미디어·플랫폼 전문 컨설턴트입니다.\n"
-        "전략적 차별화, 경쟁 우위, ROI를 기준으로 매우 냉철하게 평가합니다.\n"
-        "<role>시장 포지셔닝, 경쟁사 대비 차별성, ROI 예측, 확장성, 리스크 관점에서 평가합니다.\n"
-        "특히 '이 아이디어가 경쟁사가 6개월 내 따라올 수 있는가'와 '수익 모델이 명확한가'를 검토합니다.\n"
-        "표면적으로 그럴듯하지만 경쟁 우위가 없는 아이디어는 냉정하게 3~5점을 부여합니다.</role>\n"
-        "<output_format>반드시 valid JSON만 출력. 마크다운 코드블록 없이.</output_format>\n"
-        + EVAL_RUBRIC
-    ),
-    "엔지니어": (
-        "당신은 디지털 서비스 플랫폼 시니어 엔지니어(10년+ 경력)입니다.\n"
-        "기술 구현의 현실을 정확히 알며, 과장된 아이디어에 매우 비판적입니다.\n"
-        "<role>기술 구현 난이도, 기존 시스템 통합 가능성, 개발 기간·비용, 유지보수 부담, 확장성을 평가합니다.\n"
-        "특히 '현재 보유 기술 스택으로 실제 구현 가능한가', '6개월 내 MVP 가능한가'를 검토합니다.\n"
-        "기술 용어를 잘못 사용하거나 구현 복잡도를 과소평가한 아이디어에 낮은 점수를 줍니다.</role>\n"
+    "TRIZ전문가": (
+        "당신은 Altshuller TRIZ·Horowitz ASIT 방법론을 20년 이상 현장 적용한 혁신 전문가입니다.\n"
+        "아이디어의 '모순 해소력'과 Altshuller 발명수준(L1~L5)을 최우선 평가 기준으로 삼습니다.\n"
+        "<role>TRIZ 39개 파라미터, 40가지 발명원리, ASIT 5도구, 분리원리, IFR 이상성 관점에서 평가합니다.\n"
+        "특히 '근본 모순(기술·물리)을 실제로 해소하는가', '발명수준(L1~L5)이 어느 수준인가'를 집중 검토합니다.\n"
+        "표면적 개선이나 모순을 다른 곳으로 이동시키는 아이디어에 냉정하게 낮은 점수를 줍니다.</role>\n"
         "<output_format>반드시 valid JSON만 출력. 마크다운 코드블록 없이.</output_format>\n"
         + EVAL_RUBRIC
     ),
     "고객": (
-        "당신은 서비스 분야의 핵심 고객층을 대표하는 실제 사용자입니다.\n"
-        "화려한 기능보다 실제로 내 삶에 유용한지를 가장 중요하게 봅니다.\n"
+        "당신은 서비스 분야 핵심 고객층을 대표하는 실제 사용자입니다.\n"
+        "화려한 기능보다 '실제로 내 삶에 유용한가'를 가장 중요하게 봅니다.\n"
         "<role>실사용 가치, 편의성, 체감 효과, 전환 의향, 차별성 관점에서 평가합니다.\n"
-        "특히 '이 서비스를 위해 내가 행동을 바꿀 의향이 있는가', '불편함 없이 쓸 수 있는가'를 검토합니다.\n"
+        "특히 '이 서비스를 위해 내 행동을 바꿀 의향이 있는가', '불편함 없이 쓸 수 있는가'를 검토합니다.\n"
         "기능은 멋지지만 실제로 쓸 것 같지 않은 아이디어에 솔직하게 낮은 점수를 줍니다.</role>\n"
         "<output_format>반드시 valid JSON만 출력. 마크다운 코드블록 없이.</output_format>\n"
         + EVAL_RUBRIC
@@ -897,7 +896,9 @@ async def evaluate_single_agent(
     else:
         ctx = f"상품: {req.상품명}\n대상: {req.대상}\n가치지표: {req.가치}"
 
-    user = f"""다음 아이디어 목록을 {agent_name} 관점에서 채점 루브릭에 따라 엄격하게 평가하세요.
+    # ── 캐시 분할 ──────────────────────────────────────────────
+    # 공통 부분 (3개 에이전트 동일): 컨텍스트 + 아이디어 목록 → cache_control 적용
+    common_block = f"""다음 아이디어 목록을 채점 루브릭에 따라 엄격하게 평가하세요.
 
 ## 평가 컨텍스트
 {ctx}
@@ -905,9 +906,11 @@ async def evaluate_single_agent(
 목표: {req.목표}
 
 ## 아이디어 목록
-{ideas_text}
+{ideas_text}"""
 
-## 채점 지침 (반드시 준수)
+    # 에이전트별 고유 지침 (캐시 불가 — agent_name 포함)
+    agent_block = f"""
+## 채점 지침 ({agent_name} 관점에서 수행, 반드시 준수)
 - score = A모순해소(30%) + B신규성(20%) + C실현가능성(35%) + D가치기여도(15%) 가중평균
 - novelty_level: "L1(기존재서술)" / "L2(기존개선)" / "L3(타분야도입)" / "L4(새시스템)" / "L5(혁신)" 중 선택
 - feasibility_check: 4항목 중 충족 수 (0~4), 각 항목 충족 여부 명시
@@ -941,8 +944,14 @@ async def evaluate_single_agent(
   "hidden_gem": "점수는 낮지만 잠재력이 있어 추가 검토 가치가 있는 아이디어 (있으면)"
 }}"""
 
-    # 평가 응답: 16개 아이디어 × 에이전트당 출력 압축 → 4096으로 제한해 TPM 절약
-    raw = await call_claude_async(system, user, max_tokens=4096)
+    # 공통 블록은 캐시(3 에이전트 공유), 에이전트 지침 블록은 비캐시
+    user_content = [
+        {"type": "text", "text": common_block, "cache_control": {"type": "ephemeral"}},
+        {"type": "text", "text": agent_block},
+    ]
+
+    # 평가 응답: 12개 아이디어(6TRIZ+6ASIT) × 에이전트당 출력 압축 → 4096으로 제한해 TPM 절약
+    raw = await call_claude_async(system, user_content, max_tokens=4096)
     result = parse_json_safe(raw)
     return agent_name, result
 
@@ -958,7 +967,7 @@ async def step_evaluation(
         "step": "evaluation",
         "status": "start",
         "agent": "마스터",
-        "message": "4명 에이전트 동시 평가 시작...",
+        "message": "3명 에이전트 동시 평가 시작...",
     }))
 
     # 전체 아이디어 합산
@@ -973,20 +982,26 @@ async def step_evaluation(
     for i, idea in enumerate(asit_ideas):
         merged_ideas.append({**idea, "id": offset + i + 1, "source": "ASIT"})
 
-    # 순차 실행: 출력 TPM 한도를 피하기 위해 한 명씩 실행하고 30초 간격
-    # (8192 토큰 응답을 연속으로 4번 → TPM 초과 위험)
+    # 병렬 실행: 3명 에이전트를 동시에 실행 (2초 스태거로 TPM 분산)
     evaluation_data = {}
     agents_list = list(AGENT_CONFIGS.items())
-    for i, (name, system_prompt) in enumerate(agents_list):
-        try:
-            agent_name, agent_result = await evaluate_single_agent(name, system_prompt, merged_ideas, req, queue)
+
+    async def _staggered_eval(idx: int, name: str, system_prompt: str):
+        if idx > 0:
+            await asyncio.sleep(idx * 2)  # 0 / 2 / 4 / 6초 스태거
+        return await evaluate_single_agent(name, system_prompt, merged_ideas, req, queue)
+
+    tasks_eval = [
+        _staggered_eval(i, name, sp)
+        for i, (name, sp) in enumerate(agents_list)
+    ]
+    results = await asyncio.gather(*tasks_eval, return_exceptions=True)
+    for result in results:
+        if isinstance(result, Exception):
+            print(f"⚠️  평가 실패: {result}")
+        else:
+            agent_name, agent_result = result
             evaluation_data[agent_name] = agent_result
-        except Exception as e:
-            evaluation_data[name] = {"raw": "", "error": str(e)}
-            print(f"⚠️  {name} 평가 실패: {e}")
-        # 마지막 호출 빼고 다음 호출 전 30초 대기 (출력 TPM 안전 마진)
-        if i < len(agents_list) - 1:
-            await asyncio.sleep(30)
 
     await queue.put(sse_event({
         "type": "result",
@@ -1015,14 +1030,14 @@ async def step_synthesis(
 
     system = (
         "당신은 TRIZ/ASIT 분석 종합 전문가이자 실행 전략가입니다.\n"
-        "4명의 다른 관점에서 나온 평가를 단순 평균하는 것이 아니라, "
+        "3명의 다른 관점에서 나온 평가를 단순 평균하는 것이 아니라, "
         "TRIZ/ASIT 방법론 관점에서 '모순 해소력이 높고 실행 가능한' 아이디어를 선별해야 합니다.\n"
         "반드시 valid JSON만 출력하세요.\n\n"
         "# 종합 선별 원칙\n"
         "1. 모순 해소력 우선: TRIZ/ASIT 관점에서 근본 모순을 해소하는 아이디어를 최우선\n"
         "2. 실행 다양성: 단기/중기/장기 실행 아이디어가 골고루 포함되도록\n"
         "3. 소스 다양성: TRIZ와 ASIT 아이디어가 혼합되도록\n"
-        "4. 에이전트 컨센서스: 4명 중 3명 이상이 높게 평가한 아이디어 우선\n"
+        "4. 에이전트 컨센서스: 3명 중 2명 이상이 높게 평가한 아이디어 우선\n"
         "5. 숨은 보석 발굴: 평균 점수는 낮지만 특정 에이전트가 강력 추천한 아이디어 검토\n"
     )
     eval_text = json.dumps(evaluation_data, ensure_ascii=False, indent=2)
@@ -1034,7 +1049,7 @@ async def step_synthesis(
     else:
         ctx = f"매체: {req.매체} / 상품: {req.상품명} / 대상: {req.대상} / KPI: {req.가치}"
 
-    user = f"""4명 에이전트 평가 결과와 전체 아이디어를 TRIZ/ASIT 전문가 관점으로 종합하여 최종 Top 10을 선정하세요.
+    user = f"""3명 에이전트(전략기획자·TRIZ전문가·고객) 평가 결과와 전체 아이디어를 TRIZ/ASIT 전문가 관점으로 종합하여 최종 Top 10을 선정하세요.
 
 ## 분석 컨텍스트
 {ctx}
@@ -1049,7 +1064,7 @@ async def step_synthesis(
 
 ## Top 10 선별 기준 (이 순서로 적용)
 1. contradiction_score 합계가 높은 아이디어 (모순 해소력)
-2. 4명 에이전트 중 top3에 포함된 횟수
+2. 3명 에이전트 중 top3에 포함된 횟수
 3. feasibility_check 평균값 (실행 가능성)
 4. 소스 다양성 (TRIZ와 ASIT 혼합)
 5. 단기/중기/장기 균형
@@ -1064,7 +1079,7 @@ async def step_synthesis(
       "description": "아이디어 핵심 내용 (원본 description을 그대로 포함 + 선정 이유 1문장 추가)",
       "triz_asit_rationale": "왜 TRIZ/ASIT 관점에서 이 아이디어가 우수한가 (모순 해소 방식 포함)",
       "avg_score": 8.5,
-      "scores": {{"기획자": 9, "컨설턴트": 8, "엔지니어": 7, "고객": 9}},
+      "scores": {{"전략기획자": 9, "TRIZ전문가": 8, "고객": 9}},
       "agent_top3_count": 3,
       "consensus": "높음/보통/낮음",
       "implementation": "단기(1-3개월)/중기(3-6개월)/장기(6개월+)",
@@ -1091,8 +1106,8 @@ async def step_synthesis(
   ]
 }}"""
 
-    # Top10 + 인사이트 + next_steps 기준 8192 토큰으로 충분 (16000은 연결 중단 위험)
-    raw = await call_claude_async(system, user, max_tokens=8192)
+    # Top10 선정 + 인사이트 + next_steps — 아이디어 수 감소로 4096으로 충분
+    raw = await call_claude_async(system, user, max_tokens=4096)
     result = parse_json_safe(raw)
 
     await queue.put(sse_event({
@@ -1111,19 +1126,19 @@ async def run_analysis_pipeline(task_id: str, req: AnalyzeRequest):
     try:
         # Step 1
         problem = await step_problem(req, queue)
-        await asyncio.sleep(5)  # rate limit 안전 마진
+        await asyncio.sleep(2)
 
         # Step 2
         triz_result = await step_triz(req, problem, queue)
-        await asyncio.sleep(8)  # TRIZ 출력이 크므로 더 긴 대기
+        await asyncio.sleep(2)
 
         # Step 3
         asit_result = await step_asit(req, problem, queue)
-        await asyncio.sleep(30)  # ASIT 출력 토큰 소진 후 TPM 회복 대기
+        await asyncio.sleep(3)
 
-        # Step 4
+        # Step 4 (병렬 평가)
         evaluation_data, merged_ideas = await step_evaluation(req, triz_result, asit_result, queue)
-        await asyncio.sleep(10)
+        await asyncio.sleep(2)
 
         # Step 5
         await step_synthesis(req, evaluation_data, merged_ideas, queue)
@@ -1234,23 +1249,31 @@ async def stream(task_id: str):
     queue = tasks[task_id]
 
     async def event_generator():
+        completed = False
         try:
             while True:
                 try:
-                    # 15초 대기 후 keepalive 핑 전송 (긴 단계 사이 연결 유지)
-                    item = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    # 5초 대기 후 keepalive 핑 전송 (Railway 프록시 타임아웃 방지)
+                    item = await asyncio.wait_for(queue.get(), timeout=5.0)
                 except asyncio.TimeoutError:
-                    # SSE 코멘트 대신 실제 data 이벤트로 ping → 브라우저 onerror 방지
                     import json as _json
                     yield f"data: {_json.dumps({'type': 'ping'})}\n\n"
                     continue
                 if item is None:
-                    # 스트림 종료
+                    # 분석 파이프라인 정상 완료 → 태스크 즉시 정리
+                    completed = True
                     break
                 yield item
         finally:
-            # 클린업
-            tasks.pop(task_id, None)
+            if completed:
+                # 정상 완료: 즉시 정리
+                tasks.pop(task_id, None)
+            else:
+                # 클라이언트 연결 끊김 (중간 단절): 30초 유지 후 정리 → 브라우저 재연결 허용
+                async def _delayed_cleanup():
+                    await asyncio.sleep(30)
+                    tasks.pop(task_id, None)
+                asyncio.create_task(_delayed_cleanup())
 
     return StreamingResponse(
         event_generator(),
@@ -1446,7 +1469,7 @@ async def framework_feedback(req: FrameworkFeedbackRequest):
 # 실행 아이디어 (구체적 실행 계획 생성)
 # ──────────────────────────────────────────────
 class ActionPlanRequest(BaseModel):
-    top10: list = []           # [{name, avg_score, timing, scores:{기획자,컨설턴트,엔지니어,고객}}]
+    top10: list = []           # [{name, avg_score, timing, scores:{전략기획자,TRIZ전문가,고객}}]
     problem_summary: str = ""
     goal: str = ""
     existing_elements: str = ""  # ASIT 폐쇄 세계 조건용 (쉼표 구분)

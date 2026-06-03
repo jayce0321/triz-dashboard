@@ -17,9 +17,10 @@
   --brand-dark: #1a50b0;
   --brand-light: #e8f0fd;
   --planner: #7c3aed;
+  --trizexpert: #dc2626;
+  --customer: #0891b2;
   --consultant: #059669;
   --engineer: #d97706;
-  --customer: #0891b2;
   --bg: #f8fafc;
   --surface: #ffffff;
   --border: #e2e8f0;
@@ -586,7 +587,7 @@ body {
   margin-bottom: 12px;
 }
 .contradiction-card.tech { border-color: var(--brand); }
-.contradiction-card.phys { border-color: var(--engineer); }
+.contradiction-card.phys { border-color: #d97706; }
 
 .ifr-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 16px 0; }
 .ifr-card {
@@ -1304,8 +1305,8 @@ body {
       <div class="agent-card" id="ac-eval">
         <div class="agent-icon">👥</div>
         <div class="agent-info">
-          <div class="agent-name">4인 평가단</div>
-          <div class="agent-status">기획·컨설턴트·엔지니어·고객</div>
+          <div class="agent-name">3인 평가단</div>
+          <div class="agent-status">전략기획자·TRIZ전문가·고객</div>
         </div>
         <div class="agent-dot"></div>
       </div>
@@ -1367,7 +1368,7 @@ body {
       <div class="tab-pane" id="tab-3">
         <div id="tab3-placeholder" class="placeholder-box">
           <div class="placeholder-icon">👥</div>
-          <div class="placeholder-text">4인 에이전트 평가 결과가 여기에 표시됩니다</div>
+          <div class="placeholder-text">3인 에이전트 평가 결과가 여기에 표시됩니다</div>
           <div class="placeholder-sub">분석 완료 후 각 에이전트의 평가를 확인하세요</div>
         </div>
         <div id="tab3-content" style="display:none"></div>
@@ -1634,6 +1635,7 @@ function renderTriz(ideas) {
         </div>
         <div class="idea-desc">${d.desc}</div>
         ${d.contradictionResolved ? `<div style="margin-top:6px;padding:5px 8px;background:#eff6ff;border-radius:6px;font-size:11px;color:#1d4ed8"><span style="font-weight:700">🎯 모순 해소:</span> ${d.contradictionResolved}</div>` : ''}
+        ${d.userScenario ? `<div style="margin-top:6px;padding:5px 8px;background:#fffbeb;border-radius:6px;font-size:11px;color:#92400e;line-height:1.5"><span style="font-weight:700">👤 시나리오:</span> ${d.userScenario}</div>` : ''}
         ${d.firstAction ? `<div style="margin-top:6px;padding:5px 8px;background:#f0fdf4;border-radius:6px;font-size:11px;color:#166534"><span style="font-weight:700">⚡ 첫 행동:</span> ${d.firstAction}</div>` : ''}
         <div>
           <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:5px;margin-top:8px">장점 / 단점</div>
@@ -1710,10 +1712,9 @@ function renderAsit(data) {
 
 /* ===== 에이전트 점수 → 아이디어 카드 주입 ===== */
 const agentCfg = [
-  { key:'planner',    short:'기획자', color:'#7c3aed' },
-  { key:'consultant', short:'컨설턴트', color:'#059669' },
-  { key:'engineer',   short:'엔지니어', color:'#d97706' },
-  { key:'customer',   short:'고객',   color:'#0891b2' },
+  { key:'planner',    short:'전략기획자', color:'#7c3aed' },
+  { key:'trizexpert', short:'TRIZ전문가', color:'#dc2626' },
+  { key:'customer',   short:'고객',      color:'#0891b2' },
 ];
 function injectAgentScores(evalData) {
   stageData.evaluation = evalData;
@@ -1770,9 +1771,8 @@ function renderMatrix(evalData) {
             <thead>
               <tr>
                 <th>아이디어명</th><th>출처</th>
-                <th style="color:#c4b5fd">기획자</th>
-                <th style="color:#6ee7b7">컨설턴트</th>
-                <th style="color:#fcd34d">엔지니어</th>
+                <th style="color:#c4b5fd">전략기획자</th>
+                <th style="color:#fca5a5">TRIZ전문가</th>
                 <th style="color:#67e8f9">고객</th>
                 <th>초기점수</th>
               </tr>
@@ -1787,9 +1787,8 @@ function renderMatrix(evalData) {
 
 /* ===== 탭4: 에이전트 평가 렌더 ===== */
 const evalAgents = [
-  { key:'planner',    label:'기획자 에이전트',     icon:'📊', color:'var(--planner)' },
-  { key:'consultant', label:'컨설턴트 에이전트',   icon:'💼', color:'var(--consultant)' },
-  { key:'engineer',   label:'엔지니어 에이전트',   icon:'⚙️', color:'var(--engineer)' },
+  { key:'planner',    label:'전략기획자 에이전트', icon:'📊', color:'var(--planner)' },
+  { key:'trizexpert', label:'TRIZ전문가 에이전트', icon:'🔬', color:'var(--trizexpert)' },
   { key:'customer',   label:'고객 에이전트',       icon:'🙋', color:'var(--customer)' },
 ];
 function renderEvaluation(data) {
@@ -1797,7 +1796,7 @@ function renderEvaluation(data) {
   c.innerHTML = `<div class="eval-grid">${evalAgents.map(ag=>{
     const d = data[ag.key];
     if (!d) return `<div class="eval-panel"><div class="eval-header" style="border-left:4px solid ${ag.color}"><span>${ag.icon}</span><span class="eval-header-name">${ag.label}</span></div><div class="eval-body"><p class="eval-summary">데이터 없음</p></div></div>`;
-    const barColor = ag.key==='planner'?'#7c3aed': ag.key==='consultant'?'#059669': ag.key==='engineer'?'#d97706':'#0891b2';
+    const barColor = ag.key==='planner'?'#7c3aed': ag.key==='trizexpert'?'#dc2626':'#0891b2';
     return `
       <div class="eval-panel" style="border-color:${ag.color}">
         <div class="eval-header" style="border-left:4px solid ${ag.color}">
@@ -1852,8 +1851,10 @@ function renderSynthesis(data) {
   const rows = data.top10.map((d,i)=>{
     const rankCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
     const srcInfo = stageData.allIdeas.find(x=>x.name===d.name);
-    const srcBadge = srcInfo
-      ? `<span class="src-badge ${srcInfo.source==='TRIZ'?'triz':'asit'}">${srcInfo.sourceFull}</span>`
+    const srcSource = srcInfo?.source || d.source || '';
+    const srcFull = srcInfo?.sourceFull || srcSource;
+    const srcBadge = srcSource
+      ? `<span class="src-badge ${srcSource==='TRIZ'?'triz':'asit'}">${srcFull}</span>`
       : `<span class="src-badge">—</span>`;
     const principleLabel = d.principleOrTool
       ? `<div style="font-size:10px;color:#6366f1;margin-top:3px">🔑 ${d.principleOrTool}</div>` : '';
@@ -1869,8 +1870,7 @@ function renderSynthesis(data) {
         </td>
         <td>${srcBadge}</td>
         <td><span class="score-cell ${scoreClass(d.planner)}">${d.planner}</span></td>
-        <td><span class="score-cell ${scoreClass(d.consultant)}">${d.consultant}</span></td>
-        <td><span class="score-cell ${scoreClass(d.engineer)}">${d.engineer}</span></td>
+        <td><span class="score-cell ${scoreClass(d.trizexpert)}">${d.trizexpert}</span></td>
         <td><span class="score-cell ${scoreClass(d.customer)}">${d.customer}</span></td>
         <td><span class="score-cell ${scoreClass(d.avg)}">${d.avg.toFixed(1)}</span></td>
         <td><span class="timing-badge">${d.timing}</span></td>
@@ -1886,9 +1886,8 @@ function renderSynthesis(data) {
         <thead>
           <tr>
             <th>순위</th><th>아이디어명 / TRIZ·ASIT 근거</th><th>출처</th>
-            <th style="color:#c4b5fd">기획자</th>
-            <th style="color:#6ee7b7">컨설턴트</th>
-            <th style="color:#fcd34d">엔지니어</th>
+            <th style="color:#c4b5fd">전략기획자</th>
+            <th style="color:#fca5a5">TRIZ전문가</th>
             <th style="color:#67e8f9">고객</th>
             <th>평균</th><th>실행시기</th><th>임팩트</th>
           </tr>
@@ -1940,9 +1939,9 @@ function exportReport() {
 
 ## Top 10 아이디어 순위
 
-| 순위 | 아이디어명 | 기획자 | 컨설턴트 | 엔지니어 | 고객 | 평균 | 실행시기 | 임팩트 |
-|------|-----------|--------|----------|---------|------|------|---------|--------|
-${d.top10.map((r,i)=>`| ${i+1} | ${r.name} | ${r.planner} | ${r.consultant} | ${r.engineer} | ${r.customer} | ${r.avg.toFixed(1)} | ${r.timing} | ${'★'.repeat(r.impact)} |`).join('\n')}
+| 순위 | 아이디어명 | 전략기획자 | TRIZ전문가 | 고객 | 평균 | 실행시기 | 임팩트 |
+|------|-----------|-----------|-----------|------|------|---------|--------|
+${d.top10.map((r,i)=>`| ${i+1} | ${r.name} | ${r.planner} | ${r.trizexpert} | ${r.customer} | ${r.avg.toFixed(1)} | ${r.timing} | ${'★'.repeat(r.impact)} |`).join('\n')}
 
 ---
 
@@ -2045,22 +2044,13 @@ function getMockData(step, formData) {
           {name:'요소 분리', score:8.4}, {name:'복제 확산', score:8.6}, {name:'사전 개입', score:8.2},
         ]
       },
-      consultant: {
-        summary: `경쟁·시장 관점에서, "${목표}"를 달성하려면 ${대상}이 자발적으로 참여하는 구조가 필수입니다. 외부 자원 없이 내부 역량만으로 해결하는 ASIT 접근이 가장 현실적입니다.`,
-        top3: [`${대상} 접점 통합`, `고성과 요소 복제 확산`, `성과 연동 보상`],
-        concern: `단기 지표 개선에 집착하다 ${주체}의 장기 역량 저하를 초래할 가능성에 주의해야 합니다.`,
+      trizexpert: {
+        summary: `TRIZ/ASIT 방법론 관점에서, 이 문제의 핵심 모순은 "${문제현상}"에 내재된 기술·물리 모순입니다. 분리원리와 ASIT 폐쇄 세계 조건을 적용하면 추가 자원 없이 해결 가능합니다.`,
+        top3: [`${주체} 역할 비대칭 재설계`, `${구성요소} 기능 분리·전문화`, `${지표} 실시간 피드백`],
+        concern: `일부 아이디어가 모순을 해소하는 것이 아닌 단순히 다른 곳으로 이동시키는 수준(L1)에 머물고 있습니다.`,
         scores: [
-          {name:'접점 통합', score:8.6}, {name:'복제 확산', score:8.5}, {name:'성과 연동', score:9.0},
-          {name:'기능 통합', score:8.7}, {name:'역할 분리', score:8.2}, {name:'사전 개입', score:8.1},
-        ]
-      },
-      engineer: {
-        summary: `기술·실행 관점에서, 기존 ${구성요소} 내에서 가장 빠르게 적용 가능한 아이디어는 "역할 분리"와 "성과 피드백 시스템"입니다. 추가 예산 없이 프로세스 변경만으로 가능합니다.`,
-        top3: [`시간대별 역할 분리`, `${지표} 실시간 피드백`, `핵심 요소 제거`],
-        concern: `실시간 피드백 시스템 구축에 데이터 인프라 정비가 선행되어야 합니다.`,
-        scores: [
-          {name:'역할 분리', score:9.0}, {name:'실시간 피드백', score:8.1}, {name:'기능 통합', score:8.7},
-          {name:'요소 분리', score:8.4}, {name:'접점 통합', score:7.0}, {name:'맞춤 대칭파괴', score:7.4},
+          {name:`${주체} 역할 재설계`, score:9.0}, {name:'성과 연동 보상', score:7.5}, {name:'기능 통합', score:8.7},
+          {name:'요소 분리', score:8.4}, {name:'복제 확산', score:7.8}, {name:'사전 개입', score:8.3},
         ]
       },
       customer: {
@@ -2075,16 +2065,16 @@ function getMockData(step, formData) {
     },
     synthesis: {
       top10: [
-        {name:`${주체} 역할 비대칭 재설계`, planner:9.0, consultant:9.0, engineer:9.0, customer:8.0, avg:8.75, timing:'즉시', impact:5},
-        {name:'성과 연동 보상 구조', planner:8.8, consultant:8.0, engineer:7.5, customer:8.8, avg:8.28, timing:'1개월', impact:5},
-        {name:`${지표} 실시간 피드백`, planner:8.7, consultant:8.7, engineer:8.7, customer:7.5, avg:8.40, timing:'즉시', impact:5},
-        {name:`${대상} 접점 통합`, planner:8.6, consultant:8.6, engineer:7.0, customer:7.8, avg:8.00, timing:'2개월', impact:4},
-        {name:`${구성요소} 기능 분리`, planner:8.4, consultant:7.5, engineer:8.4, customer:8.4, avg:8.18, timing:'1개월', impact:4},
-        {name:'고성과 요소 복제 확산', planner:8.5, consultant:8.5, engineer:7.8, customer:7.2, avg:8.00, timing:'2개월', impact:4},
-        {name:`부담 요소 완전 제거`, planner:8.3, consultant:7.5, engineer:8.0, customer:8.3, avg:8.03, timing:'즉시', impact:3},
-        {name:'사전 개입 시스템', planner:8.1, consultant:8.1, engineer:8.1, customer:8.1, avg:8.10, timing:'1개월', impact:4},
-        {name:'시간대별 역할 분리', planner:7.9, consultant:7.5, engineer:7.5, customer:7.0, avg:7.48, timing:'즉시', impact:3},
-        {name:'맞춤 대칭파괴 구조', planner:7.3, consultant:7.5, engineer:6.5, customer:7.0, avg:7.08, timing:'2개월', impact:3},
+        {name:`${주체} 역할 비대칭 재설계`, planner:9.0, trizexpert:9.0, customer:8.0, avg:8.67, timing:'즉시', impact:5},
+        {name:'성과 연동 보상 구조', planner:8.8, trizexpert:7.5, customer:8.8, avg:8.37, timing:'1개월', impact:5},
+        {name:`${지표} 실시간 피드백`, planner:8.7, trizexpert:8.3, customer:7.5, avg:8.17, timing:'즉시', impact:5},
+        {name:`${대상} 접점 통합`, planner:8.6, trizexpert:8.4, customer:7.8, avg:8.27, timing:'2개월', impact:4},
+        {name:`${구성요소} 기능 분리`, planner:8.4, trizexpert:8.4, customer:8.4, avg:8.40, timing:'1개월', impact:4},
+        {name:'고성과 요소 복제 확산', planner:8.5, trizexpert:7.8, customer:7.2, avg:7.83, timing:'2개월', impact:4},
+        {name:`부담 요소 완전 제거`, planner:8.3, trizexpert:8.0, customer:8.3, avg:8.20, timing:'즉시', impact:3},
+        {name:'사전 개입 시스템', planner:8.1, trizexpert:8.3, customer:8.1, avg:8.17, timing:'1개월', impact:4},
+        {name:'시간대별 역할 분리', planner:7.9, trizexpert:7.5, customer:7.0, avg:7.47, timing:'즉시', impact:3},
+        {name:'맞춤 대칭파괴 구조', planner:7.3, trizexpert:7.8, customer:7.0, avg:7.37, timing:'2개월', impact:3},
       ],
       quickWins: [
         `${주체} 내 고성과 패턴 즉시 복제 → ${대상} 전체 적용 (예상 효과: ${지표} 단기 개선)`,
@@ -2442,16 +2432,39 @@ function connectSSE(taskId, btn, formData) {
     const isPermanent = eventSource.readyState === 2;
     if (!isPermanent) {
       sseErrorCount++;
-      if (sseErrorCount < 3) return;  // 일시적 중단: 자동 재연결 허용
+      if (sseErrorCount < 8) return;  // 일시적 중단: 자동 재연결 허용 (Railway 프록시 대응)
     }
 
     // 영구 오류 or 3회 연속 실패 → 처리
     eventSource.close(); eventSource = null;
-    const hasRealData = window.__rawBackend && Object.keys(window.__rawBackend).length > 0;
-    if (hasRealData) {
-      addLog('[안내] 서버 연결이 끊겼습니다. 받은 결과까지만 표시합니다.', 'error');
+    const receivedSteps = Object.keys(window.__rawBackend || {});
+    const allSteps = ['problem','triz','asit','evaluation','synthesis'];
+    const missingSteps = allSteps.filter(s => !receivedSteps.includes(s));
+
+    if (receivedSteps.length > 0 && missingSteps.length > 0) {
+      // 일부 결과 수신 후 연결 끊김 → 미완료 단계를 데모 데이터로 채움
+      addLog(`[안내] 서버 연결이 끊겼습니다. 미완료 단계(${missingSteps.join(',')})는 데모 데이터로 채웁니다.`, 'error');
+      missingSteps.forEach(step => {
+        const demoData = getMockData(step, currentFormData);
+        if (demoData) processResult(step, demoData);
+      });
       btn.disabled = false;
       btn.textContent = '🚀 AI 에이전트 분석 시작';
+      return;
+    }
+    if (receivedSteps.length > 0) {
+      // 일부 결과 수신됨 → 미완료 단계도 데모 데이터로 채움
+      const missing2 = allSteps.filter(s => !Object.keys(window.__rawBackend||{}).includes(s));
+      if (missing2.length > 0) {
+        addLog(`[안내] 연결 끊김. 미완료(${missing2.join(',')}) 데모 데이터로 채웁니다.`, 'error');
+        missing2.forEach(step => {
+          const d = getMockData(step, currentFormData);
+          if (d) processResult(step, d);
+        });
+      } else {
+        addLog('[안내] 서버 연결이 끊겼습니다. 받은 결과까지만 표시합니다.', 'error');
+      }
+      if (btn) { btn.disabled = false; btn.textContent = '🚀 AI 에이전트 분석 시작'; }
       return;
     }
     addLog('[안내] AI 서버 응답이 없어 데모 모드로 전환됩니다.', 'error');
@@ -2561,11 +2574,11 @@ function adaptAsit(d) {
 
 function adaptEvaluation(d) {
   // 백엔드 실제 스키마:
-  //   {기획자|컨설턴트|엔지니어|고객: {
+  //   {전략기획자|TRIZ전문가|고객: {
   //     agent, overall_assessment, evaluations:[{id,name,score,...}], top3_ids:[N,N,N], key_concerns:[]
   //   }}
   // 프론트 기대: {planner:{summary, top3:[string], concern, scores:[{name,score}]}, ...}
-  const map = { planner:['기획자','planner'], consultant:['컨설턴트','consultant'], engineer:['엔지니어','engineer'], customer:['고객','customer'] };
+  const map = { planner:['전략기획자','planner'], trizexpert:['TRIZ전문가','trizexpert'], customer:['고객','customer'] };
   const out = {};
   for (const [engKey, [korKey, enKey]] of Object.entries(map)) {
     const raw = d?.[korKey] ?? d?.[enKey] ?? null;
@@ -2598,7 +2611,7 @@ function adaptEvaluation(d) {
 
 function adaptSynthesis(d) {
   // 백엔드 실제 스키마:
-  //   final_top10: [{rank, id, name, description, avg_score, scores:{기획자,컨설턴트,엔지니어,고객}, consensus, implementation, impact("높음"|"보통"|"낮음"), source}]
+  //   final_top10: [{rank, id, name, description, avg_score, scores:{전략기획자,TRIZ전문가,고객}, consensus, implementation, impact("높음"|"보통"|"낮음"), source}]
   //   quick_wins: [id, id, ...]    ← 숫자 ID 배열!
   //   insights: ["문장1", ...]
   //   next_steps: [{step, action, timeline, owner}]
@@ -2611,24 +2624,25 @@ function adaptSynthesis(d) {
 
   const top10 = top10Raw.map(t => {
     const breakdown = pick(t, 'scores', 'score_breakdown', '점수') || {};
-    const planner = Number(pick(breakdown,'기획자','planner') ?? 0);
-    const consultant = Number(pick(breakdown,'컨설턴트','consultant') ?? 0);
-    const engineer = Number(pick(breakdown,'엔지니어','engineer') ?? 0);
-    const customer = Number(pick(breakdown,'고객','customer') ?? 0);
-    const nums = [planner,consultant,engineer,customer].filter(n=>n>0);
+    // scores 서브키 우선, 없으면 flat 루트 필드 폴백 (데모/목업 데이터 호환)
+    const planner    = Number(pick(breakdown,'전략기획자','planner')    ?? pick(t,'planner','전략기획자')    ?? 0);
+    const trizexpert = Number(pick(breakdown,'TRIZ전문가','trizexpert') ?? pick(t,'trizexpert','TRIZ전문가') ?? 0);
+    const customer   = Number(pick(breakdown,'고객','customer')         ?? pick(t,'customer','고객')         ?? 0);
+    const nums = [planner,trizexpert,customer].filter(n=>n>0);
     const avgRaw = Number(pick(t,'avg_score','avg','평균'));
     const avg = (!isNaN(avgRaw) && avgRaw > 0) ? avgRaw : (nums.length ? nums.reduce((a,b)=>a+b,0)/nums.length : 0);
     let impactRaw = pick(t,'impact','임팩트');
     let impact = typeof impactRaw === 'number' ? impactRaw : (impactMap[String(impactRaw).toLowerCase?.() || impactRaw] ?? impactMap[impactRaw] ?? 3);
     return {
       name: pick(t,'name','아이디어명','title') || '',
-      planner, consultant, engineer, customer,
+      planner, trizexpert, customer,
       avg,
       timing: pick(t,'implementation','timing','실행시기','priority') || '',
       impact: Number(impact) || 3,
       trizRationale: pick(t,'triz_asit_rationale','trizRationale') || '',
       principleOrTool: pick(t,'principle_or_tool','principleOrTool') || '',
       agentTop3Count: Number(pick(t,'agent_top3_count','agentTop3Count') ?? 0),
+      source: pick(t,'source','출처') || '',  // 백엔드 source 필드 추출
     };
   });
 
@@ -2649,7 +2663,7 @@ function adaptSynthesis(d) {
   const timeline = nextSteps.map(t => ({
     period: pick(t,'timeline','period','시기','timeframe') || (pick(t,'step') ? `Step ${pick(t,'step')}` : ''),
     title: pick(t,'action','title','단계명','step_name','name') || '',
-    desc: pick(t,'owner','desc','description','details','담당') ? `담당: ${pick(t,'owner','담당')||''} ${pick(t,'desc','description','details')||''}`.trim() : '',
+    desc: (() => { const ow = pick(t,'owner','담당')||''; const dt = pick(t,'desc','description','details','expected_outcome')||''; return ow ? `담당: ${ow}${dt?' / '+dt:''}` : dt; })(),
   }));
 
   return { top10, quickWins, insights, timeline };
@@ -2664,7 +2678,18 @@ function processResult(step, data) {
     if (data && data.raw && Object.keys(data).length === 1) {
       addLog(`[안내] ${step} 단계: AI 응답 JSON 파싱 실패 — 일부 결과가 누락될 수 있습니다.`, 'error');
     }
-    if (step === 'problem') { renderProblem(adaptProblem(data)); setAgentState('master','done'); switchTab(0); autoFillFrameworkInputs(data); }
+    if (step === 'problem') {
+      renderProblem(adaptProblem(data)); setAgentState('master','done'); switchTab(0); autoFillFrameworkInputs(data);
+      // Railway 등 SSE가 불안정한 환경 대비: 15초 후에도 TRIZ 미도착이면 나머지 탭을 데모로 채움
+      setTimeout(() => {
+        const done = Object.keys(window.__rawBackend || {});
+        const remain = ['triz','asit','evaluation','synthesis'].filter(s => !done.includes(s));
+        if (remain.length > 0) {
+          addLog(`[안내] AI 응답 지연 → 나머지 분석(${remain.join(',')})을 데모 데이터로 표시합니다.`, 'error');
+          remain.forEach(s => { const d = getMockData(s, currentFormData); if (d) processResult(s, d); });
+        }
+      }, 15000);
+    }
     else if (step === 'triz') { renderTriz(adaptTriz(data)); setAgentState('triz','done'); switchTab(1); }
     else if (step === 'asit') { renderAsit(adaptAsit(data)); setAgentState('asit','done'); switchTab(2); }
     else if (step === 'evaluation') { renderEvaluation(adaptEvaluation(data)); setAgentState('evaluation','done'); switchTab(3); }
@@ -2879,7 +2904,7 @@ async function generateActionPlan(synthesisData) {
     name: t.name,
     avg_score: t.avg,
     timing: t.timing,
-    scores: { 기획자: t.planner, 컨설턴트: t.consultant, 엔지니어: t.engineer, 고객: t.customer }
+    scores: { 전략기획자: t.planner, TRIZ전문가: t.trizexpert, 고객: t.customer }
   }));
 
   try {
@@ -3001,6 +3026,11 @@ function renderActionPlan(data) {
           <div class="ap-chevron">▼</div>
         </div>
         <div class="ap-card-body">
+          ${p.triz_asit_principle ? `
+          <div style="background:#eef2ff;border-radius:8px;padding:9px 12px;margin-bottom:14px;border-left:3px solid #6366f1;">
+            <div style="font-size:10px;font-weight:700;color:#6366f1;margin-bottom:2px;">🔑 TRIZ/ASIT 원리</div>
+            <div style="font-size:12px;color:#4338ca;line-height:1.5;">${p.triz_asit_principle}</div>
+          </div>` : ''}
           <div class="ap-first-action">
             <div class="ap-fa-icon">🎯</div>
             <div>
@@ -3065,6 +3095,12 @@ function renderActionPlan(data) {
     ${renderGroup('⚡ 즉시 실행', 'ap-timing-immediate', groups.immediate)}
     ${renderGroup('📅 1개월 내', 'ap-timing-1month', groups.month1)}
     ${renderGroup('🔭 2개월+', 'ap-timing-long', groups.long)}
+
+    ${data['30day_sprint'] ? `
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;margin:8px 0 16px;">
+      <div style="font-size:11px;font-weight:700;color:#16a34a;margin-bottom:4px;">📅 30일 집중 스프린트</div>
+      <div style="font-size:13px;color:#15803d;line-height:1.55;">${data['30day_sprint']}</div>
+    </div>` : ''}
 
     <div style="text-align:center;padding:16px 0;">
       <button onclick="exportActionPlan()"
