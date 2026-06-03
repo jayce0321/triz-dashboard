@@ -292,7 +292,7 @@ def _call_claude_sync(system, user, max_tokens: int = 8192) -> str:
     for attempt in range(5):
         if attempt > 0:
             wait = retry_waits[attempt - 1]
-            print(f"⏳ Claude 재시도 대기 {wait}초 ({attempt}/{len(retry_waits)})...")
+            print(f"⏳ Claude 재시도 대기 {wait}초 ({attempt}/{len(retry_waits)})...", flush=True)
             time.sleep(wait)
         try:
             response = client.messages.create(
@@ -308,11 +308,12 @@ def _call_claude_sync(system, user, max_tokens: int = 8192) -> str:
                 cr = getattr(u, "cache_read_input_tokens", 0) or 0
                 cc = getattr(u, "cache_creation_input_tokens", 0) or 0
                 if cr or cc:
-                    print(f"💾 캐시: 생성={cc:,} / 히트={cr:,} tokens")
+                    print(f"💾 캐시: 생성={cc:,} / 히트={cr:,} tokens", flush=True)
             return response.content[0].text
 
         except Exception as e:
             err_str = str(e).lower()
+            err_type = type(e).__name__.lower()
 
             # 인증 오류 — 재시도 불필요
             if any(k in err_str for k in ("authentication", "api_key", "401", "invalid x-api-key")):
@@ -325,19 +326,28 @@ def _call_claude_sync(system, user, max_tokens: int = 8192) -> str:
             if any(k in err_str for k in ("rate_limit", "429", "too many", "overloaded", "529")):
                 last_err = e
                 if attempt < 4:
-                    print(f"⏳ Claude Rate limit (attempt {attempt+1}/5)")
-                    continue  # 루프 상단에서 대기
+                    print(f"⏳ Claude Rate limit (attempt {attempt+1}/5)", flush=True)
+                    continue
                 raise RuntimeError("Claude 요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.") from e
 
-            # 서버 오류
+            # 서버 오류 (HTTP 5xx)
             if any(k in err_str for k in ("503", "500", "server error", "internal")):
                 last_err = e
                 if attempt < 4:
-                    print(f"⏳ Claude 서버 일시 장애 (attempt {attempt+1}/5)")
+                    print(f"⏳ Claude 서버 일시 장애 (attempt {attempt+1}/5)", flush=True)
                     continue
                 raise RuntimeError(f"Claude 서버 오류. 잠시 후 다시 시도해 주세요: {e}") from e
 
-            raise RuntimeError(f"Claude API 오류: {e}") from e
+            # 연결 오류 / 타임아웃 — 재시도
+            if any(k in err_type for k in ("timeout", "connection", "network")) or \
+               any(k in err_str for k in ("timeout", "connection", "network", "timed out", "reset by peer")):
+                last_err = e
+                if attempt < 4:
+                    print(f"⏳ Claude 연결 오류 재시도 (attempt {attempt+1}/5): {type(e).__name__}", flush=True)
+                    continue
+                raise RuntimeError(f"Claude 연결 오류. 네트워크를 확인해 주세요: {e}") from e
+
+            raise RuntimeError(f"Claude API 오류: {type(e).__name__}: {e}") from e
 
     raise RuntimeError(f"AI 호출이 반복적으로 실패했습니다: {last_err}")
 
@@ -987,8 +997,8 @@ async def step_evaluation(
     agents_list = list(AGENT_CONFIGS.items())
 
     async def _staggered_eval(idx: int, name: str, system_prompt: str):
-        if idx > 0:
-            await asyncio.sleep(idx * 2)  # 0 / 2 / 4 / 6초 스태거
+        # 첫 번째 에이전트도 2초 대기 (ASIT 직후 rate limit 방지)
+        await asyncio.sleep(2 + idx * 2)  # 2 / 4 / 6초 스태거
         return await evaluate_single_agent(name, system_prompt, merged_ideas, req, queue)
 
     tasks_eval = [
@@ -996,12 +1006,38 @@ async def step_evaluation(
         for i, (name, sp) in enumerate(agents_list)
     ]
     results = await asyncio.gather(*tasks_eval, return_exceptions=True)
+    failed_agents = []
     for result in results:
         if isinstance(result, Exception):
-            print(f"⚠️  평가 실패: {result}")
+            # 어느 에이전트가 실패했는지 추적
+            err_msg = str(result)
+            print(f"⚠️  평가 에이전트 실패: {err_msg[:200]}", flush=True)
+            failed_agents.append(err_msg[:100])
         else:
             agent_name, agent_result = result
             evaluation_data[agent_name] = agent_result
+
+    # 실패한 에이전트는 빈 껍데기로 채워 프론트엔드가 "데이터 없음" 대신 에러 표시
+    for name_sp, _sp in agents_list:
+        if name_sp not in evaluation_data:
+            evaluation_data[name_sp] = {
+                "agent": name_sp,
+                "overall_assessment": f"⚠️ {name_sp} 평가 중 오류가 발생했습니다. 서버 로그를 확인하세요.",
+                "evaluations": [],
+                "top3_ids": [],
+                "bottom3_ids": [],
+                "key_concerns": ["평가 실패"],
+                "hidden_gem": "",
+            }
+
+    if failed_agents:
+        await queue.put(sse_event({
+            "type": "progress",
+            "step": "evaluation",
+            "status": "partial_fail",
+            "agent": "마스터",
+            "message": f"⚠️ 일부 에이전트 평가 실패 ({len(failed_agents)}개) — 나머지 결과로 진행합니다.",
+        }))
 
     await queue.put(sse_event({
         "type": "result",
@@ -1040,7 +1076,9 @@ async def step_synthesis(
         "4. 에이전트 컨센서스: 3명 중 2명 이상이 높게 평가한 아이디어 우선\n"
         "5. 숨은 보석 발굴: 평균 점수는 낮지만 특정 에이전트가 강력 추천한 아이디어 검토\n"
     )
-    eval_text = json.dumps(evaluation_data, ensure_ascii=False, indent=2)
+    # 에이전트 순서 고정 (전략기획자→TRIZ전문가→고객) 후 JSON 직렬화
+    agents_ordered = {k: evaluation_data.get(k, {}) for k in ["전략기획자", "TRIZ전문가", "고객"]}
+    eval_text = json.dumps(agents_ordered, ensure_ascii=False, indent=2)
     ideas_text = json.dumps(merged_ideas, ensure_ascii=False, indent=2)
 
     # 문제유형별 컨텍스트
@@ -1126,19 +1164,20 @@ async def run_analysis_pipeline(task_id: str, req: AnalyzeRequest):
     try:
         # Step 1
         problem = await step_problem(req, queue)
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
 
         # Step 2
         triz_result = await step_triz(req, problem, queue)
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
 
         # Step 3
         asit_result = await step_asit(req, problem, queue)
-        await asyncio.sleep(3)
+        # step_evaluation 내 각 에이전트가 2초 이상 스태거로 시작하므로 여기선 1초만
+        await asyncio.sleep(1)
 
         # Step 4 (병렬 평가)
         evaluation_data, merged_ideas = await step_evaluation(req, triz_result, asit_result, queue)
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
 
         # Step 5
         await step_synthesis(req, evaluation_data, merged_ideas, queue)

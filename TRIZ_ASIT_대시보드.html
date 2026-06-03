@@ -1805,23 +1805,23 @@ function renderEvaluation(data) {
           <div class="eval-status-dot" style="background:${ag.color}"></div>
         </div>
         <div class="eval-body">
-          <div class="eval-summary">${d.summary}</div>
+          <div class="eval-summary">${d.summary || '(요약 없음)'}</div>
           <div>
             <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">TOP 3 추천 아이디어</div>
-            <div class="eval-top3">${d.top3.map(t=>`<span class="eval-idea-badge" style="background:${ag.color}22;color:${ag.color}">${t}</span>`).join('')}</div>
+            <div class="eval-top3">${(d.top3||[]).length ? (d.top3||[]).map(t=>`<span class="eval-idea-badge" style="background:${ag.color}22;color:${ag.color}">${t}</span>`).join('') : '<span style="color:#94a3b8;font-size:11px">데이터 없음</span>'}</div>
           </div>
-          <div class="concern-box">⚠️ 주요 우려: ${d.concern}</div>
+          ${d.concern ? `<div class="concern-box">⚠️ 주요 우려: ${d.concern}</div>` : ''}
           <div>
             <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px">아이디어별 점수</div>
-            <div class="mini-bar-list">${d.scores.map(s=>`
+            <div class="mini-bar-list">${(d.scores||[]).length ? (d.scores||[]).map(s=>`
               <div class="mini-bar-item">
-                <div class="mini-bar-label" title="${s.name}">${s.name}</div>
+                <div class="mini-bar-label" title="${s.name||''}">${s.name||''}</div>
                 <div class="mini-bar-bg">
-                  <div class="mini-bar-fill" style="width:${s.score*10}%;background:${barColor}"></div>
+                  <div class="mini-bar-fill" style="width:${(s.score||0)*10}%;background:${barColor}"></div>
                 </div>
-                <div class="mini-bar-score">${s.score}</div>
+                <div class="mini-bar-score">${s.score||0}</div>
               </div>
-            `).join('')}</div>
+            `).join('') : '<span style="color:#94a3b8;font-size:11px">점수 데이터 없음</span>'}</div>
           </div>
         </div>
       </div>
@@ -2680,19 +2680,33 @@ function processResult(step, data) {
     }
     if (step === 'problem') {
       renderProblem(adaptProblem(data)); setAgentState('master','done'); switchTab(0); autoFillFrameworkInputs(data);
-      // Railway 등 SSE가 불안정한 환경 대비: 15초 후에도 TRIZ 미도착이면 나머지 탭을 데모로 채움
+      // Railway 등 SSE가 불안정한 환경 대비: 30초 후에도 TRIZ 미도착이면 나머지 탭을 데모로 채움
+      // 실제 분석 완료 후 데이터가 도착하면 processResult가 재호출되어 덮어씌워짐
       setTimeout(() => {
         const done = Object.keys(window.__rawBackend || {});
         const remain = ['triz','asit','evaluation','synthesis'].filter(s => !done.includes(s));
         if (remain.length > 0) {
-          addLog(`[안내] AI 응답 지연 → 나머지 분석(${remain.join(',')})을 데모 데이터로 표시합니다.`, 'error');
-          remain.forEach(s => { const d = getMockData(s, currentFormData); if (d) processResult(s, d); });
+          addLog(`[안내] AI 응답 지연(30초) → 나머지 분석(${remain.join(',')})을 데모 데이터로 임시 표시합니다.`, 'error');
+          // 아직 도착하지 않은 step만 채움 (이중 처리 방지)
+          remain.forEach(s => {
+            if (!Object.keys(window.__rawBackend||{}).includes(s)) {
+              const d = getMockData(s, currentFormData); if (d) processResult(s, d);
+            }
+          });
         }
-      }, 15000);
+      }, 30000);
     }
     else if (step === 'triz') { renderTriz(adaptTriz(data)); setAgentState('triz','done'); switchTab(1); }
     else if (step === 'asit') { renderAsit(adaptAsit(data)); setAgentState('asit','done'); switchTab(2); }
-    else if (step === 'evaluation') { renderEvaluation(adaptEvaluation(data)); setAgentState('evaluation','done'); switchTab(3); }
+    else if (step === 'evaluation') {
+      try {
+        renderEvaluation(adaptEvaluation(data));
+      } catch(re) {
+        console.error('[evaluation 렌더 오류]', re, data);
+        addLog(`[평가] 렌더링 오류: ${re.message}`, 'error');
+      }
+      setAgentState('evaluation','done'); switchTab(3);
+    }
     else if (step === 'synthesis') {
       const adapted = adaptSynthesis(data);
       renderSynthesis(adapted);
