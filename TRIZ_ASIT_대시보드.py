@@ -1518,7 +1518,7 @@ class ActionPlanRequest(BaseModel):
 @app.post("/api/action-plan")
 async def action_plan(req: ActionPlanRequest):
     """Top 10 아이디어를 구체적 실행 계획으로 변환."""
-    ideas_text = json.dumps(req.top10[:10], ensure_ascii=False, indent=2)
+    ideas_text = json.dumps(req.top10[:5], ensure_ascii=False, indent=2)
     insights_text = "\n".join(f"- {t}" for t in req.insights[:3])
 
     system = (
@@ -1586,7 +1586,7 @@ async def action_plan(req: ActionPlanRequest):
 }}"""
 
     try:
-        raw = await call_ai_async(system, user, max_tokens=3000)  # Top3 × 간결 계획 완전 출력
+        raw = await call_ai_async(system, user, max_tokens=5000)  # Top5 × 간결 계획 완전 출력
         result = parse_json_safe(raw)
         if "raw" in result and len(result) == 1:
             raise ValueError("JSON 파싱 실패")
