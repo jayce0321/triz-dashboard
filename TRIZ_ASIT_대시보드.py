@@ -579,7 +579,7 @@ async def step_triz(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
     if isinstance(ifr, dict):
         ifr_text = f"IFR-1: {ifr.get('IFR1','')}\nIFR-2: {ifr.get('IFR2','')}\nIFR-3: {ifr.get('IFR3','')}"
 
-    user = f"""다음 문제의 모순을 해소하는 TRIZ 아이디어를 최소 9개 도출하세요.
+    user = f"""다음 문제의 모순을 해소하는 TRIZ 아이디어를 정확히 8개 도출하세요.
 
 ## 문제 컨텍스트
 {domain_ctx}
@@ -594,9 +594,9 @@ async def step_triz(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
 ## IFR (아이디어가 이 방향을 향해야 함)
 {ifr_text}
 
-## 아이디어 도출 요건 (정확히 6개)
-- 2개: 기술 모순 해소 (발명원리 적용)
-- 2개: 물리 모순 해소 (분리원리 적용)
+## 아이디어 도출 요건 (정확히 8개)
+- 3개: 기술 모순 해소 (발명원리 적용, 서로 다른 원리)
+- 3개: 물리 모순 해소 (분리원리 적용, 시간/공간/조건 분리 각각 1개)
 - 2개: IFR-1 또는 IFR-2 수준에 근접
 - 각 아이디어: 서로 다른 원리 적용
 - 아이디어명: 구체적 행동명 (예: '이탈신호 7일 전 인터셉트')
@@ -604,7 +604,7 @@ async def step_triz(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
 description은 2문장으로 간결하게:
   ① 메커니즘(모순 해소 방식) ② 핵심 변화(현재→개선)
 
-출력 형식 (JSON만, 정확히 6개):
+출력 형식 (JSON만, 정확히 8개):
 {{
   "ideas": [
     {{
@@ -621,7 +621,7 @@ description은 2문장으로 간결하게:
   ]
 }}"""
 
-    raw = await call_claude_async(system, user, max_tokens=4000)  # 6개 × 간결 → 4000
+    raw = await call_claude_async(system, user, max_tokens=5500)  # 8개 × 간결 → 5500
     result = parse_json_safe(raw)
 
     await queue.put(sse_event({
@@ -705,7 +705,7 @@ async def step_asit(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
     else:
         elements_display = raw_elements
 
-    user = f"""다음 문제에 ASIT 5가지 도구를 전문가 수준으로 적용하여 최소 10개 아이디어를 도출하세요.
+    user = f"""다음 문제에 ASIT 5가지 도구를 전문가 수준으로 적용하여 정확히 8개 아이디어를 도출하세요.
 
 ## 문제 컨텍스트
 {subject_label}: {subject_value}
@@ -717,8 +717,8 @@ async def step_asit(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
 ## 폐쇄 세계 목록 (이 요소들만 사용 가능 — ASIT 절대 원칙)
 {elements_label}: {elements_display}
 
-## 도구별 아이디어 배분 (총 6개, 각 도구당 1~2개)
-- 제거·복제·분할·기능통합·대칭파괴 중 6개 선택
+## 도구별 아이디어 배분 (총 8개, 각 도구당 1~2개 — 5가지 도구 모두 사용)
+- 제거 2개 · 복제 2개 · 분할 1개 · 기능통합 2개 · 대칭파괴 1개
 
 ## 각 아이디어 필수 (간결하게)
 - used_elements: 사용한 폐쇄 세계 요소 배열
@@ -726,7 +726,7 @@ async def step_asit(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
 - description: AS-IS → TO-BE 1~2문장
 - closed_world_check: YES/NO
 
-출력 형식 (JSON만, 정확히 6개):
+출력 형식 (JSON만, 정확히 8개):
 {{
   "ideas": [
     {{
@@ -745,7 +745,7 @@ async def step_asit(req: AnalyzeRequest, problem: dict, queue: asyncio.Queue) ->
   ]
 }}"""
 
-    raw = await call_claude_async(system, user, max_tokens=4000)  # 6개 × 간결 → 4000
+    raw = await call_claude_async(system, user, max_tokens=5500)  # 8개 × 간결 → 5500
     result = parse_json_safe(raw)
 
     await queue.put(sse_event({
@@ -1144,8 +1144,8 @@ async def step_synthesis(
   ]
 }}"""
 
-    # Top10 선정 + 인사이트 + next_steps — 아이디어 수 감소로 4096으로 충분
-    raw = await call_claude_async(system, user, max_tokens=4096)
+    # Top10 선정 + 인사이트 + next_steps — 16개 풀(TRIZ 8 + ASIT 8)에서 10개 선정
+    raw = await call_claude_async(system, user, max_tokens=5000)
     result = parse_json_safe(raw)
 
     await queue.put(sse_event({
@@ -1518,7 +1518,7 @@ class ActionPlanRequest(BaseModel):
 @app.post("/api/action-plan")
 async def action_plan(req: ActionPlanRequest):
     """Top 10 아이디어를 구체적 실행 계획으로 변환."""
-    ideas_text = json.dumps(req.top10[:5], ensure_ascii=False, indent=2)
+    ideas_text = json.dumps(req.top10[:10], ensure_ascii=False, indent=2)
     insights_text = "\n".join(f"- {t}" for t in req.insights[:3])
 
     system = (
@@ -1586,7 +1586,7 @@ async def action_plan(req: ActionPlanRequest):
 }}"""
 
     try:
-        raw = await call_ai_async(system, user, max_tokens=5000)  # Top5 × 간결 계획 완전 출력
+        raw = await call_ai_async(system, user, max_tokens=8000)  # Top10 × 간결 계획 완전 출력
         result = parse_json_safe(raw)
         if "raw" in result and len(result) == 1:
             raise ValueError("JSON 파싱 실패")

@@ -1394,7 +1394,7 @@ body {
         <div id="tab6-loading" style="display:none;text-align:center;padding:40px 0;">
           <div style="font-size:28px;margin-bottom:12px;">⚙️</div>
           <div style="font-size:14px;font-weight:600;color:#2367d7;margin-bottom:6px;">실행 아이디어 생성 중...</div>
-          <div style="font-size:12px;color:#64748b;">Top 5 아이디어를 현장 실행 계획 + 적용 아이디어로 변환하고 있습니다 (약 60~90초)</div>
+          <div style="font-size:12px;color:#64748b;">Top 10 아이디어를 현장 실행 계획 + 적용 아이디어로 변환하고 있습니다 (약 90~120초)</div>
         </div>
         <div id="tab6-content" style="display:none"></div>
       </div>
@@ -2022,6 +2022,8 @@ function getMockData(step, formData) {
       { principle:'#25 자기서비스 원리', name:`[자기서비스] ${주체} 자율 최적화 루프`, description:`① 메커니즘: 자기서비스 원리(#25)를 적용해 시스템이 스스로 ${지표}를 개선하는 피드백 루프를 만듭니다. IFR-1(시스템 스스로 해결)에 가장 근접한 아이디어입니다. ② 사용자 경험: 내가 특별히 요청하지 않아도 내 사용 패턴에 맞는 최적 상태가 자동으로 유지됩니다. ③ 핵심 변화: 현재 수동 개입 → 자동 최적화 루프로 운영 부담 없이 지속 개선됩니다.`, contradiction_resolved:'IFR-1 — 시스템이 스스로 해결', first_action:`현재 ${구성요소}에서 자동화 가능한 반복 작업 2가지를 이번 주에 식별하고 자동화 범위를 확정한다`, pros:['운영 부담 최소화','IFR-1 달성'], cons:['초기 설정 비용','예외 처리 필요'], initial_score:8 },
       { principle:'#23 피드백 원리', name:`[피드백] ${지표} 실시간 가시화`, description:`① 메커니즘: 피드백 원리(#23)로 ${대상}이 자신의 행동이 ${지표}에 미치는 영향을 실시간으로 볼 수 있게 합니다. ② 사용자 경험: 내가 취한 행동의 결과를 즉시 숫자로 확인할 수 있어 무엇을 더 하고 덜 해야 하는지 스스로 조정합니다. ③ 핵심 변화: 현재 블랙박스 운영 → 투명한 실시간 피드백으로 자발적 행동 변화가 유도됩니다.`, contradiction_resolved:'기술모순 — 투명성 향상 vs 데이터 인프라 부담', first_action:`이번 주 목요일, 기존 데이터베이스에서 ${지표} 관련 지표 3개를 선정하고 간단한 대시보드 초안을 만든다`, pros:['투명성 향상','자발적 동기 부여'], cons:['데이터 인프라 필요','과잉 측정 위험'], initial_score:7 },
       { principle:'분리원리 (시간 분리)', name:`[시간분리] 기능 단계별 시간 분리 운영`, description:`① 메커니즘: 시간 분리 원리로 '전체 동시 제공 vs 순차 제공' 물리 모순을 해소합니다. ${구성요소}를 동시에 제공하는 대신 단계별로 제공해 각 시점에 최적화된 가치를 전달합니다. ② 사용자 경험: 나는 지금 단계에 꼭 필요한 것만 받기 때문에 정보 과부하 없이 핵심에 집중할 수 있습니다. ③ 핵심 변화: 현재 일괄 제공 → 시간 단계별 최적 제공으로 체험 만족도가 향상됩니다.`, contradiction_resolved:'물리모순 — 많은 정보 vs 간단한 경험의 시간 분리', first_action:`이번 주에 ${대상}의 이용 흐름을 3단계로 구분하고 각 단계에서 가장 필요한 기능 1개를 매핑한다`, pros:['집중도 향상','단계별 최적화'], cons:['전체 그림 파악 어려움'], initial_score:7 },
+      { principle:'분리원리 (공간 분리)', name:`[공간분리] ${대상} 행동 채널 공간 분리`, description:`① 메커니즘: 공간 분리 원리로 '동일 공간에서 모든 것 vs 채널별 분리' 물리 모순을 해소합니다. ${대상}의 행동 유형에 따라 전용 채널을 분리해 각 채널이 해당 역할에만 집중합니다. ② 핵심 변화: 현재 통합 채널 운영 → 기능 전용 채널 분리로 혼선 없이 목적 달성률이 향상됩니다.`, contradiction_resolved:'물리모순 — 통합 편의성 vs 채널별 최적화의 공간 분리', first_action:`이번 주에 ${대상}이 가장 자주 사용하는 기능 상위 3개를 추출하고 전용 채널 설계 초안을 만든다`, pros:['채널 혼선 제거','목적 달성률 향상'], cons:['사용자 채널 전환 학습 필요'], initial_score:7 },
+      { principle:'#35 속성 변환 원리', name:`[속성변환] ${지표} 저하 패턴 자동 감지·변환`, description:`① 메커니즘: 속성 변환 원리(#35)로 ${지표} 저하를 유발하는 패턴을 실시간으로 감지하고 자동으로 개선 트리거로 변환합니다. ② 핵심 변화: 현재 사후 확인 방식 → 저하 징후 감지 즉시 자동 전환으로 ${지표}가 특정 임계치 아래로 내려가지 않습니다.`, contradiction_resolved:'IFR-2 — 시스템이 문제 발생 직전 자동 해소', first_action:`기존 데이터에서 ${지표} 급락 직전 3~5개 공통 패턴을 이번 주 내 추출해 감지 기준으로 설정한다`, pros:['IFR-2 수준 달성','선제 자동 대응'], cons:['감지 기준 정교화 필요'], initial_score:8 },
     ]},
     asit: {
       removal: [
@@ -2053,6 +2055,8 @@ function getMockData(step, formData) {
         scores: [
           {name:`${주체} 역할 재설계`, score:9.0}, {name:'성과 연동 보상', score:8.8}, {name:'기능 통합', score:8.7},
           {name:'요소 분리', score:8.4}, {name:'복제 확산', score:8.6}, {name:'사전 개입', score:8.2},
+          {name:'공간 채널 분리', score:7.9}, {name:'속성 자동 변환', score:8.1},
+          {name:'결제 마찰 제거', score:8.5}, {name:'시간대별 비대칭', score:7.8},
         ]
       },
       trizexpert: {
@@ -2062,6 +2066,8 @@ function getMockData(step, formData) {
         scores: [
           {name:`${주체} 역할 재설계`, score:9.0}, {name:'성과 연동 보상', score:7.5}, {name:'기능 통합', score:8.7},
           {name:'요소 분리', score:8.4}, {name:'복제 확산', score:7.8}, {name:'사전 개입', score:8.3},
+          {name:'속성 자동 변환', score:8.6}, {name:'공간 채널 분리', score:7.6},
+          {name:'시간 단계 분리', score:7.9}, {name:'댓글 프로파일링', score:8.2},
         ]
       },
       customer: {
@@ -2071,6 +2077,8 @@ function getMockData(step, formData) {
         scores: [
           {name:'성과 연동', score:8.8}, {name:'부담 제거', score:8.3}, {name:'맞춤 대칭파괴', score:7.6},
           {name:'역할 분리', score:8.4}, {name:'실시간 피드백', score:8.1}, {name:'참여 보상', score:7.5},
+          {name:'결제 마찰 제거', score:8.7}, {name:'요약본 서비스', score:8.9},
+          {name:'카테고리 분리 구독', score:8.2}, {name:'시간대별 뉴스레터', score:7.8},
         ]
       }
     },
@@ -2924,8 +2932,8 @@ async function generateActionPlan(synthesisData) {
     ? (currentFormData.하위요소 || currentFormData.현재구조 || '')
     : '';
 
-  // Top 5 전송 — max_tokens=5000, 각 항목 간결 작성으로 ~90초 내 안정 완료
-  const top10 = (synthesisData.top10 || []).slice(0, 5).map(t => ({
+  // Top 10 전송 — max_tokens=8000, 각 항목 간결 작성으로 ~120초 내 안정 완료
+  const top10 = (synthesisData.top10 || []).slice(0, 10).map(t => ({
     name: t.name,
     avg_score: t.avg,
     timing: t.timing,
@@ -2943,7 +2951,7 @@ async function generateActionPlan(synthesisData) {
         existing_elements: existingEl,
         insights: synthesisData.insights || [],
       }),
-      signal: AbortSignal.timeout(180000),  // 180초 — Top5 × 상세 실행계획 생성
+      signal: AbortSignal.timeout(240000),  // 240초 — Top10 × 상세 실행계획 생성
     });
     if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
     const data = await res.json();
