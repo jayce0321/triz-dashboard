@@ -2733,6 +2733,16 @@ function processResult(step, data) {
       switchTab(4);
       // 실행 아이디어 자동 생성 (백그라운드)
       generateActionPlan(adapted);
+      // synthesis는 마지막 파이프라인 단계 — 2초 후 버튼 잠금 해제 (complete SSE 누락 대비)
+      setTimeout(() => {
+        const b = $('btn-start');
+        if (b && b.disabled) {
+          b.disabled = false;
+          b.textContent = '🚀 AI 에이전트 분석 시작';
+          if ($('progress-label-text')) $('progress-label-text').textContent = '분석 완료!';
+          ['master','triz','asit','evaluation','synthesis'].forEach(k => setAgentState(k,'done'));
+        }
+      }, 2000);
     }
   } catch (e) {
     addLog(`[렌더 오류] ${step}: ${e.message}`, 'error');

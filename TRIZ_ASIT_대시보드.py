@@ -1077,9 +1077,30 @@ async def step_synthesis(
         "5. 숨은 보석 발굴: 평균 점수는 낮지만 특정 에이전트가 강력 추천한 아이디어 검토\n"
     )
     # 에이전트 순서 고정 (전략기획자→TRIZ전문가→고객) 후 JSON 직렬화
+    # 토큰 절약: 합성에 필요한 핵심 정보만 추출 (full description·pros·cons 제외)
+    slim_ideas = [
+        {
+            "id":     idea.get("id"),
+            "name":   idea.get("name"),
+            "source": idea.get("source", ""),
+            "contradiction_resolved": idea.get("contradiction_resolved") or idea.get("tool", ""),
+            "initial_score": idea.get("initial_score", 0),
+            "first_action": idea.get("first_action", ""),
+        }
+        for idea in merged_ideas
+    ]
+    ideas_text = json.dumps(slim_ideas, ensure_ascii=False, indent=2)
+
     agents_ordered = {k: evaluation_data.get(k, {}) for k in ["전략기획자", "TRIZ전문가", "고객"]}
-    eval_text = json.dumps(agents_ordered, ensure_ascii=False, indent=2)
-    ideas_text = json.dumps(merged_ideas, ensure_ascii=False, indent=2)
+    # 토큰 절약: top3 + 각 아이디어 점수만 전달
+    slim_eval = {
+        agent: {
+            "top3":   data.get("top3", []),
+            "scores": {s.get("name", ""): s.get("score", 0) for s in data.get("scores", [])}
+        }
+        for agent, data in agents_ordered.items()
+    }
+    eval_text = json.dumps(slim_eval, ensure_ascii=False, indent=2)
 
     # 문제유형별 컨텍스트
     if req.문제유형 == "조직프로세스":
@@ -1107,45 +1128,44 @@ async def step_synthesis(
 4. 소스 다양성 (TRIZ와 ASIT 혼합)
 5. 단기/중기/장기 균형
 
-출력 형식 (JSON만):
+출력 형식 (JSON만, 간결하게):
 {{
   "final_top10": [
     {{
       "rank": 1,
       "id": 5,
       "name": "아이디어명",
-      "description": "아이디어 핵심 내용 (원본 description을 그대로 포함 + 선정 이유 1문장 추가)",
-      "triz_asit_rationale": "왜 TRIZ/ASIT 관점에서 이 아이디어가 우수한가 (모순 해소 방식 포함)",
+      "description": "선정 이유 1문장 (모순 해소 방식 핵심)",
+      "triz_asit_rationale": "원리/도구 적용 효과 1문장",
       "avg_score": 8.5,
       "scores": {{"전략기획자": 9, "TRIZ전문가": 8, "고객": 9}},
-      "agent_top3_count": 3,
       "consensus": "높음/보통/낮음",
       "implementation": "단기(1-3개월)/중기(3-6개월)/장기(6개월+)",
       "impact": "높음/보통/낮음",
       "source": "TRIZ/ASIT",
-      "principle_or_tool": "적용된 발명원리 또는 ASIT 도구"
+      "principle_or_tool": "발명원리명 또는 ASIT 도구명"
     }}
   ],
   "quick_wins": [1, 3],
   "insights": [
-    "통찰1: [구체적 수치나 패턴 포함] — 이 분석에서 발견한 핵심 패턴",
-    "통찰2: [실행 관련 발견]",
-    "통찰3: [TRIZ/ASIT 관점 특이점]"
+    "통찰1: 핵심 패턴 (수치 포함, 1문장)",
+    "통찰2: 실행 관련 발견 (1문장)",
+    "통찰3: TRIZ/ASIT 관점 특이점 (1문장)"
   ],
-  "contradiction_analysis": "분석 결과 이 문제의 핵심 모순이 아이디어들에서 어떻게 나타났는지 (2문장)",
+  "contradiction_analysis": "핵심 모순이 아이디어들에서 어떻게 나타났는지 (1문장)",
   "next_steps": [
     {{
       "step": 1,
-      "action": "구체적 실행 행동 (동사 시작, 담당자와 수단 포함)",
+      "action": "구체적 행동 (동사+담당자+수단)",
       "timeline": "1주 이내/1개월 내/3개월 내",
-      "owner": "담당 부서 또는 역할",
-      "expected_outcome": "이 단계 완료 시 측정 가능한 결과"
+      "owner": "담당 부서",
+      "expected_outcome": "측정 가능한 결과"
     }}
   ]
 }}"""
 
-    # Top10 선정 + 인사이트 + next_steps — 16개 풀(TRIZ 8 + ASIT 8)에서 10개 선정
-    raw = await call_claude_async(system, user, max_tokens=5000)
+    # Top10 선정 + 인사이트 + next_steps — 16개 풀(TRIZ 8 + ASIT 8)에서 10개 선정, 입력 슬림화로 토큰 여유
+    raw = await call_claude_async(system, user, max_tokens=6000)
     result = parse_json_safe(raw)
 
     await queue.put(sse_event({
