@@ -35,7 +35,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE  = os.path.join(BASE_DIR, "aeo_articles.json")
-HTML_FILE  = os.path.join(BASE_DIR, "aeo_대시보드.html")
+HTML_FILE  = os.path.join(BASE_DIR, "aeo_dashboard.html")
 
 # ── 엔티티 오탐 차단 사전 ──────────────────────────
 ENTITY_BLOCKLIST = {

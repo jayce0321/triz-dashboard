@@ -16,3 +16,15 @@ __pycache__/
 # 가상환경
 .venv/
 venv/
+
+# Claude Code 내부 파일
+.claude/
+.playwright-mcp/
+.railway
+
+# 스크린샷 / 임시 이미지
+*.png
+*.jpg
+
+# 기타 작업 파일
+lotto_raw.json
