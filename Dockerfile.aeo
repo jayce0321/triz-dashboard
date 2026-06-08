@@ -1,0 +1,14 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# AEO 의존성 설치
+COPY aeo/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# AEO 소스 복사
+COPY aeo/ ./
+
+EXPOSE 8000
+
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
