@@ -1675,16 +1675,35 @@ function loadMoreNews() {
   if (S.newsOff >= pers.length) document.getElementById('newsMore').style.display='none';
 }
 
-// ④ 수정: 캐시 있으면 즉시 렌더 (all RSS는 홈에서 이미 fetch됨)
+// ④ 카드뉴스: 포토RSS(이미지 풍부) + 전체RSS 병합 → 이미지 있는 것 우선
 async function loadCards() {
   const gridEl = document.getElementById('cardGrid');
-  if (!_rStale('card')) return; // 최근 렌더됨
+  if (!_rStale('card')) return;
 
-  const all = S.cache['all'] ? S.cache['all'] : await getRSS('all');
-  all.forEach(reg);
+  gridEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:28px">
+    <div class="spinner" style="margin:0 auto 10px"></div>
+    <span style="font-size:var(--fs-sm);color:var(--muted)">카드뉴스 불러오는 중…</span>
+  </div>`;
+
+  // 포토 RSS + 전체 RSS 병렬 fetch
+  const [photoArts, allArts] = await Promise.all([
+    getRSS('photo'),
+    S.cache['all'] ? Promise.resolve(S.cache['all']) : getRSS('all'),
+  ]);
+  photoArts.forEach(reg);
+  allArts.forEach(reg);
+
+  // 포토 우선, 전체에서 이미지 있는 것 보완 — 중복 제거
+  const seen = new Set();
+  const merged = [];
+  for (const a of [...photoArts, ...sortByImage(allArts)]) {
+    if (!seen.has(a.id) && a.image_url) { seen.add(a.id); merged.push(a); }
+    if (merged.length >= 16) break;
+  }
+
   gridEl.innerHTML = '';
 
-  // Instagram 배너 — RSS 성공/실패 여부와 관계없이 항상 상단 노출
+  // ── Instagram 바로가기 배너 ──
   const igBanner = document.createElement('a');
   igBanner.className = 'ig-banner';
   igBanner.href = 'https://www.instagram.com/segyetimes/';
@@ -1693,21 +1712,32 @@ async function loadCards() {
   igBanner.innerHTML = `
     <div class="ig-ic">📸</div>
     <div class="ig-text">
-      <h3>세계일보 인스타그램</h3>
-      <p>@segyetimes · 카드뉴스·포토뉴스 구독하기</p>
+      <h3>세계일보 인스타그램 @segyetimes</h3>
+      <p>인스타그램 카드뉴스·포토뉴스 보러가기 →</p>
     </div>
     <div class="ig-arr">›</div>`;
   gridEl.appendChild(igBanner);
 
-  if (!all.length) {
+  if (!merged.length) {
     const msg = document.createElement('div');
     msg.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)';
-    msg.textContent = '뉴스를 불러오지 못했습니다';
+    msg.textContent = '카드뉴스를 불러오지 못했습니다';
     gridEl.appendChild(msg);
     _rDone('card');
     return;
   }
-  sortByImage(all).slice(0,12).forEach((a,i)=>gridEl.appendChild(buildCNGridCard(a,i===0)));
+
+  // 섹션 레이블
+  const lbl = document.createElement('div');
+  lbl.style.cssText = 'grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:2px 2px 4px';
+  lbl.innerHTML = `
+    <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text);display:flex;align-items:center;gap:5px">
+      📷 포토·카드뉴스 <span style="font-size:10px;font-weight:600;color:var(--muted)">${merged.length}건</span>
+    </span>
+    <span style="font-size:10px;color:var(--muted)">세계일보 포토뉴스</span>`;
+  gridEl.appendChild(lbl);
+
+  merged.forEach((a,i) => gridEl.appendChild(buildCNGridCard(a, i===0)));
   _rDone('card');
 }
 
