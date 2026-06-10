@@ -707,10 +707,10 @@ img{display:block;max-width:100%}
       </div>
     </div>
 
-    <!-- 카드뉴스 -->
+    <!-- 포토뉴스 -->
     <div class="divider"></div>
     <div class="sh">
-      <div class="sh-t">🃏 카드뉴스</div>
+      <div class="sh-t">📷 포토뉴스</div>
       <button class="sh-more" onclick="gotoPage('card')">전체 →</button>
     </div>
     <div class="cn-row" id="homeCards">
@@ -752,9 +752,9 @@ img{display:block;max-width:100%}
     </div>
   </div>
 
-  <!-- ── 카드 ── -->
+  <!-- ── 포토뉴스 ── -->
   <div id="pg-card" class="pg">
-    <div class="sh"><div class="sh-t">🃏 카드뉴스</div><span class="sh-more" style="animation:pulse 1.8s infinite">● LIVE</span></div>
+    <div class="sh"><div class="sh-t">📷 포토뉴스</div><span class="sh-more" style="animation:pulse 1.8s infinite">● LIVE</span></div>
     <div class="cn-grid" id="cardGrid">
       <div style="grid-column:1/-1;text-align:center;padding:30px">
         <div class="spinner" style="margin:0 auto 10px"></div>
@@ -844,7 +844,7 @@ img{display:block;max-width:100%}
     <span class="ico">📰</span>뉴스
   </button>
   <button class="ni" id="ni-card" onclick="gotoPage('card')">
-    <span class="ico">🃏</span>카드
+    <span class="ico">📷</span>포토
   </button>
   <button class="ni" id="ni-shorts" onclick="gotoPage('shorts')">
     <span class="ico">🎬</span>숏츠
@@ -1682,7 +1682,7 @@ async function loadCards() {
 
   gridEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:28px">
     <div class="spinner" style="margin:0 auto 10px"></div>
-    <span style="font-size:var(--fs-sm);color:var(--muted)">카드뉴스 불러오는 중…</span>
+    <span style="font-size:var(--fs-sm);color:var(--muted)">포토뉴스 불러오는 중…</span>
   </div>`;
 
   // 포토 RSS + 전체 RSS 병렬 fetch
@@ -1713,7 +1713,7 @@ async function loadCards() {
     <div class="ig-ic">📸</div>
     <div class="ig-text">
       <h3>세계일보 인스타그램 @segyetimes</h3>
-      <p>인스타그램 카드뉴스·포토뉴스 보러가기 →</p>
+      <p>인스타그램 포토뉴스·카드뉴스 보러가기 →</p>
     </div>
     <div class="ig-arr">›</div>`;
   gridEl.appendChild(igBanner);
@@ -1721,7 +1721,7 @@ async function loadCards() {
   if (!merged.length) {
     const msg = document.createElement('div');
     msg.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)';
-    msg.textContent = '카드뉴스를 불러오지 못했습니다';
+    msg.textContent = '포토뉴스를 불러오지 못했습니다';
     gridEl.appendChild(msg);
     _rDone('card');
     return;
@@ -1732,7 +1732,7 @@ async function loadCards() {
   lbl.style.cssText = 'grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:2px 2px 4px';
   lbl.innerHTML = `
     <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text);display:flex;align-items:center;gap:5px">
-      📷 포토·카드뉴스 <span style="font-size:10px;font-weight:600;color:var(--muted)">${merged.length}건</span>
+      📷 포토뉴스 <span style="font-size:10px;font-weight:600;color:var(--muted)">${merged.length}건</span>
     </span>
     <span style="font-size:10px;color:var(--muted)">세계일보 포토뉴스</span>`;
   gridEl.appendChild(lbl);
