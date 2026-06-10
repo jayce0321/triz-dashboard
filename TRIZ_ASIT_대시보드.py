@@ -1244,6 +1244,71 @@ _ALLOWED_HOSTS = (
     "api.open-meteo.com",
 )
 
+
+# ──────────────────────────────────────────────
+# 주가 지수 — yfinance (Yahoo Finance 인증 자동 처리)
+# 3분 서버사이드 캐시로 rate-limit 방지
+# ──────────────────────────────────────────────
+import time as _time
+
+_STOCK_CACHE: dict = {}   # {"data": [...], "ts": float}
+_STOCK_TTL = 3 * 60       # 3분 캐시
+
+_STOCK_SYMBOLS = [
+    {"sym": "^KS11",  "nm": "KOSPI",  "fmt": "int_comma"},
+    {"sym": "^KQ11",  "nm": "KOSDAQ", "fmt": "float2"},
+    {"sym": "^GSPC",  "nm": "S&P500", "fmt": "int_comma"},
+    {"sym": "^DJI",   "nm": "DOW",    "fmt": "int_comma"},
+    {"sym": "^IXIC",  "nm": "NASDAQ", "fmt": "int_comma"},
+]
+
+def _fmt_price(val: float, fmt: str) -> str:
+    if fmt == "int_comma":
+        return f"{int(val):,}"
+    return f"{val:.2f}"
+
+@app.get("/api/stocks")
+async def get_stocks():
+    """주가 지수 반환 (yfinance, 3분 캐시)."""
+    now = _time.time()
+    if _STOCK_CACHE.get("ts") and now - _STOCK_CACHE["ts"] < _STOCK_TTL:
+        return {"stocks": _STOCK_CACHE["data"], "cached": True}
+
+    import yfinance as yf
+
+    loop = asyncio.get_event_loop()
+    def _fetch():
+        results = []
+        tickers = yf.Tickers(" ".join(s["sym"] for s in _STOCK_SYMBOLS))
+        for s in _STOCK_SYMBOLS:
+            try:
+                info = tickers.tickers[s["sym"]].fast_info
+                price = info.last_price
+                prev  = info.previous_close
+                if price and prev:
+                    chg_pct = (price / prev - 1) * 100
+                    results.append({
+                        "nm":     s["nm"],
+                        "price":  _fmt_price(price, s["fmt"]),
+                        "chgPct": round(chg_pct, 2),
+                    })
+            except Exception:
+                pass
+        return results
+
+    try:
+        data = await loop.run_in_executor(executor, _fetch)
+        if data:
+            _STOCK_CACHE["data"] = data
+            _STOCK_CACHE["ts"]   = now
+        return {"stocks": data, "cached": False}
+    except Exception as e:
+        # 캐시가 있으면 만료돼도 반환
+        if _STOCK_CACHE.get("data"):
+            return {"stocks": _STOCK_CACHE["data"], "cached": True, "stale": True}
+        raise HTTPException(status_code=502, detail=str(e))
+
+
 @app.get("/api/rss-proxy")
 async def rss_proxy(url: str = Query(..., description="프록시할 URL")):
     """CORS 우회 프록시: segye.com RSS / YouTube 피드 등 허용 도메인 fetch."""

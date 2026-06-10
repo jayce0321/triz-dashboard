@@ -2165,89 +2165,40 @@ async function loadWeather() {
 }
 
 /* ════════════════════════════════════════════
-   생활정보 — 주식 지수
-   Yahoo Finance v8 API → allorigins 프록시
+   생활정보 — 주가 지수
+   백엔드 /api/stocks (yfinance, 3분 캐시)
 ════════════════════════════════════════════ */
-const STOCKS = [
-  { sym:'%5EKS11',  nm:'KOSPI',   fmt: v=>v>=1000 ? (v/1).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',') : v.toFixed(2) },
-  { sym:'%5EKQ11',  nm:'KOSDAQ',  fmt: v=>v.toFixed(2) },
-  { sym:'%5EGSPC',  nm:'S&P500',  fmt: v=>v.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',') },
-  { sym:'%5EDJI',   nm:'DOW',     fmt: v=>v.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',') },
-  { sym:'%5EIXIC',  nm:'NASDAQ',  fmt: v=>v.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',') },
-];
-
-async function fetchOneStock(sym) {
-  // v8 → v7 순으로 시도, allorigins get/raw 모두 시도
-  const endpoints = [
-    `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1d`,
-    `https://query2.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1d`,
-    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${sym}`,
-  ];
-  for (const yfUrl of endpoints) {
-    for (const pxFn of [
-      u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
-      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    ]) {
-      try {
-        const r = await fetch(pxFn(yfUrl), { signal: AbortSignal.timeout(7000) });
-        if (!r.ok) continue;
-        const raw = await r.text();
-        let inner;
-        try {
-          const outer = JSON.parse(raw);
-          inner = outer.contents ? JSON.parse(outer.contents) : outer;
-        } catch { continue; }
-        // v8 chart 응답
-        const meta = inner?.chart?.result?.[0]?.meta;
-        if (meta?.regularMarketPrice) return {
-          price: meta.regularMarketPrice,
-          prev:  meta.chartPreviousClose || meta.previousClose,
-          chgPct: meta.regularMarketChangePercent,
-        };
-        // v7 quote 응답
-        const q = inner?.quoteResponse?.result?.[0];
-        if (q?.regularMarketPrice) return {
-          price: q.regularMarketPrice,
-          prev:  q.regularMarketPreviousClose,
-          chgPct: q.regularMarketChangePercent,
-        };
-      } catch { /* 다음 시도 */ }
-    }
-  }
-  throw new Error('all endpoints failed');
-}
-
 async function loadStocks() {
   const el = document.getElementById('ibStocks');
   if (!el) return;
 
-  // 병렬 fetch
-  const results = await Promise.allSettled(
-    STOCKS.map(s => fetchOneStock(s.sym).then(d => ({...s, ...d})))
-  );
-
-  const html_parts = [];
-  for (const r of results) {
-    if (r.status === 'rejected') continue;
-    const { nm, price, chgPct, fmt } = r.value;
-    if (!price) continue;
-    const chg = chgPct ?? 0;
-    const cls = chg > 0.05 ? 'ib-up' : chg < -0.05 ? 'ib-dn' : 'ib-fl';
-    const arrow = chg > 0.05 ? '▲' : chg < -0.05 ? '▼' : '━';
-    const pct = Math.abs(chg).toFixed(2);
-    html_parts.push(`
-      <div class="ib-stk">
-        <span class="ib-stk-nm">${nm}</span>
-        <div class="ib-stk-row">
-          <span class="ib-stk-val">${fmt(price)}</span>
-          <span class="ib-stk-chg ${cls}">${arrow}${pct}%</span>
-        </div>
-      </div>`);
+  // file:// 환경에서는 백엔드 없음
+  if (location.protocol === 'file:') {
+    el.innerHTML = `<span class="ib-loading" style="color:rgba(255,255,255,.35)">배포 환경에서만 표시됩니다</span>`;
+    return;
   }
 
-  if (html_parts.length) {
-    el.innerHTML = html_parts.join('');
-  } else {
+  try {
+    const res = await fetch('/api/stocks', { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) throw new Error('http ' + res.status);
+    const { stocks } = await res.json();
+    if (!stocks || !stocks.length) throw new Error('empty');
+
+    el.innerHTML = stocks.map(s => {
+      const chg = s.chgPct ?? 0;
+      const cls   = chg > 0.05 ? 'ib-up' : chg < -0.05 ? 'ib-dn' : 'ib-fl';
+      const arrow = chg > 0.05 ? '▲'     : chg < -0.05 ? '▼'     : '━';
+      const pct   = Math.abs(chg).toFixed(2);
+      return `<div class="ib-stk">
+        <span class="ib-stk-nm">${e(s.nm)}</span>
+        <div class="ib-stk-row">
+          <span class="ib-stk-val">${e(s.price)}</span>
+          <span class="ib-stk-chg ${cls}">${arrow}${pct}%</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(err) {
+    console.warn('[Stocks]', err.message);
     el.innerHTML = `<span class="ib-loading" style="color:rgba(255,255,255,.35)">시세 정보를 불러올 수 없습니다</span>`;
   }
 }
