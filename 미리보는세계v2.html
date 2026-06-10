@@ -2113,54 +2113,54 @@ async function loadWeather() {
   const wxEl = document.getElementById('ibWx');
   if (!wxEl) return;
 
-  // 위치 정보 받기
-  let lat = 37.5665, lon = 126.9780, cityName = '서울';  // 기본값: 서울
+  // 위치 정보 받기 (geolocation 지원 시 1분 이내 캐시 재사용)
+  let lat = 37.5665, lon = 126.9780;
   try {
     const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, {timeout:6000, maximumAge:600000})
+      navigator.geolocation.getCurrentPosition(res, rej, {timeout:8000, maximumAge:120000})
     );
     lat = pos.coords.latitude;
     lon = pos.coords.longitude;
-    // 역지오코딩 (Nominatim)
-    try {
-      const geoR = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=ko`,
-        { signal: AbortSignal.timeout(5000), headers: {'Accept-Language':'ko'} }
-      );
-      if (geoR.ok) {
-        const geoD = await geoR.json();
-        const a = geoD.address || {};
-        cityName = a.city || a.town || a.county || a.village || a.state || '내위치';
-        // 시/구까지만 표시
-        if (cityName.length > 6) cityName = cityName.slice(0, 6);
-      }
-    } catch { /* 기본값 유지 */ }
-  } catch { /* 위치 거부 시 서울 기본값 */ }
+  } catch { /* 위치 거부/실패 시 서울 기본값 */ }
 
-  // 날씨 fetch (Open-Meteo)
+  // 백엔드 /api/weather 호출 (서버사이드 Open-Meteo + Nominatim, 10분 캐시)
+  const isDeployed = location.protocol !== 'file:';
   try {
-    const wR = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-      `&current=temperature_2m,weather_code,relative_humidity_2m` +
-      `&timezone=Asia/Seoul&forecast_days=1`,
-      { signal: AbortSignal.timeout(6000) }
-    );
-    if (!wR.ok) throw new Error('wx http '+wR.status);
-    const wD = await wR.json();
-    const cur = wD.current || {};
-    const temp = Math.round(cur.temperature_2m ?? 0);
-    const code = cur.weather_code ?? 0;
-    const humidity = cur.relative_humidity_2m ?? 0;
-    const desc = WX_CODE[code] || '🌤 맑음';
+    let wD;
+    if (isDeployed) {
+      const wR = await fetch(`/api/weather?lat=${lat}&lon=${lon}`, {
+        signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
+      });
+      if (!wR.ok) throw new Error('weather api ' + wR.status);
+      wD = await wR.json();
+    } else {
+      // 로컬 파일 환경: Open-Meteo 직접 호출
+      const wR = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&current=temperature_2m,weather_code,relative_humidity_2m&timezone=Asia/Seoul&forecast_days=1`
+      );
+      if (!wR.ok) throw new Error('wx http ' + wR.status);
+      const raw = await wR.json();
+      const cur = raw.current || {};
+      wD = { city:'서울', temp: Math.round(cur.temperature_2m||0), code: cur.weather_code||0, humidity: cur.relative_humidity_2m||0 };
+    }
+
+    const desc = WX_CODE[wD.code] || '🌤 맑음';
+    const now  = new Date();
+    const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
 
     wxEl.innerHTML = `
-      <span class="ib-wx-loc">📍 ${e(cityName)}</span>
+      <span class="ib-wx-loc">📍 ${e(wD.city)}</span>
       <span style="font-size:16px">${desc.split(' ')[0]}</span>
-      <span class="ib-wx-temp">${temp}°</span>
+      <span class="ib-wx-temp">${wD.temp}°</span>
       <span class="ib-wx-desc">${desc.split(' ').slice(1).join(' ')}</span>
-      <span class="ib-wx-desc" style="margin-left:3px;color:rgba(255,255,255,.45)">💧${humidity}%</span>`;
+      <span class="ib-wx-desc" style="margin-left:3px;color:rgba(255,255,255,.45)">💧${wD.humidity}%</span>
+      <span class="ib-wx-desc" style="margin-left:6px;color:rgba(255,255,255,.3);font-size:10px">${timeStr} 기준</span>`;
   } catch(err) {
+    console.warn('[Weather]', err.message || err);
     wxEl.innerHTML = `<span class="ib-wx-desc" style="color:rgba(255,255,255,.4)">🌡 날씨 정보 없음</span>`;
+    // 2분 후 재시도
+    setTimeout(loadWeather, 2 * 60 * 1000);
   }
 }
 
@@ -2203,9 +2203,9 @@ async function loadStocks() {
   }
 }
 
-// 생활정보 자동 갱신 (날씨 30분, 주식 5분)
+// 생활정보 자동 갱신 (날씨 15분, 주식 5분)
 function startInfoRefresh() {
-  setInterval(loadWeather, 30*60*1000);
+  setInterval(loadWeather, 15*60*1000);
   setInterval(loadStocks,   5*60*1000);
 }
 

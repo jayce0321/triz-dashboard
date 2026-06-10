@@ -1309,6 +1309,60 @@ async def get_stocks():
         raise HTTPException(status_code=502, detail=str(e))
 
 
+@app.get("/api/weather")
+async def get_weather(lat: float = Query(37.5665), lon: float = Query(126.9780)):
+    """날씨 정보: Open-Meteo + Nominatim 역지오코딩 (서버사이드, 10분 캐시)."""
+    import math, time as _t
+
+    # 10분 캐시 — 위치 변화 0.01도(~1km) 이내면 캐시 재사용
+    if not hasattr(get_weather, "_cache"):
+        get_weather._cache = {}
+    cache_key = (round(lat, 2), round(lon, 2))
+    now_ts = _t.time()
+    if cache_key in get_weather._cache:
+        entry = get_weather._cache[cache_key]
+        if now_ts - entry["ts"] < 600:
+            return entry["data"]
+
+    city_name = "서울"
+    async with httpx.AsyncClient(timeout=8, follow_redirects=True) as hx:
+        # 1. 역지오코딩 (Nominatim)
+        try:
+            geo_r = await hx.get(
+                f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json",
+                headers={"User-Agent": "MiriNews/1.0 segye.com news app", "Accept-Language": "ko"},
+            )
+            if geo_r.status_code == 200:
+                geo_d = geo_r.json()
+                a = geo_d.get("address", {})
+                raw = a.get("city") or a.get("town") or a.get("county") or a.get("village") or a.get("state", "내위치")
+                city_name = raw[:6] if len(raw) > 6 else raw
+        except Exception:
+            pass
+
+        # 2. Open-Meteo 날씨
+        wx_r = await hx.get(
+            f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
+            "&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m"
+            "&timezone=Asia/Seoul&forecast_days=1",
+        )
+        if wx_r.status_code != 200:
+            raise HTTPException(status_code=502, detail="Open-Meteo 오류")
+        cur = wx_r.json().get("current", {})
+
+    result = {
+        "city": city_name,
+        "temp": round(cur.get("temperature_2m", 0)),
+        "code": cur.get("weather_code", 0),
+        "humidity": cur.get("relative_humidity_2m", 0),
+        "wind": round(cur.get("wind_speed_10m", 0), 1),
+        "lat": lat,
+        "lon": lon,
+    }
+    get_weather._cache[cache_key] = {"ts": now_ts, "data": result}
+    return result
+
+
 @app.get("/api/rss-proxy")
 async def rss_proxy(url: str = Query(..., description="프록시할 URL")):
     """CORS 우회 프록시: segye.com RSS / YouTube 피드 등 허용 도메인 fetch."""
