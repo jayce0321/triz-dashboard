@@ -1230,6 +1230,18 @@ async def root():
 
 
 # ──────────────────────────────────────────────
+# 미리보는 세계 v2 — AI 뉴스 앱
+# ──────────────────────────────────────────────
+@app.get("/miribon")
+@app.get("/miribon/")
+async def miribon():
+    html_path = os.path.join(BASE_DIR, "미리보는세계v2.html")
+    if not os.path.exists(html_path):
+        raise HTTPException(status_code=404, detail="미리보는세계v2.html 파일을 찾을 수 없습니다.")
+    return FileResponse(html_path, media_type="text/html")
+
+
+# ──────────────────────────────────────────────
 # 문제 파싱 (자유 텍스트 → 구조화 필드)
 # ──────────────────────────────────────────────
 @app.post("/api/parse-problem")
