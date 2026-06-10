@@ -1574,14 +1574,17 @@ async function loadHome() {
     return;
   }
 
-  // 숏츠: 이미지 있는 기사 우선, 최대 8개
+  // 숏츠: 일반 RSS에서 이미지 있는 기사 우선, 최대 8개
   const forShorts = sortByImage(all).slice(0, 8);
   const shortsEl = document.getElementById('homeShorts');
   shortsEl.innerHTML = '';
   forShorts.forEach(a => shortsEl.appendChild(buildShortsCard(a)));
 
-  // 카드뉴스: 이미지 있는 기사 우선, 최대 7개
-  const forCards = sortByImage(all).slice(0, 7);
+  // 포토뉴스: 포토 전용 RSS (segye_photo.xml) — 일반 뉴스와 겹치지 않도록 별도 피드
+  const photoRss = await getRSS('photo');
+  photoRss.forEach(reg);
+  const photoSrc = photoRss.length ? photoRss : sortByImage(all).filter(a => a.img);
+  const forCards = photoSrc.slice(0, 7);
   const cardsEl = document.getElementById('homeCards');
   cardsEl.innerHTML = '';
   forCards.forEach(a => cardsEl.appendChild(buildCNCard(a)));
