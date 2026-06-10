@@ -141,11 +141,6 @@ img{display:block;max-width:100%}
   width:fit-content;margin-bottom:4px}
 .sc-title{font-size:10px;font-weight:700;color:#fff;line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.sc-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-58%);
-  width:36px;height:36px;border-radius:50%;
-  background:rgba(255,255,255,.22);backdrop-filter:blur(4px);
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;color:#fff;pointer-events:none}
 
 /* ══ CARD NEWS ROW ══ */
 .cn-row{display:flex;gap:9px;padding:0 14px 4px;overflow-x:auto;
@@ -699,7 +694,7 @@ img{display:block;max-width:100%}
     <!-- 숏츠 히어로 -->
     <div class="shorts-hero">
       <div class="shorts-lbl">
-        <h3>🎬 오늘의 숏츠 <span class="live-badge">LIVE</span></h3>
+        <h3>📰 주요뉴스 <span class="live-badge">LIVE</span></h3>
         <span class="more" onclick="gotoPage('shorts')">전체보기 ›</span>
       </div>
       <div class="shorts-row" id="homeShorts">
@@ -1442,7 +1437,7 @@ function buildShortsCard(a) {
       <span class="sc-cat">${e(c.l)}</span>
       <div class="sc-title">${e(a.title)}</div>
     </div>
-    <div class="sc-play">▶</div>`;
+    `;
   return btn;
 }
 
