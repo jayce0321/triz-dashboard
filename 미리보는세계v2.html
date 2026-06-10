@@ -944,13 +944,26 @@ const RSS = {
 const YT_CH   = 'UCzwT19hkdAkZIil8WdgzdgA'; // 세계일보 채널 ID
 const YT_RSS  = `https://www.youtube.com/feeds/videos.xml?channel_id=${YT_CH}`;
 const YT_EMBED = 'https://www.youtube.com/embed/';
+// hqdefault 없으면 mqdefault → sddefault 순으로 fallback
 const YT_THUMB = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+const YT_THUMB_FALLBACKS = id => [
+  `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
+  `https://i.ytimg.com/vi/${id}/sddefault.jpg`,
+];
 
-// 다중 CORS 프록시 — {fn, ms} 형태로 타임아웃 개별 관리
+// CORS 프록시 목록
+// 1순위: 동일 오리진 백엔드 프록시 (Railway 배포 시 항상 동작)
+// 2순위~: 외부 공용 프록시 (fallback)
+const _SELF_PROXY = (typeof location !== 'undefined' && location.protocol !== 'file:')
+  ? (u => `/api/rss-proxy?url=${encodeURIComponent(u)}`)
+  : null;
+
 const PROXIES = [
-  { fn: u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, ms:5000 },
-  { fn: u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,             ms:4000 },
-  { fn: u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, ms:3500 },
+  ...(_SELF_PROXY ? [{ fn: _SELF_PROXY, ms:10000, raw:true }] : []),
+  { fn: u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,  ms:7000, raw:true  },
+  { fn: u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,  ms:7000, raw:false },
+  { fn: u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,               ms:6000, raw:true  },
+  { fn: u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, ms:6000, raw:true },
 ];
 
 /* ════════════════════════════════════════════
@@ -972,13 +985,20 @@ function reg(a){ AMAP[a.id]=a; return a; }
 /* ════════════════════════════════════════════
    RSS FETCH  (다중 프록시 + fallback)
 ════════════════════════════════════════════ */
-// ① 수정: 타임아웃을 프록시별로 개별 적용
+// ① fetchProxy: raw/JSON 응답 모두 처리
 async function fetchProxy(url, proxy) {
   const purl = proxy.fn(url);
   const r = await fetch(purl, {signal: AbortSignal.timeout(proxy.ms)});
   if (!r.ok) throw new Error('http '+r.status);
-  const d = await r.json();
-  const xml = typeof d === 'string' ? d : (d.contents || d.body || '');
+  const raw = await r.text();
+  let xml = raw;
+  // JSON 래퍼 형태(allorigins /get)이면 contents 추출
+  if (!proxy.raw && raw.trimStart().startsWith('{')) {
+    try { const j = JSON.parse(raw); xml = j.contents || j.body || raw; } catch {}
+  } else if (raw.trimStart().startsWith('{')) {
+    // raw:true 인데 JSON이 왔다면 혹시 contents 있으면 사용
+    try { const j = JSON.parse(raw); if (j.contents) xml = j.contents; } catch {}
+  }
   if (!xml || xml.length < 100) throw new Error('empty');
   return xml;
 }
@@ -1227,7 +1247,10 @@ function buildYTShortsCard(v) {
   imgEl.alt = v.title;
   imgEl.loading = 'lazy';
   imgEl.src = v.thumb;
+  const fallbacks = YT_THUMB_FALLBACKS(v.vid);
+  let _fi = 0;
   imgEl.onerror = function() {
+    if (_fi < fallbacks.length) { this.src = fallbacks[_fi++]; return; }
     this.style.display = 'none';
     const ph = document.createElement('div');
     ph.className = 'yt-sf-ph';
@@ -1564,7 +1587,7 @@ async function loadHome() {
   }
   updateBanner();
   S.cacheTime['all'] = Date.now();
-  _R.home = true;
+  _rDone('home');
 }
 
 function loadMoreHome() {
@@ -1594,6 +1617,7 @@ async function loadNews(cat='all') {
     const mBtn = document.getElementById('newsMore');
     if (mBtn) mBtn.style.display = pers.length>8 ? 'block':'none';
     // 백그라운드 새로고침 (30분 이상 된 경우)
+    _rDone('news');
     const age = Date.now() - (S.cacheTime[cat]||0);
     if (age > 30*60*1000) refreshCatBg(cat);
     return;
@@ -1616,6 +1640,7 @@ async function loadNews(cat='all') {
   const mBtn = document.getElementById('newsMore');
   if (mBtn) mBtn.style.display = pers.length>8 ? 'block':'none';
   trackRead(cat, 0.3);
+  _rDone('news');
 }
 
 // 백그라운드 캐시 갱신 (화면 업데이트 없이 조용히)
@@ -1636,7 +1661,7 @@ function loadMoreNews() {
 // ④ 수정: 캐시 있으면 즉시 렌더 (all RSS는 홈에서 이미 fetch됨)
 async function loadCards() {
   const gridEl = document.getElementById('cardGrid');
-  if (_R.card) return; // 이미 렌더됨
+  if (!_rStale('card')) return; // 최근 렌더됨
 
   const all = S.cache['all'] ? S.cache['all'] : await getRSS('all');
   all.forEach(reg);
@@ -1662,24 +1687,26 @@ async function loadCards() {
     msg.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)';
     msg.textContent = '뉴스를 불러오지 못했습니다';
     gridEl.appendChild(msg);
-    _R.card = true;
+    _rDone('card');
     return;
   }
   sortByImage(all).slice(0,12).forEach((a,i)=>gridEl.appendChild(buildCNGridCard(a,i===0)));
-  _R.card = true;
+  _rDone('card');
 }
 
 async function loadShorts() {
   const feedEl = document.getElementById('shortsFeed');
-  if (_R.shorts) return; // 이미 렌더됨
+  if (!_rStale('shorts')) return; // 최근 렌더됨
 
-  feedEl.innerHTML = '';
+  feedEl.innerHTML = '<div class="spin-wrap" style="background:#000;color:rgba(255,255,255,.6)"><div class="spinner" style="border-color:rgba(255,255,255,.2);border-top-color:#fff"></div>불러오는 중…</div>';
+
   // 1) YouTube RSS 먼저 시도
   try {
     const ytItems = await fetchYouTube();
     if (ytItems.length) {
+      feedEl.innerHTML = '';
       ytItems.slice(0, 15).forEach(v => feedEl.appendChild(buildYTShortsCard(v)));
-      _R.shorts = true;
+      _rDone('shorts');
       return;
     }
   } catch(e) {
@@ -1689,19 +1716,24 @@ async function loadShorts() {
   // 2) YouTube 실패 시 뉴스 RSS 폴백
   const all = S.cache['all'] ? S.cache['all'] : await getRSS('all');
   all.forEach(reg);
+  feedEl.innerHTML = '';
   if (!all.length) {
     feedEl.innerHTML = '<div style="text-align:center;padding:50px;color:rgba(255,255,255,.6)">뉴스를 불러오지 못했습니다</div>';
     return;
   }
   sortByImage(all).slice(0,12).forEach(a=>feedEl.appendChild(buildShortsFullCard(a)));
-  _R.shorts = true;
+  _rDone('shorts');
 }
 
 /* ════════════════════════════════════════════
    NAVIGATION
 ════════════════════════════════════════════ */
-// ⑤ 수정: _rendered 플래그로 페이지별 로딩 상태 확실히 관리
-const _R = { home:false, news:false, card:false, shorts:false };
+// _R: 페이지별 마지막 렌더 타임스탬프 (0=미렌더)
+// 5분 경과 시 재렌더 허용
+const _R_TTL = 5 * 60 * 1000;
+const _R = { home:0, news:0, card:0, shorts:0 };
+function _rDone(pg) { _R[pg] = Date.now(); }
+function _rStale(pg) { return !_R[pg] || (Date.now() - _R[pg]) > _R_TTL; }
 // newsCat 변경 감지용
 let _lastNewsCat = 'all';
 
@@ -1712,18 +1744,19 @@ function gotoPage(page) {
   document.getElementById('ni-'+page).classList.add('on');
   S.page = page; window.scrollTo(0,0);
 
-  if (page==='news') {
+  if (page==='home') {
+    if (_rStale('home')) loadHome();
+  } else if (page==='news') {
     renderCatTabs();
-    // 탭 변경이 있거나 피드가 비어있으면 로딩
     const feedEmpty = !document.getElementById('newsFeed').children.length;
-    if (feedEmpty || S.newsCat !== _lastNewsCat) {
+    if (feedEmpty || S.newsCat !== _lastNewsCat || _rStale('news')) {
       _lastNewsCat = S.newsCat;
       loadNews(S.newsCat);
     }
   } else if (page==='card') {
-    loadCards(); // 내부에서 _R.card 플래그로 중복 방지
+    loadCards();
   } else if (page==='shorts') {
-    loadShorts(); // 내부에서 _R.shorts 플래그로 중복 방지
+    loadShorts();
   } else if (page==='my') {
     renderIntGrid(); updatePrefBars(); renderRecent(); updateDarkTgl(); updateSeniorTgl();
   }
@@ -2095,20 +2128,44 @@ const STOCKS = [
 ];
 
 async function fetchOneStock(sym) {
-  const yfUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1d`;
-  // allorigins 프록시 사용
-  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yfUrl)}`;
-  const r = await fetch(proxyUrl, { signal: AbortSignal.timeout(7000) });
-  if (!r.ok) throw new Error('proxy '+r.status);
-  const outer = await r.json();
-  const inner = JSON.parse(outer.contents);
-  const meta  = inner?.chart?.result?.[0]?.meta;
-  if (!meta) throw new Error('no meta');
-  return {
-    price: meta.regularMarketPrice,
-    prev:  meta.chartPreviousClose || meta.previousClose,
-    chgPct: meta.regularMarketChangePercent,
-  };
+  // v8 → v7 순으로 시도, allorigins get/raw 모두 시도
+  const endpoints = [
+    `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1d`,
+    `https://query2.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1d`,
+    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${sym}`,
+  ];
+  for (const yfUrl of endpoints) {
+    for (const pxFn of [
+      u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    ]) {
+      try {
+        const r = await fetch(pxFn(yfUrl), { signal: AbortSignal.timeout(7000) });
+        if (!r.ok) continue;
+        const raw = await r.text();
+        let inner;
+        try {
+          const outer = JSON.parse(raw);
+          inner = outer.contents ? JSON.parse(outer.contents) : outer;
+        } catch { continue; }
+        // v8 chart 응답
+        const meta = inner?.chart?.result?.[0]?.meta;
+        if (meta?.regularMarketPrice) return {
+          price: meta.regularMarketPrice,
+          prev:  meta.chartPreviousClose || meta.previousClose,
+          chgPct: meta.regularMarketChangePercent,
+        };
+        // v7 quote 응답
+        const q = inner?.quoteResponse?.result?.[0];
+        if (q?.regularMarketPrice) return {
+          price: q.regularMarketPrice,
+          prev:  q.regularMarketPreviousClose,
+          chgPct: q.regularMarketChangePercent,
+        };
+      } catch { /* 다음 시도 */ }
+    }
+  }
+  throw new Error('all endpoints failed');
 }
 
 async function loadStocks() {

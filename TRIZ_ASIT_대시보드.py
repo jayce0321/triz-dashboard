@@ -4,9 +4,10 @@ import json
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+import httpx
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse, Response
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -1227,6 +1228,58 @@ async def root():
     if not os.path.exists(html_path):
         raise HTTPException(status_code=404, detail="TRIZ_ASIT_대시보드.html 파일을 찾을 수 없습니다.")
     return FileResponse(html_path, media_type="text/html")
+
+
+# ──────────────────────────────────────────────
+# RSS / YouTube 프록시 — CORS 우회
+# 허용 도메인: segye.com, youtube.com, open-meteo.com
+# ──────────────────────────────────────────────
+_ALLOWED_HOSTS = (
+    "www.segye.com",
+    "img.segye.com",
+    "www.youtube.com",
+    "query1.finance.yahoo.com",
+    "query2.finance.yahoo.com",
+    "nominatim.openstreetmap.org",
+    "api.open-meteo.com",
+)
+
+@app.get("/api/rss-proxy")
+async def rss_proxy(url: str = Query(..., description="프록시할 URL")):
+    """CORS 우회 프록시: segye.com RSS / YouTube 피드 등 허용 도메인 fetch."""
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    if parsed.hostname not in _ALLOWED_HOSTS:
+        raise HTTPException(status_code=403, detail=f"허용되지 않은 도메인: {parsed.hostname}")
+
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/rss+xml, application/xml, text/xml, */*",
+        "Accept-Language": "ko-KR,ko;q=0.9",
+        "Referer": "https://www.segye.com/",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+            r = await client.get(url, headers=headers)
+            r.raise_for_status()
+            content_type = r.headers.get("content-type", "application/xml; charset=utf-8")
+            # CORS 허용 헤더 포함하여 반환
+            return Response(
+                content=r.content,
+                media_type=content_type,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "public, max-age=120",  # 2분 캐시
+                },
+            )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"프록시 오류: {str(e)}")
 
 
 # ──────────────────────────────────────────────
