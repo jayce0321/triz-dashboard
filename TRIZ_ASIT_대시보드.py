@@ -1574,6 +1574,70 @@ ASIT 폐쇄 세계 원칙: 모든 해결책은 '이미 문제 상황에 존재�
     return result
 
 
+
+# ──────────────────────────────────────────────
+# 미리보는세계 — 기사 AI Q&A 생성
+# ──────────────────────────────────────────────
+class QARequest(BaseModel):
+    title: str
+    description: str = ""
+    category: str = "society"
+    article_id: Optional[str] = None
+
+# 간단한 인메모리 캐시 (최대 200건)
+_qa_cache: dict[str, list] = {}
+
+@app.post("/api/qa")
+async def generate_qa(req: QARequest):
+    """기사 제목·본문으로 AI Q&A 3쌍 생성."""
+    cache_key = req.article_id or f"{req.title[:60]}"
+    if cache_key in _qa_cache:
+        return {"qa": _qa_cache[cache_key], "cached": True}
+
+    cat_labels = {
+        "politics": "정치", "economy": "경제", "society": "사회",
+        "international": "국제", "culture": "문화", "opinion": "오피니언",
+        "entertainment": "연예", "sports": "스포츠", "photo": "포토", "all": "일반",
+    }
+    cat_label = cat_labels.get(req.category, "일반")
+
+    system = (
+        "당신은 독자가 뉴스를 더 깊이 이해하도록 돕는 저널리즘 전문 AI입니다. "
+        "기사 내용을 바탕으로 독자가 궁금해할 질문 3개와 그에 대한 명확하고 간결한 답변을 작성하세요. "
+        "질문은 기사의 핵심 사실·배경·영향 중 하나를 다루어야 합니다. "
+        "답변은 기사 내용에 근거하되, 독자가 이해하기 쉽게 2~4문장으로 작성하세요. "
+        "반드시 JSON 형식으로만 응답하세요."
+    )
+    user = f"""다음 [{cat_label}] 기사를 읽고 Q&A 3쌍을 작성하세요.
+
+제목: {req.title}
+본문 요약: {req.description[:800] if req.description else '(본문 없음)'}
+
+출력 JSON (다른 텍스트 없이 JSON만):
+[
+  {{"q": "첫번째 질문 (기사 핵심 사실 관련)", "a": "답변 (2~4문장)"}},
+  {{"q": "두번째 질문 (배경·원인 관련)", "a": "답변 (2~4문장)"}},
+  {{"q": "세번째 질문 (영향·전망 관련)", "a": "답변 (2~4문장)"}}
+]"""
+
+    try:
+        raw = await call_ai_async(system, user, max_tokens=1024)
+        # JSON 배열 추출
+        import re
+        m = re.search(r'\[.*\]', raw, re.DOTALL)
+        if not m:
+            raise ValueError("JSON 배열 없음")
+        qa_list = json.loads(m.group())
+        # 캐시 크기 관리
+        if len(_qa_cache) >= 200:
+            oldest = next(iter(_qa_cache))
+            del _qa_cache[oldest]
+        _qa_cache[cache_key] = qa_list
+        return {"qa": qa_list, "cached": False}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/framework-feedback")
 async def framework_feedback(req: FrameworkFeedbackRequest):
     """3가지 프레임워크 에이전트(IFR / ASIT 폐쇄세계 / 분리원리)로 아이디어 평가."""

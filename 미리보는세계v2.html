@@ -1319,45 +1319,62 @@ function make3Lines(a) {
   return [line1, line2, line3];
 }
 
-/* GEO Q&A */
-const QA = {
-  politics:[
-    ['이 사안이 정치에 미치는 영향은?','여야 모두 대응 전략 마련에 나설 것으로 보이며, 관련 법안 처리 과정에서 논의가 이어질 전망입니다.'],
-    ['일반 시민에게 어떤 영향이 있나요?','정책 방향에 따라 행정 서비스와 복지 혜택에 변화가 생길 수 있습니다. 향후 정부 발표를 주목해야 합니다.'],
-    ['앞으로 어떻게 전개될까요?','전문가들은 여론 동향과 국회 처리 결과에 따라 방향이 결정될 것으로 전망합니다.'],
-  ],
-  economy:[
-    ['경제적 파급 효과는?','시장에서는 이번 소식이 관련 산업 전반에 영향을 미칠 것으로 보고 있으며 투자 심리 변화가 주목됩니다.'],
-    ['개인 재테크에 영향이 있나요?','금리·부동산·주식 등 자산 관리 측면에서 예의주시가 필요합니다. 재무 전문가 조언을 참고하세요.'],
-    ['전문가 전망은?','단기 변동성은 있겠지만 장기 펀더멘털에는 큰 변화가 없을 것으로 분석됩니다.'],
-  ],
-  society:[
-    ['이 사안의 사회적 의미는?','사회 구조적 문제와 연결된 만큼 폭넓은 사회적 논의와 제도 개선이 필요한 상황입니다.'],
-    ['관련 법률·제도는?','현행 제도의 한계가 드러났으며, 관련 법률 개정이나 정책 보완 요구가 높아지고 있습니다.'],
-    ['어떻게 대응할 수 있나요?','관련 정보를 꼼꼼히 확인하고, 필요 시 해당 기관의 안내를 받는 것이 좋습니다.'],
-  ],
-  international:[
-    ['한국에 어떤 영향이 있나요?','해당 국가와의 교역·외교 관계를 고려할 때, 우리나라 경제·안보 정책에 간접 영향이 예상됩니다.'],
-    ['글로벌 반응은?','국제 사회에서는 다양한 반응이 나오는 가운데, 다자 외교 차원의 대응이 주목됩니다.'],
-    ['향후 전망은?','전문가들은 협상과 대화를 통한 해결이 최선이며, 단기 극적 변화는 어렵다고 봅니다.'],
-  ],
-  culture:[
-    ['이 트렌드의 배경은?','미디어 환경 변화와 사회적 흐름이 맞물려 새로운 문화 현상이 빠르게 확산 중입니다.'],
-    ['어떻게 참여할 수 있나요?','관련 공연·전시·행사 정보를 확인하고 직접 참여해보세요. 새로운 경험이 될 것입니다.'],
-    ['앞으로 어떤 흐름이 올까요?','이 트렌드는 당분간 지속되며 다양한 파생 콘텐츠로 이어질 것으로 예상됩니다.'],
-  ],
-  entertainment:[
-    ['이 소식이 엔터테인먼트 업계에 미치는 영향은?','팬덤과 콘텐츠 소비 트렌드에 변화를 일으킬 수 있습니다. 관련 동향을 주목하세요.'],
-    ['팬들의 반응은?','국내외 팬들 사이에서 큰 화제가 되고 있으며 다양한 반응이 나오고 있습니다.'],
-    ['향후 활동 전망은?','업계 관계자들은 이번 소식이 향후 활동과 콘텐츠 방향에 영향을 줄 것으로 보고 있습니다.'],
-  ],
-  sports:[
-    ['이 소식의 스포츠적 의미는?','국내 스포츠 팬들의 큰 관심을 받고 있으며 관련 팀·선수의 향후 행보가 주목됩니다.'],
-    ['팬들에게 어떤 영향이 있나요?','경기 일정과 팀 전력에 변화가 예상되며 팬들의 응원 방식에도 영향을 줄 수 있습니다.'],
-    ['앞으로의 전망은?','전문 해설진들은 이번 변화가 리그 전체 판도에 적지 않은 영향을 미칠 것으로 분석합니다.'],
-  ],
+/* ═══ AI Q&A — 기사 본문 기반 실시간 생성 ═══ */
+const _qaCache = {};
+const _QA_API = (location.protocol !== 'file:') ? '/api/qa' : null;
+
+// fallback 템플릿 (API 실패 시)
+const _QA_TMPL = {
+  politics:[['이 사안이 정치에 미치는 영향은?','여야 모두 대응 전략 마련에 나설 것으로 보이며, 관련 법안 처리 과정에서 논의가 이어질 전망입니다.'],['일반 시민에게 어떤 영향이 있나요?','정책 방향에 따라 행정 서비스와 복지 혜택에 변화가 생길 수 있습니다.'],['앞으로 어떻게 전개될까요?','전문가들은 여론 동향과 국회 처리 결과에 따라 방향이 결정될 것으로 전망합니다.']],
+  economy:[['경제적 파급 효과는?','시장에서는 이번 소식이 관련 산업 전반에 영향을 미칠 것으로 보고 있으며 투자 심리 변화가 주목됩니다.'],['개인 재테크에 영향이 있나요?','금리·부동산·주식 등 자산 관리 측면에서 예의주시가 필요합니다.'],['전문가 전망은?','단기 변동성은 있겠지만 장기 펀더멘털에는 큰 변화가 없을 것으로 분석됩니다.']],
+  society:[['이 사안의 사회적 의미는?','사회 구조적 문제와 연결된 만큼 폭넓은 사회적 논의와 제도 개선이 필요한 상황입니다.'],['관련 법률·제도는?','현행 제도의 한계가 드러났으며 관련 법률 개정이나 정책 보완 요구가 높아지고 있습니다.'],['어떻게 대응할 수 있나요?','관련 정보를 꼼꼼히 확인하고 필요 시 해당 기관의 안내를 받는 것이 좋습니다.']],
+  international:[['한국에 어떤 영향이 있나요?','해당 국가와의 교역·외교 관계를 고려할 때, 우리나라 경제·안보 정책에 간접 영향이 예상됩니다.'],['글로벌 반응은?','국제 사회에서는 다양한 반응이 나오는 가운데, 다자 외교 차원의 대응이 주목됩니다.'],['향후 전망은?','전문가들은 협상과 대화를 통한 해결이 최선이며, 단기 극적 변화는 어렵다고 봅니다.']],
+  culture:[['이 트렌드의 배경은?','미디어 환경 변화와 사회적 흐름이 맞물려 새로운 문화 현상이 빠르게 확산 중입니다.'],['어떻게 참여할 수 있나요?','관련 공연·전시·행사 정보를 확인하고 직접 참여해보세요.'],['앞으로 어떤 흐름이 올까요?','이 트렌드는 당분간 지속되며 다양한 파생 콘텐츠로 이어질 것으로 예상됩니다.']],
+  entertainment:[['이 소식이 업계에 미치는 영향은?','팬덤과 콘텐츠 소비 트렌드에 변화를 일으킬 수 있습니다.'],['팬들의 반응은?','국내외 팬들 사이에서 큰 화제가 되고 있으며 다양한 반응이 나오고 있습니다.'],['향후 활동 전망은?','업계 관계자들은 이번 소식이 향후 활동과 콘텐츠 방향에 영향을 줄 것으로 보고 있습니다.']],
+  sports:[['이 소식의 스포츠적 의미는?','국내 스포츠 팬들의 큰 관심을 받고 있으며 관련 팀·선수의 향후 행보가 주목됩니다.'],['팬들에게 어떤 영향이 있나요?','경기 일정과 팀 전력에 변화가 예상되며 팬들의 응원 방식에도 영향을 줄 수 있습니다.'],['앞으로의 전망은?','전문 해설진들은 이번 변화가 리그 전체 판도에 적지 않은 영향을 미칠 것으로 분석합니다.']],
 };
-function getQA(a) { return (QA[a.category] || QA.politics).map(([q,ans])=>({q,a:ans})); }
+function getQAFallback(a) {
+  return (_QA_TMPL[a.category] || _QA_TMPL.society).map(([q,ans])=>({q,a:ans}));
+}
+
+async function fetchAIQA(a) {
+  const key = String(a.id);
+  if (_qaCache[key]) return _qaCache[key];
+  if (!_QA_API) return getQAFallback(a);
+  try {
+    const res = await fetch(_QA_API, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        title: a.title,
+        description: a.description || '',
+        category: a.category,
+        article_id: key,
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) throw new Error('http '+res.status);
+    const data = await res.json();
+    const qa = data.qa;
+    if (Array.isArray(qa) && qa.length) { _qaCache[key] = qa; return qa; }
+  } catch(err) {
+    console.warn('[QA] AI 생성 실패, 템플릿 사용:', err.message);
+  }
+  return getQAFallback(a);
+}
+
+function renderQAItems(qas) {
+  return qas.map(q=>`<div class="qa-item">
+    <div class="qa-q">${e(q.q)}</div>
+    <div class="qa-a">${e(q.a)}</div>
+  </div>`).join('');
+}
+function renderQALoading() {
+  return `<div class="qa-loading" style="display:flex;align-items:center;gap:7px;padding:10px 0">
+    <div class="mini-spin" style="border-color:rgba(13,122,107,.2);border-top-color:var(--teal);width:14px;height:14px;border-width:2px"></div>
+    <span style="font-size:var(--fs-xs);color:var(--muted)">AI가 기사를 분석 중…</span>
+  </div>`;
+}
 
 /* ════════════════════════════════════════════
    개인화 엔진
@@ -1450,7 +1467,6 @@ function buildCNCard(a) {
 function buildGeoCard(a) {
   const c = CATS.find(x=>x.k===a.category)||CATS[0];
   const lines = make3Lines(a);
-  const qas = getQA(a);
   const qId = 'q'+a.id;
   const img = a.image_url
     ? `<img class="gc-img" src="${e(a.image_url)}" loading="lazy"
@@ -1473,12 +1489,7 @@ function buildGeoCard(a) {
         💬 AI에게 더 물어보기
         <span class="qa-arr" id="qa${qId}">▼</span>
       </div>
-      <div class="qa-body" id="qb${qId}">
-        ${qas.map(q=>`<div class="qa-item">
-          <div class="qa-q">${e(q.q)}</div>
-          <div class="qa-a">${e(q.a)}</div>
-        </div>`).join('')}
-      </div>
+      <div class="qa-body" id="qb${qId}"></div>
       <div class="gc-acts">
         <button class="ga">📖 전문</button>
         <button class="ga">🔗 공유</button>
@@ -1490,6 +1501,12 @@ function buildGeoCard(a) {
   el.querySelector('#qt'+qId).addEventListener('click', ()=>{
     const body=el.querySelector('#qb'+qId), arr=el.querySelector('#qa'+qId);
     const open=body.classList.toggle('open'); arr.classList.toggle('open',open);
+    // 처음 열 때 AI Q&A 로딩
+    if (open && !body.dataset.aiLoaded) {
+      body.dataset.aiLoaded = '1';
+      body.innerHTML = renderQALoading();
+      fetchAIQA(a).then(qas => { body.innerHTML = renderQAItems(qas); });
+    }
   });
   const acts = el.querySelectorAll('.ga');
   acts[0].addEventListener('click', ()=>{ trackRead(a.category,1,a); openSheet(a); });
@@ -1780,7 +1797,6 @@ function openSheet(a) {
   if (!a) return;
   const c = CATS.find(x=>x.k===a.category)||CATS[0];
   const lines = make3Lines(a);
-  const qas = getQA(a);
 
   document.getElementById('shCat').innerHTML = `<span class="pill p-${e(a.category)}">${e(c.l)}</span>`;
   document.getElementById('shTitle').textContent = a.title;
@@ -1796,8 +1812,11 @@ function openSheet(a) {
   document.getElementById('shSumList').innerHTML = lines.map(l=>`<li>${e(l)}</li>`).join('');
 
   const qaEl=document.getElementById('shQA');
-  qaEl.innerHTML = '<div class="sh-qa-lbl">💬 AI Q&A</div>' +
-    qas.map(q=>`<div class="sh-qi"><div class="sh-qq">Q. ${e(q.q)}</div><div class="sh-aa">${e(q.a)}</div></div>`).join('');
+  qaEl.innerHTML = `<div class="sh-qa-lbl">💬 AI Q&A</div>${renderQALoading()}`;
+  fetchAIQA(a).then(qas => {
+    qaEl.innerHTML = '<div class="sh-qa-lbl">💬 AI Q&A</div>' +
+      qas.map(q=>`<div class="sh-qi"><div class="sh-qq">Q. ${e(q.q)}</div><div class="sh-aa">${e(q.a)}</div></div>`).join('');
+  });
 
   document.getElementById('shLink').href = a.url||'https://www.segye.com';
 
