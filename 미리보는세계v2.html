@@ -604,6 +604,57 @@ img{display:block;max-width:100%}
 .dark .info-bar{background:linear-gradient(90deg,#0A1020,#0F172A)}
 .dark .ib-wx,.dark .ib-stk-nm{color:rgba(255,255,255,.5)}
 .dark .ib-wx-temp,.dark .ib-stk-val{color:rgba(255,255,255,.9)}
+
+/* ══ YOUTUBE 플레이어 모달 ══ */
+#ytModal{
+  position:fixed;bottom:0;left:0;right:0;z-index:601;
+  background:var(--card);border-radius:20px 20px 0 0;
+  max-height:88vh;display:flex;flex-direction:column;
+  transform:translateY(102%);transition:transform .28s cubic-bezier(.32,.72,0,1)
+}
+#ytModal.on{transform:translateY(0)}
+@media(min-width:600px){
+  #ytModal{max-width:480px;left:50%;transform:translateX(-50%) translateY(102%)}
+  #ytModal.on{transform:translateX(-50%) translateY(0)}
+}
+@media(min-width:768px){
+  #ytModal{max-width:600px;width:600px}
+}
+.yt-hdr{display:flex;align-items:center;justify-content:center;
+  padding:8px 16px 6px;border-bottom:1px solid var(--border);flex-shrink:0}
+.yt-frame-wrap{position:relative;width:100%;flex-shrink:0}
+.yt-frame-wrap iframe{width:100%;border:none;display:block}
+.yt-landscape iframe{height:clamp(180px,56.25vw,270px)}
+.yt-portrait iframe{height:clamp(320px,80vw,450px)}
+@media(min-width:600px){.yt-landscape iframe{height:270px}.yt-portrait iframe{height:450px}}
+.yt-info{padding:11px 16px 6px;overflow-y:auto}
+.yt-info-title{font-size:var(--fs-sm);font-weight:700;color:var(--text);line-height:1.5;margin-bottom:3px}
+.yt-info-meta{font-size:var(--fs-xs);color:var(--muted)}
+
+/* ══ YouTube Shorts 카드 (숏츠 피드) ══ */
+.yt-sf{position:relative;width:100%;background:#000;margin-bottom:3px;
+  cursor:pointer;overflow:hidden;min-height:180px}
+.yt-sf-thumb{width:100%;max-height:56vw;object-fit:cover;display:block}
+.yt-sf-ph{width:100%;height:52vw;max-height:56vw;
+  display:flex;align-items:center;justify-content:center;font-size:48px;
+  background:linear-gradient(180deg,#1A2E5A,#8B0000)}
+.yt-badge{font-size:9px;background:#c00;color:#fff;
+  padding:2px 6px;border-radius:3px;width:fit-content;
+  margin-bottom:6px;font-weight:800;letter-spacing:.3px}
+
+/* ══ Instagram 배너 ══ */
+.ig-banner{
+  display:flex;align-items:center;gap:12px;
+  margin:10px 10px 12px;border-radius:14px;padding:14px 16px;
+  background:linear-gradient(135deg,#833ab4 0%,#fd1d1d 50%,#fcb045 100%);
+  cursor:pointer;text-decoration:none;transition:opacity .15s;
+  grid-column:1/-1
+}
+.ig-banner:active{opacity:.78}
+.ig-ic{font-size:30px;flex-shrink:0;line-height:1}
+.ig-text h3{font-size:var(--fs-sm);font-weight:800;color:#fff;margin-bottom:2px}
+.ig-text p{font-size:var(--fs-xs);color:rgba(255,255,255,.85);line-height:1.4}
+.ig-arr{margin-left:auto;color:rgba(255,255,255,.7);font-size:20px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -847,6 +898,25 @@ img{display:block;max-width:100%}
 
 <div id="toast"></div>
 
+<!-- ══ YouTube 플레이어 모달 ══ -->
+<div id="ytModal" role="dialog" aria-label="YouTube 플레이어">
+  <div class="yt-hdr">
+    <span style="font-size:12px;font-weight:700;color:var(--muted)">▶ 세계일보 YouTube</span>
+    <button onclick="ytClose()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text);font-size:20px;padding:4px 8px" aria-label="닫기">✕</button>
+  </div>
+  <div id="ytFrameWrap" class="yt-frame-wrap yt-landscape"></div>
+  <div class="yt-info">
+    <div id="ytTitle" class="yt-info-title"></div>
+    <div id="ytMeta" class="yt-info-meta"></div>
+    <div style="height:8px"></div>
+    <a id="ytExtLink" href="#" target="_blank" rel="noopener noreferrer"
+       style="font-size:12px;color:#c00;font-weight:700;text-decoration:none">
+      ▶ YouTube에서 보기 →
+    </a>
+  </div>
+  <div style="height:env(safe-area-inset-bottom,12px)"></div>
+</div>
+
 <script>
 /* ════════════════════════════════════════════
    CONFIG
@@ -870,6 +940,12 @@ const RSS = {
   sports:'https://www.segye.com/Articles/RSSList/segye_sports.xml',
   photo:'https://www.segye.com/Articles/RSSList/segye_photo.xml',
 };
+// ══ YouTube 설정 ══
+const YT_CH   = 'UCzwT19hkdAkZIil8WdgzdgA'; // 세계일보 채널 ID
+const YT_RSS  = `https://www.youtube.com/feeds/videos.xml?channel_id=${YT_CH}`;
+const YT_EMBED = 'https://www.youtube.com/embed/';
+const YT_THUMB = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+
 // 다중 CORS 프록시 — {fn, ms} 형태로 타임아웃 개별 관리
 const PROXIES = [
   { fn: u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, ms:5000 },
@@ -1064,6 +1140,147 @@ function parseFromHTMLDoc(doc, cat) {
     });
     return arts;
   } catch { return []; }
+}
+
+/* ════════════════════════════════════════════
+   YOUTUBE RSS 파서 & 로더
+════════════════════════════════════════════ */
+function parseYouTubeRSS(xmlText) {
+  try {
+    const dp = new DOMParser();
+    const doc = dp.parseFromString(xmlText, 'text/xml');
+    const entries = doc.querySelectorAll('entry');
+    if (!entries.length) return [];
+    const items = [];
+    entries.forEach(e => {
+      // yt:videoId — 네임스페이스 안전 처리
+      let vid = '';
+      const ytVid = e.getElementsByTagNameNS('http://www.youtube.com/xml/schemas/2015','videoId');
+      if (ytVid.length) vid = ytVid[0].textContent.trim();
+      if (!vid) {
+        const idEl = e.querySelector('videoId') || e.querySelector('id');
+        if (idEl) vid = (idEl.textContent.match(/([A-Za-z0-9_-]{11})$/)||[])[1]||'';
+      }
+      if (!vid) return;
+
+      const title   = (e.querySelector('title')?.textContent||'').trim();
+      const pubDate = (e.querySelector('published')?.textContent||'').trim();
+      const author  = (e.querySelector('author name')?.textContent||'세계일보').trim();
+
+      // media:thumbnail
+      let thumb = YT_THUMB(vid);
+      const mThumb = e.getElementsByTagNameNS('http://search.yahoo.com/mrss/','thumbnail');
+      if (mThumb.length) thumb = mThumb[0].getAttribute('url') || thumb;
+
+      items.push({ vid, title, thumb, pubDate, author });
+    });
+    return items;
+  } catch(err) {
+    console.error('[YT] 파싱 예외:', err);
+    return [];
+  }
+}
+
+async function fetchYouTube() {
+  for (const px of PROXIES) {
+    try {
+      const proxyUrl = px.fn(YT_RSS);
+      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(px.ms) });
+      if (!res.ok) continue;
+      // 먼저 텍스트로 읽어서 JSON인지 XML인지 판별
+      const raw = await res.text();
+      let xmlText = raw;
+      if (raw.trimStart().startsWith('{')) {
+        // allorigins JSON 래퍼 → contents 추출
+        try {
+          const j = JSON.parse(raw);
+          if (j.contents) xmlText = j.contents;
+        } catch { /* JSON 파싱 실패 시 raw 사용 */ }
+      }
+      const items = parseYouTubeRSS(xmlText);
+      if (items.length) return items;
+    } catch(e) {
+      console.warn('[YT] 프록시 실패:', e.message);
+    }
+  }
+  // allorigins /raw 엔드포인트 직접 시도
+  try {
+    const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(YT_RSS)}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      const txt = await res.text();
+      const items = parseYouTubeRSS(txt);
+      if (items.length) return items;
+    }
+  } catch(e) { /* ignore */ }
+  return [];
+}
+
+function buildYTShortsCard(v) {
+  const wrap = document.createElement('div');
+  wrap.className = 'sf-card yt-sf';
+  wrap.style.cssText = 'cursor:pointer';
+  wrap.addEventListener('click', () => ytOpen(v));
+
+  const imgEl = document.createElement('img');
+  imgEl.className = 'yt-sf-thumb';
+  imgEl.alt = v.title;
+  imgEl.loading = 'lazy';
+  imgEl.src = v.thumb;
+  imgEl.onerror = function() {
+    this.style.display = 'none';
+    const ph = document.createElement('div');
+    ph.className = 'yt-sf-ph';
+    ph.textContent = '▶';
+    wrap.insertBefore(ph, wrap.firstChild);
+  };
+
+  const info = document.createElement('div');
+  info.className = 'sf-info';
+  info.style.cssText = 'padding:10px 12px';
+  info.innerHTML = `
+    <div class="yt-badge">▶ YouTube</div>
+    <div class="sf-title" style="color:#fff">${v.title}</div>
+    <div class="sf-meta" style="color:rgba(255,255,255,.6);margin-top:4px">
+      ${v.pubDate ? new Date(v.pubDate).toLocaleDateString('ko-KR',{month:'short',day:'numeric'}) : ''}
+    </div>`;
+
+  wrap.appendChild(imgEl);
+  wrap.appendChild(info);
+  return wrap;
+}
+
+// YouTube 플레이어 모달 열기
+function ytOpen(v) {
+  const modal = document.getElementById('ytModal');
+  const wrap  = document.getElementById('ytFrameWrap');
+  const titleEl = document.getElementById('ytTitle');
+  const metaEl  = document.getElementById('ytMeta');
+  const extLink = document.getElementById('ytExtLink');
+
+  // iframe 생성
+  wrap.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.src = `${YT_EMBED}${v.vid}?autoplay=1&rel=0&playsinline=1`;
+  iframe.allow = 'autoplay;encrypted-media';
+  iframe.allowFullscreen = true;
+  iframe.setAttribute('allowfullscreen','');
+  wrap.appendChild(iframe);
+
+  titleEl.textContent = v.title;
+  metaEl.textContent  = v.author + (v.pubDate ? ' · ' + new Date(v.pubDate).toLocaleDateString('ko-KR') : '');
+  extLink.href = `https://www.youtube.com/watch?v=${v.vid}`;
+
+  modal.classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+
+function ytClose() {
+  const modal = document.getElementById('ytModal');
+  modal.classList.remove('on');
+  document.body.style.overflow = '';
+  // iframe 제거로 재생 중지
+  setTimeout(() => { document.getElementById('ytFrameWrap').innerHTML = ''; }, 300);
 }
 
 /* ════════════════════════════════════════════
@@ -1420,12 +1637,32 @@ function loadMoreNews() {
 async function loadCards() {
   const gridEl = document.getElementById('cardGrid');
   if (_R.card) return; // 이미 렌더됨
-  // 캐시 없으면 로딩 표시 유지, 있으면 즉시 렌더
+
   const all = S.cache['all'] ? S.cache['all'] : await getRSS('all');
   all.forEach(reg);
   gridEl.innerHTML = '';
+
+  // Instagram 배너 — RSS 성공/실패 여부와 관계없이 항상 상단 노출
+  const igBanner = document.createElement('a');
+  igBanner.className = 'ig-banner';
+  igBanner.href = 'https://www.instagram.com/segyetimes/';
+  igBanner.target = '_blank';
+  igBanner.rel = 'noopener noreferrer';
+  igBanner.innerHTML = `
+    <div class="ig-ic">📸</div>
+    <div class="ig-text">
+      <h3>세계일보 인스타그램</h3>
+      <p>@segyetimes · 카드뉴스·포토뉴스 구독하기</p>
+    </div>
+    <div class="ig-arr">›</div>`;
+  gridEl.appendChild(igBanner);
+
   if (!all.length) {
-    gridEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">뉴스를 불러오지 못했습니다</div>';
+    const msg = document.createElement('div');
+    msg.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)';
+    msg.textContent = '뉴스를 불러오지 못했습니다';
+    gridEl.appendChild(msg);
+    _R.card = true;
     return;
   }
   sortByImage(all).slice(0,12).forEach((a,i)=>gridEl.appendChild(buildCNGridCard(a,i===0)));
@@ -1435,9 +1672,23 @@ async function loadCards() {
 async function loadShorts() {
   const feedEl = document.getElementById('shortsFeed');
   if (_R.shorts) return; // 이미 렌더됨
+
+  feedEl.innerHTML = '';
+  // 1) YouTube RSS 먼저 시도
+  try {
+    const ytItems = await fetchYouTube();
+    if (ytItems.length) {
+      ytItems.slice(0, 15).forEach(v => feedEl.appendChild(buildYTShortsCard(v)));
+      _R.shorts = true;
+      return;
+    }
+  } catch(e) {
+    console.warn('[Shorts] YouTube 실패, RSS 폴백:', e.message);
+  }
+
+  // 2) YouTube 실패 시 뉴스 RSS 폴백
   const all = S.cache['all'] ? S.cache['all'] : await getRSS('all');
   all.forEach(reg);
-  feedEl.innerHTML = '';
   if (!all.length) {
     feedEl.innerHTML = '<div style="text-align:center;padding:50px;color:rgba(255,255,255,.6)">뉴스를 불러오지 못했습니다</div>';
     return;
