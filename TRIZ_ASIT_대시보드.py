@@ -1311,8 +1311,8 @@ async def get_stocks():
 
 @app.get("/api/weather")
 async def get_weather(lat: float = Query(37.5665), lon: float = Query(126.9780)):
-    """날씨 정보: Open-Meteo + Nominatim 역지오코딩 (서버사이드, 10분 캐시)."""
-    import math, time as _t
+    """날씨 정보: Open-Meteo → wttr.in 폴백 + Nominatim 역지오코딩 (10분 캐시)."""
+    import time as _t
 
     # 10분 캐시 — 위치 변화 0.01도(~1km) 이내면 캐시 재사용
     if not hasattr(get_weather, "_cache"):
@@ -1324,7 +1324,28 @@ async def get_weather(lat: float = Query(37.5665), lon: float = Query(126.9780))
         if now_ts - entry["ts"] < 600:
             return entry["data"]
 
+    def _wwo_to_wmo(wwo: int) -> int:
+        """World Weather Online 코드 → WMO 코드 변환 (wttr.in 폴백용)."""
+        if wwo == 113: return 0
+        if wwo == 116: return 2
+        if wwo in (119, 122): return 3
+        if wwo in (143, 248, 260): return 45
+        if wwo in (176, 263, 266, 281, 284): return 51
+        if wwo in (185): return 56
+        if wwo in (293, 296, 317): return 61
+        if wwo in (299, 302, 305, 308): return 63
+        if wwo in (311, 314, 350): return 66
+        if wwo in (323, 326, 320, 227): return 71
+        if wwo in (329, 332, 335, 338, 230): return 75
+        if wwo in (353, 362, 365, 368, 374): return 80
+        if wwo in (356, 359, 371, 377): return 82
+        if wwo in (200, 386, 392): return 95
+        if wwo in (389, 395): return 99
+        return 0
+
     city_name = "서울"
+    cur = None
+
     async with httpx.AsyncClient(timeout=8, follow_redirects=True) as hx:
         # 1. 역지오코딩 (Nominatim)
         try:
@@ -1340,15 +1361,41 @@ async def get_weather(lat: float = Query(37.5665), lon: float = Query(126.9780))
         except Exception:
             pass
 
-        # 2. Open-Meteo 날씨
-        wx_r = await hx.get(
-            f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
-            "&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m"
-            "&timezone=Asia/Seoul&forecast_days=1",
-        )
-        if wx_r.status_code != 200:
-            raise HTTPException(status_code=502, detail="Open-Meteo 오류")
-        cur = wx_r.json().get("current", {})
+        # 2. Open-Meteo 날씨 (1차 시도)
+        try:
+            wx_r = await hx.get(
+                f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
+                "&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m"
+                "&timezone=Asia/Seoul&forecast_days=1",
+            )
+            if wx_r.status_code == 200 and wx_r.text.strip():
+                cur = wx_r.json().get("current", {})
+        except Exception:
+            cur = None
+
+        # 3. Open-Meteo 실패 시 wttr.in 폴백
+        if not cur:
+            try:
+                wt_r = await hx.get(
+                    f"https://wttr.in/{lat},{lon}?format=j1",
+                    headers={"Accept": "application/json", "User-Agent": "MiriNews/1.0"},
+                )
+                if wt_r.status_code == 200 and wt_r.text.strip():
+                    cc = wt_r.json().get("current_condition", [{}])[0]
+                    cur = {
+                        "temperature_2m": float(cc.get("temp_C", 20)),
+                        "weather_code": _wwo_to_wmo(int(cc.get("weatherCode", 113))),
+                        "relative_humidity_2m": int(cc.get("humidity", 50)),
+                        "wind_speed_10m": float(cc.get("windspeedKmph", 0)),
+                    }
+            except Exception:
+                cur = None
+
+    # 4. 모두 실패 → 스테일 캐시 또는 기본값
+    if not cur:
+        if cache_key in get_weather._cache:
+            return get_weather._cache[cache_key]["data"]
+        cur = {"temperature_2m": 20, "weather_code": 0, "relative_humidity_2m": 60, "wind_speed_10m": 3.0}
 
     result = {
         "city": city_name,
