@@ -483,6 +483,36 @@ img{display:block;max-width:100%}
 .ib-fortune-lbl{display:flex;flex-direction:column;gap:1px}
 .ib-fortune-sub{font-size:9px;color:rgba(255,255,255,.5);font-weight:700}
 .ib-fortune-nm{font-size:10px;color:rgba(255,255,255,.9);font-weight:800}
+/* 주가 펼치기 버튼 */
+.ib-stk-more{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 8px;height:100%;cursor:pointer;flex-shrink:0;
+  border-left:1px solid rgba(255,255,255,.08);
+  font-size:11px;color:rgba(255,255,255,.55);font-weight:700;
+  transition:background .12s;user-select:none;
+}
+.ib-stk-more:active{background:rgba(255,255,255,.12)}
+.ib-stk-more-ico{font-size:13px;line-height:1;margin-bottom:1px;transition:transform .2s}
+.ib-stk-more-ico.open{transform:rotate(180deg)}
+/* 주가 드롭다운 */
+#stocksDropdown{
+  position:fixed;top:calc(var(--hdr) + 46px);right:0;z-index:250;
+  background:#0D1B3E;border:1px solid rgba(255,255,255,.15);
+  border-top:none;border-radius:0 0 10px 10px;
+  min-width:180px;padding:6px 0;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+  display:none;
+}
+#stocksDropdown.on{display:block}
+.sd-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.06);
+}
+.sd-item:last-child{border-bottom:none}
+.sd-nm{color:rgba(255,255,255,.6);font-weight:700;font-size:11px}
+.sd-val{font-size:12px;font-weight:800;color:#fff}
+.sd-chg{font-size:10px;font-weight:700;margin-left:5px}
+@media(min-width:600px){#stocksDropdown{right:calc(50% - 240px)}}
 /* 로그인 버튼 */
 .login-btn-hdr{min-width:44px;height:44px;border-radius:10px;color:#fff;font-size:14px;
   font-weight:700;background:rgba(255,255,255,.12);display:flex;align-items:center;
@@ -908,6 +938,9 @@ img{display:block;max-width:100%}
     <div class="empty"><div class="empty-ico">🔍</div><div class="empty-txt">키워드를 입력하세요<br>뉴스 제목과 본문에서 검색합니다</div></div>
   </div>
 </div>
+
+<!-- 주가 펼치기 드롭다운 -->
+<div id="stocksDropdown"></div>
 
 <!-- SHEET -->
 <div class="sheet-bg" id="sheetBg" onclick="sheetClose()"></div>
@@ -2219,11 +2252,14 @@ async function loadWeather() {
    생활정보 — 주가 지수
    백엔드 /api/stocks (yfinance, 3분 캐시)
 ════════════════════════════════════════════ */
+// 주가 펼치기 상태
+let _stocksExpanded = false;
+let _stocksExtra = []; // S&P500, DOW, NASDAQ
+
 async function loadStocks() {
   const el = document.getElementById('ibStocks');
   if (!el) return;
 
-  // file:// 환경에서는 백엔드 없음
   if (location.protocol === 'file:') {
     el.innerHTML = `<span class="ib-loading" style="color:rgba(255,255,255,.35)">배포 환경에서만 표시됩니다</span>`;
     return;
@@ -2235,7 +2271,12 @@ async function loadStocks() {
     const { stocks } = await res.json();
     if (!stocks || !stocks.length) throw new Error('empty');
 
-    el.innerHTML = stocks.map(s => {
+    // 대표지수(KOSPI·KOSDAQ)와 추가지수 분리
+    const MAIN_NMS = ['KOSPI', 'KOSDAQ'];
+    const main  = stocks.filter(s => MAIN_NMS.includes(s.nm));
+    _stocksExtra = stocks.filter(s => !MAIN_NMS.includes(s.nm));
+
+    function stkHTML(s) {
       const chg = s.chgPct ?? 0;
       const cls   = chg > 0.05 ? 'ib-up' : chg < -0.05 ? 'ib-dn' : 'ib-fl';
       const arrow = chg > 0.05 ? '▲'     : chg < -0.05 ? '▼'     : '━';
@@ -2247,10 +2288,64 @@ async function loadStocks() {
           <span class="ib-stk-chg ${cls}">${arrow}${pct}%</span>
         </div>
       </div>`;
-    }).join('');
+    }
+
+    // 대표지수만 info-bar에 표시 + 더보기 버튼
+    el.innerHTML = main.map(stkHTML).join('') +
+      (_stocksExtra.length ? `
+        <div class="ib-stk-more" id="stkMoreBtn" onclick="toggleStocksExpand()" role="button" aria-label="해외지수 펼치기">
+          <span class="ib-stk-more-ico" id="stkMoreIco">▾</span>
+          <span>더보기</span>
+        </div>` : '');
+
+    // 드롭다운 내용 미리 채우기
+    _renderStocksDropdown(_stocksExtra, stkHTML);
   } catch(err) {
     console.warn('[Stocks]', err.message);
     el.innerHTML = `<span class="ib-loading" style="color:rgba(255,255,255,.35)">시세 정보를 불러올 수 없습니다</span>`;
+  }
+}
+
+function _renderStocksDropdown(extra, stkHTML) {
+  const dd = document.getElementById('stocksDropdown');
+  if (!dd || !extra.length) return;
+  dd.innerHTML = extra.map(s => {
+    const chg = s.chgPct ?? 0;
+    const cls   = chg > 0.05 ? 'ib-up' : chg < -0.05 ? 'ib-dn' : 'ib-fl';
+    const arrow = chg > 0.05 ? '▲'     : chg < -0.05 ? '▼'     : '━';
+    const pct   = Math.abs(chg).toFixed(2);
+    return `<div class="sd-item">
+      <span class="sd-nm">${e(s.nm)}</span>
+      <span>
+        <span class="sd-val">${e(s.price)}</span>
+        <span class="sd-chg ${cls}">${arrow}${pct}%</span>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+function toggleStocksExpand() {
+  _stocksExpanded = !_stocksExpanded;
+  const dd  = document.getElementById('stocksDropdown');
+  const ico = document.getElementById('stkMoreIco');
+  if (dd)  dd.classList.toggle('on', _stocksExpanded);
+  if (ico) ico.classList.toggle('open', _stocksExpanded);
+  // 드롭다운 외부 클릭 시 닫기
+  if (_stocksExpanded) {
+    setTimeout(() => {
+      document.addEventListener('click', _closeStocksOnOutside, { once: true, capture: true });
+    }, 0);
+  }
+}
+
+function _closeStocksOnOutside(ev) {
+  const dd  = document.getElementById('stocksDropdown');
+  const btn = document.getElementById('stkMoreBtn');
+  if (dd && !dd.contains(ev.target) && btn && !btn.contains(ev.target)) {
+    _stocksExpanded = false;
+    dd.classList.remove('on');
+    const ico = document.getElementById('stkMoreIco');
+    if (ico) ico.classList.remove('open');
   }
 }
 
@@ -2275,21 +2370,38 @@ function getTodayZodiac() {
   return ZODIAC_CYCLE[(idx + 12) % 12];
 }
 
-async function openFortune() {
-  // 먼저 RSS에서 운세 관련 기사 검색
-  const all = S.cache['all'] || await getRSS('all');
-  const fortuneArts = all.filter(a =>
-    ['운세','띠','오늘의 운','점성','사주','궁합'].some(kw => a.title.includes(kw) || (a.description||'').includes(kw))
-  );
+// 세계닷컴 운세 카테고리 URL
+const FORTUNE_CAT_URL = 'https://m.segye.com/category/3000222';
 
-  if (fortuneArts.length) {
-    // 운세 기사가 있으면 bottom sheet로 표시
-    openSheet(fortuneArts[0]);
-    toast('🐷 오늘의 운세 기사를 불러왔습니다');
-  } else {
-    // 없으면 세계일보 운세 검색 페이지로 이동
-    window.open('https://www.segye.com/search/%EC%98%A4%EB%8A%98%EC%9D%98%20%EC%9A%B4%EC%84%B8', '_blank', 'noopener,noreferrer');
-    toast('🌐 세계일보 운세 페이지로 이동합니다');
+async function openFortune() {
+  toast('🔍 오늘의 운세 기사를 불러오는 중…');
+  try {
+    // CORS 프록시로 운세 카테고리 페이지 가져오기
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(FORTUNE_CAT_URL)}`;
+    const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('proxy ' + res.status);
+    const html = await res.text();
+
+    // 첫 번째 newsView 링크 추출 (= 오늘의 운세 기사)
+    const match = html.match(/href="(https?:\/\/[^"]*segye\.com\/newsView\/\d+)"|href="(\/newsView\/\d+)"/);
+    let articleUrl = '';
+    if (match) {
+      articleUrl = match[1] || ('https://m.segye.com' + match[2]);
+    }
+
+    if (articleUrl) {
+      window.open(articleUrl, '_blank', 'noopener,noreferrer');
+      toast('🐴 오늘의 운세 기사로 이동합니다');
+    } else {
+      // 파싱 실패 시 카테고리 페이지 직접 열기
+      window.open(FORTUNE_CAT_URL, '_blank', 'noopener,noreferrer');
+      toast('🌐 세계닷컴 오늘의 운세 페이지로 이동합니다');
+    }
+  } catch(err) {
+    console.warn('[Fortune]', err.message);
+    // 프록시 실패 시 카테고리 페이지 직접 열기
+    window.open(FORTUNE_CAT_URL, '_blank', 'noopener,noreferrer');
+    toast('🌐 세계닷컴 오늘의 운세 페이지로 이동합니다');
   }
 }
 
