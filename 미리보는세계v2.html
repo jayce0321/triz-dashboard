@@ -1905,6 +1905,19 @@ function switchCat(cat) {
 }
 
 /* ════════════════════════════════════════════
+   URL 변환: PC newsView → 모바일 spView + ?sns=sm 트래킹
+════════════════════════════════════════════ */
+function toMobileUrl(url) {
+  if (!url || !url.includes('segye.com')) return url;
+  try {
+    const u = new URL(url);
+    if (!u.pathname.includes('/newsView/') && !u.pathname.includes('/spView/')) return url;
+    const articleId = u.pathname.split('/').filter(Boolean).pop();
+    return `https://m.segye.com/spView/${articleId}?sns=sm`;
+  } catch { return url; }
+}
+
+/* ════════════════════════════════════════════
    SHEET
 ════════════════════════════════════════════ */
 function openSheet(a) {
@@ -1932,7 +1945,7 @@ function openSheet(a) {
       qas.map(q=>`<div class="sh-qi"><div class="sh-qq">Q. ${e(q.q)}</div><div class="sh-aa">${e(q.a)}</div></div>`).join('');
   });
 
-  document.getElementById('shLink').href = a.url||'https://www.segye.com';
+  document.getElementById('shLink').href = toMobileUrl(a.url)||'https://www.segye.com';
 
   document.getElementById('sheetBg').classList.add('on');
   document.getElementById('sheet').classList.add('on');
@@ -2118,10 +2131,10 @@ function updateSeniorTgl(){ const t=document.getElementById('seniorTgl'); if(t)t
 async function shareArt(a) {
   if (!a) return;
   if (navigator.share) {
-    try { await navigator.share({title:a.title, text:make3Lines(a)[0], url:a.url}); } catch{}
+    try { await navigator.share({title:a.title, text:make3Lines(a)[0], url:toMobileUrl(a.url)}); } catch{}
   } else {
-    try { await navigator.clipboard.writeText(a.url||location.href); toast('🔗 링크가 복사되었습니다'); }
-    catch { toast('링크: '+(a.url||'')); }
+    try { await navigator.clipboard.writeText(toMobileUrl(a.url)||location.href); toast('🔗 링크가 복사되었습니다'); }
+    catch { toast('링크: '+(toMobileUrl(a.url)||'')); }
   }
 }
 
@@ -2386,7 +2399,7 @@ async function openFortune() {
     const match = html.match(/href="(https?:\/\/[^"]*segye\.com\/newsView\/\d+)"|href="(\/newsView\/\d+)"/);
     let articleUrl = '';
     if (match) {
-      articleUrl = match[1] || ('https://m.segye.com' + match[2]);
+      articleUrl = toMobileUrl(match[1] || ('https://m.segye.com' + match[2]));
     }
 
     if (articleUrl) {
