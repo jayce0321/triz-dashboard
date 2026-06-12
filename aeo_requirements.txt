@@ -1,0 +1,13 @@
+# 세계일보 AEO 대시보드 의존성
+# Railway AEO 서비스 빌드에서 사용됩니다.
+# 설치 (로컬): pip install -r aeo_requirements.txt
+
+anthropic>=0.40
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.5
+python-dotenv>=1.0
+httpx>=0.27
+beautifulsoup4>=4.12
+pdfplumber>=0.10
+python-docx>=1.1

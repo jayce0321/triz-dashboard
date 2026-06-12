@@ -33,6 +33,13 @@ MODEL = "claude-haiku-4-5-20251001"
 app = FastAPI(title="세계일보 AEO 대시보드")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+# 기사 에이전트 라우터 (서울경제 AI-LINK 벤치마킹)
+try:
+    from article_agent import router as agent_router
+    app.include_router(agent_router)
+except ImportError:
+    pass  # Railway 환경에서 경로 차이 시 무시
+
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE  = os.path.join(BASE_DIR, "aeo_articles.json")
 HTML_FILE  = os.path.join(BASE_DIR, "aeo_dashboard.html")
@@ -564,6 +571,13 @@ async def index():
     if os.path.isfile(HTML_FILE):
         return open(HTML_FILE, encoding="utf-8").read()
     return HTMLResponse("<h1>aeo_대시보드.html 파일이 없습니다.</h1>")
+
+@app.get("/agent", response_class=HTMLResponse)
+async def agent_dashboard():
+    agent_html = os.path.join(BASE_DIR, "article_agent_dashboard.html")
+    if os.path.isfile(agent_html):
+        return open(agent_html, encoding="utf-8").read()
+    return HTMLResponse("<h1>article_agent_dashboard.html 파일이 없습니다.</h1>")
 
 @app.get("/api/status")
 async def status():
