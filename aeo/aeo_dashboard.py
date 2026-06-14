@@ -34,11 +34,14 @@ app = FastAPI(title="세계일보 AEO 대시보드")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 # 기사 에이전트 라우터 (서울경제 AI-LINK 벤치마킹)
+import sys as _sys, traceback as _tb
 try:
     from article_agent import router as agent_router
     app.include_router(agent_router)
-except ImportError:
-    pass  # Railway 환경에서 경로 차이 시 무시
+    print("[OK] article_agent router registered", flush=True)
+except Exception as _e:
+    print(f"[WARN] article_agent import failed: {_e}", file=_sys.stderr, flush=True)
+    _tb.print_exc()
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE  = os.path.join(BASE_DIR, "aeo_articles.json")
