@@ -688,8 +688,9 @@ function safeParseJson(raw) {
   const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
   if (s < 0 || e < 0) throw new Error('JSON 블록 없음');
   const snippet = raw.slice(s, e + 1);
+  // 1차: 그대로 파싱
   try { return JSON.parse(snippet); } catch(_) {}
-  // 문자열 내 이스케이프 안 된 줄바꿈 처리
+  // 2차: 문자열 내 리터럴 줄바꿈 → \n 이스케이프
   let fixed = '', inStr = false, esc2 = false;
   for (const c of snippet) {
     if (esc2) { fixed += c; esc2 = false; }
@@ -698,7 +699,26 @@ function safeParseJson(raw) {
     else if (inStr && (c === '\n' || c === '\r')) { fixed += '\\n'; }
     else { fixed += c; }
   }
-  return JSON.parse(fixed);
+  try { return JSON.parse(fixed); } catch(_) {}
+  // 3차: 문자열 내 미이스케이프 " 수정 (한국어 직접 인용 패턴)
+  let fixed2 = '', inStr3 = false, esc3 = false;
+  for (let i = 0; i < fixed.length; i++) {
+    const c = fixed[i];
+    if (esc3) { fixed2 += c; esc3 = false; continue; }
+    if (c === '\\' && inStr3) { fixed2 += c; esc3 = true; continue; }
+    if (c === '"') {
+      if (!inStr3) { inStr3 = true; fixed2 += c; continue; }
+      // 문자열 내부 — 닫는 따옴표인지 내용 따옴표인지 판별
+      let j = i + 1;
+      while (j < fixed.length && /[\s]/.test(fixed[j])) j++;
+      const nx = fixed[j] || '';
+      if (',}]:'.includes(nx)) { inStr3 = false; fixed2 += c; }
+      else { fixed2 += '\\"'; }  // 내용 따옴표 → 이스케이프
+      continue;
+    }
+    fixed2 += c;
+  }
+  return JSON.parse(fixed2);
 }
 
 function renderPress(raw, container, errBox) {
@@ -706,7 +726,40 @@ function renderPress(raw, container, errBox) {
   try {
     data = safeParseJson(raw);
   } catch(ex) {
-    container.innerHTML = `<div class="card"><pre style="white-space:pre-wrap;font-size:13px">${esc(raw)}</pre></div>`;
+    // 파싱 실패 시: 기사 본문 정규식 추출 후 편집 가능 UI 표시
+    let articleText = '';
+    const m = raw.match(/"article"\s*:\s*"([\s\S]*?)",\s*[\r\n]*\s*"(?:quotes|factcheck|reporting|char_count|editorial)/);
+    if (m) {
+      articleText = m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+    } else {
+      articleText = raw.replace(/^```json\s*/m, '').replace(/```\s*$/m, '').trim();
+    }
+    const escArt = articleText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    container.innerHTML = `<div class="card">
+      <div style="color:#b45309;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px">
+        ⚠️ JSON 구조 파싱 오류 — 기사 본문만 추출했습니다. 제목·팩트체크는 아래 원문에서 확인하세요.
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-weight:700;font-size:14px">📄 기사 본문 <span style="font-size:11px;font-weight:400;color:var(--muted)">(직접 수정 가능)</span></span>
+        <span style="font-size:12px;font-weight:600;color:var(--success)" id="press-char-count">${articleText.length.toLocaleString()}자</span>
+      </div>
+      <textarea id="press-article-body"
+        style="width:100%;min-height:220px;padding:14px;border:1px solid var(--border);border-radius:10px;font-size:14px;line-height:1.8;resize:vertical;font-family:inherit;background:white;box-sizing:border-box"
+        oninput="document.getElementById('press-char-count').textContent=this.value.length.toLocaleString()+'자'"
+      >${escArt}</textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="border:1px solid var(--border);background:none;color:var(--muted)"
+          onclick="copyTextarea('press-article-body')">📋 본문 복사</button>
+        <button class="btn btn-sm" style="border:1px solid #16a34a;background:#f0fdf4;color:#16a34a;font-weight:600"
+          onclick="sendToProof()">✍️ 교열 보내기</button>
+        <button class="btn btn-sm" style="border:1px solid var(--brand);background:var(--brand-light);color:var(--brand);font-weight:600"
+          onclick="sendToAeo('')">⚡ AEO 변환 보내기</button>
+      </div>
+      <details style="margin-top:16px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--muted);user-select:none">▶ 원문 JSON 보기</summary>
+        <pre style="white-space:pre-wrap;font-size:12px;margin-top:8px;padding:10px;background:#f5f5f5;border-radius:6px;overflow:auto;max-height:300px">${esc(raw)}</pre>
+      </details>
+    </div>`;
     return;
   }
 
@@ -750,17 +803,27 @@ function renderPress(raw, container, errBox) {
     html += `</ul></div>`;
   }
 
-  // ③ 기사 본문
+  // ③ 기사 본문 (편집 가능 textarea)
   if (data.article) {
     const charColor = charCount < 400 ? 'var(--warn)' : charCount > 1500 ? 'var(--danger)' : 'var(--success)';
+    const escArticle = data.article.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     html += `<div style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span style="font-weight:700;font-size:14px">📄 기사 본문</span>
-        <span style="font-size:12px;color:${charColor};font-weight:600">${charCount.toLocaleString()}자</span>
+        <span style="font-weight:700;font-size:14px">📄 기사 본문 <span style="font-size:11px;font-weight:400;color:var(--muted)">(직접 수정 가능)</span></span>
+        <span style="font-size:12px;color:${charColor};font-weight:600" id="press-char-count">${charCount.toLocaleString()}자</span>
       </div>
-      <div class="result-area show press-article-body" id="press-article-body" style="white-space:pre-wrap">${esc(data.article)}</div>
-      <button class="btn btn-sm" style="margin-top:8px;border:1px solid var(--border);background:none;color:var(--muted)"
-        onclick="copyText('press-article-body')">📋 본문 복사</button>
+      <textarea id="press-article-body"
+        style="width:100%;min-height:220px;padding:14px;border:1px solid var(--border);border-radius:10px;font-size:14px;line-height:1.8;resize:vertical;font-family:inherit;background:white"
+        oninput="document.getElementById('press-char-count').textContent=this.value.length.toLocaleString()+'자'"
+      >${escArticle}</textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="border:1px solid var(--border);background:none;color:var(--muted)"
+          onclick="copyTextarea('press-article-body')">📋 본문 복사</button>
+        <button class="btn btn-sm" style="border:1px solid #16a34a;background:#f0fdf4;color:#16a34a;font-weight:600"
+          onclick="sendToProof()">✍️ 교열 보내기</button>
+        <button class="btn btn-sm" style="border:1px solid var(--brand);background:var(--brand-light);color:var(--brand);font-weight:600"
+          onclick="sendToAeo(${JSON.stringify(titles[rec]?.title||'').replace(/"/g,'&quot;')})">⚡ AEO 변환 보내기</button>
+      </div>
     </div>`;
   }
 
@@ -824,10 +887,46 @@ function renderPress(raw, container, errBox) {
 function copyText(elId) {
   const el = document.getElementById(elId);
   if (!el) return;
-  navigator.clipboard.writeText(el.textContent).then(() => {
+  const text = el.tagName === 'TEXTAREA' ? el.value : el.textContent;
+  navigator.clipboard.writeText(text).then(() => {
     const btn = el.nextElementSibling;
     if (btn) { const orig = btn.textContent; btn.textContent = '✓ 복사됨'; setTimeout(() => btn.textContent = orig, 1500); }
   });
+}
+
+function copyTextarea(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  navigator.clipboard.writeText(el.value).then(() => {
+    // 버튼은 textarea 다음 div 안의 첫 번째 버튼
+    const btn = el.nextElementSibling?.querySelector('button');
+    if (btn) { const orig = btn.textContent; btn.textContent = '✓ 복사됨'; setTimeout(() => btn.textContent = orig, 1500); }
+  });
+}
+
+function sendToProof() {
+  const article = document.getElementById('press-article-body')?.value || '';
+  if (!article) return;
+  document.getElementById('proof-text').value = article;
+  // 교열 탭으로 전환
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-proof').classList.add('active');
+  document.querySelector('[onclick="switchTab(\'proof\')"]').classList.add('active');
+  document.getElementById('proof-text').focus();
+}
+
+function sendToAeo(title) {
+  const article = document.getElementById('press-article-body')?.value || '';
+  if (!article) return;
+  if (title) document.getElementById('aeo-title').value = title;
+  document.getElementById('aeo-body').value = article;
+  // AEO 탭으로 전환
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-aeo').classList.add('active');
+  document.querySelector('[onclick="switchTab(\'aeo\')"]').classList.add('active');
+  document.getElementById('aeo-title').focus();
 }
 
 // ── ③ 교열 ──────────────────────────────────────
