@@ -1,4 +1,54 @@
-# 미리보는세계 v2 — 맥미니 이어받기 가이드
+# 세계일보 AI 도구 — 팀 배포 가이드
+
+---
+
+## 🗞️ 기사 에이전트 (주요 작업 도구)
+
+### 기능
+| 탭 | 설명 |
+|---|---|
+| 기사 제목 추천 | 기사 초안 → 세계일보 스타일 제목 3개 추천 |
+| 보도자료 기사화 | 보도자료 텍스트/URL/PDF → 역피라미드 기사 자동 변환 |
+| 교열 | 기사 초안 맞춤법·어색한 표현·팩트 점검 |
+| AEO 변환 | 기사 → ChatGPT·Perplexity AI 검색 최적화 포맷 변환 |
+
+### 빠른 시작 (팀원용)
+
+**1단계 — 레포 클론**
+```bash
+git clone https://github.com/jayce0321/triz-dashboard.git
+cd triz-dashboard
+```
+
+**2단계 — API 키 설정** (최초 1회)
+```bash
+mkdir -p ~/.anthropic
+echo 'ANTHROPIC_API_KEY=sk-ant-여기에_실제_키_입력' > ~/.anthropic/triz.env
+```
+키 발급: https://console.anthropic.com/ → API Keys (최소 $5 크레딧 필요)
+
+**3단계 — 실행**
+```bash
+bash start.sh
+# → http://localhost:8765/agent
+```
+
+### 수동 실행 (선택)
+```bash
+cd aeo
+pip install -r requirements.txt
+uvicorn aeo_dashboard:app --host 0.0.0.0 --port 8765 --reload
+```
+
+### 환경변수
+| 변수 | 설명 | 기본값 |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Anthropic API 키 (필수) | — |
+| `PORT` | 서버 포트 | 8765 |
+
+---
+
+## 미리보는세계 v2 — 맥미니 이어받기 가이드
 
 ## 프로젝트 개요
 세계일보 모바일 뉴스 앱 (단일 HTML/CSS/JS, 1900줄+)  
