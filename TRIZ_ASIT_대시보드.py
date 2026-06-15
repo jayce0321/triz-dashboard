@@ -2028,19 +2028,24 @@ async def telegram_webhook(request: Request):
 
     cmd = text.split()[0].lower().split("@")[0] if text else ""
 
-    if   cmd == "/status":    await _cmd_status(chat_id)
-    elif cmd == "/republish": await _cmd_republish(chat_id)
-    elif cmd == "/today":     await _cmd_today(chat_id)
-    elif cmd == "/errors":    await _cmd_errors(chat_id)
-    elif cmd in ("/help", "/start"):
-        await _tg_send(chat_id,
-            "🤖 <b>Hoya Jaeho Bot</b>\n\n"
-            "/status — 최근 발행 실행 이력\n"
-            "/republish — 즉시 재발행 트리거\n"
-            "/today — 오늘 테제 요약\n"
-            "/errors — 최근 실패 이력\n"
-            "/help — 이 메뉴"
-        )
+    try:
+        if   cmd == "/status":    await _cmd_status(chat_id)
+        elif cmd == "/republish": await _cmd_republish(chat_id)
+        elif cmd == "/today":     await _cmd_today(chat_id)
+        elif cmd == "/errors":    await _cmd_errors(chat_id)
+        elif cmd in ("/help", "/start"):
+            await _tg_send(chat_id,
+                "🤖 <b>Hoya Jaeho Bot</b>\n\n"
+                "/status — 최근 발행 실행 이력\n"
+                "/republish — 즉시 재발행 트리거\n"
+                "/today — 오늘 테제 요약\n"
+                "/errors — 최근 실패 이력\n"
+                "/help — 이 메뉴"
+            )
+    except Exception as _e:
+        import traceback
+        traceback.print_exc()
+        await _tg_send(chat_id, f"⚠️ 오류 발생: {type(_e).__name__}: {_e}")
 
     return {"ok": True}
 
