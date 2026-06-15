@@ -2037,11 +2037,12 @@ async def telegram_webhook(request: Request):
         elif cmd == "/errors":    await _cmd_errors(chat_id)
         elif cmd in ("/help", "/start"):
             await _tg_send(chat_id,
-                "🤖 <b>Hoya Jaeho Bot</b>\n\n"
-                "/status — 최근 발행 실행 이력\n"
+                "📡 <b>JAYCE</b>\n"
+                "경제·투자 데일리 리서치 &amp; 테제 발행 봇\n\n"
+                "/today — 오늘의 테제 요약\n"
+                "/status — 최근 발행 이력\n"
                 "/republish — 즉시 재발행 트리거\n"
-                "/today — 오늘 테제 요약\n"
-                "/errors — 최근 실패 이력\n"
+                "/errors — 최근 오류 이력\n"
                 "/help — 이 메뉴"
             )
     except Exception as _e:
