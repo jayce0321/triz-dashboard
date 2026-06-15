@@ -5,7 +5,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 import httpx
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Query
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse, Response
 from pydantic import BaseModel
@@ -1908,6 +1908,145 @@ async def action_plan(req: ActionPlanRequest):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ──────────────────────────────────────────────
+# Telegram Bot — Hoya Jaeho Bot
+# ──────────────────────────────────────────────
+_TG_TOKEN    = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+_GH_PAT      = os.environ.get("GH_PAT", "")
+_TG_ALLOWED  = set(filter(None, os.environ.get("TELEGRAM_ALLOWED_IDS", "5066621346").split(",")))
+
+_DAILY_REPO  = "jayce0321/daily-thesis"
+_DAILY_WF    = "daily.yml"
+_DAILY_PAGES = "https://jayce0321.github.io/daily-thesis"
+
+
+async def _tg_send(chat_id, text: str):
+    if not _TG_TOKEN:
+        return
+    async with httpx.AsyncClient(timeout=10) as c:
+        await c.post(
+            f"https://api.telegram.org/bot{_TG_TOKEN}/sendMessage",
+            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+        )
+
+
+async def _gh(method: str, path: str, body: dict | None = None):
+    headers = {
+        "Authorization": f"Bearer {_GH_PAT}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    async with httpx.AsyncClient(timeout=15) as c:
+        fn = c.post if method == "POST" else c.get
+        return await fn(f"https://api.github.com{path}", headers=headers, json=body)
+
+
+async def _cmd_status(chat_id):
+    r = await _gh("GET", f"/repos/{_DAILY_REPO}/actions/runs?per_page=5")
+    if r.status_code != 200:
+        await _tg_send(chat_id, "❌ GitHub API 오류")
+        return
+    runs = r.json()["workflow_runs"]
+    daily = [x for x in runs if "테제" in x["name"] or "daily" in x["name"].lower()][:3] or runs[:3]
+    icon  = {"success": "✅", "failure": "❌", "cancelled": "⚠️"}
+    lines = ["📊 <b>최근 발행 이력</b>\n"]
+    for run in daily:
+        s = run.get("conclusion") or run.get("status", "진행중")
+        lines.append(f"{icon.get(s,'🔄')} #{run['run_number']} {run['name'][:18]}\n   {s} · {run['created_at'][:10]}")
+    await _tg_send(chat_id, "\n".join(lines))
+
+
+async def _cmd_republish(chat_id):
+    r = await _gh("POST", f"/repos/{_DAILY_REPO}/actions/workflows/{_DAILY_WF}/dispatches", {"ref": "main"})
+    if r.status_code == 204:
+        await _tg_send(chat_id, f"🚀 재발행 트리거 완료!\n약 1~2분 후 업데이트됩니다.\n📎 {_DAILY_PAGES}")
+    else:
+        await _tg_send(chat_id, f"❌ 트리거 실패 (HTTP {r.status_code})\nGH_PAT 권한을 확인하세요.")
+
+
+async def _cmd_today(chat_id):
+    from datetime import datetime, timezone, timedelta
+    today = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
+    url   = f"{_DAILY_PAGES}/{today}.html"
+    async with httpx.AsyncClient(timeout=10) as c:
+        r = await c.get(url)
+    if r.status_code == 200:
+        # 간단한 제목 추출 (bs4 없이)
+        html  = r.text
+        start = html.find("<title>")
+        end   = html.find("</title>")
+        title = html[start + 7:end].strip() if start != -1 else "제목 없음"
+        # h2 첫 번째 (핵심 테제)
+        h2s   = html.find("<h2")
+        h2e   = html.find("</h2>", h2s)
+        raw   = html[h2s:h2e + 5] if h2s != -1 else ""
+        import re
+        thesis = re.sub(r"<[^>]+>", "", raw).strip()[:120]
+        await _tg_send(chat_id, f"📰 <b>{today} 데일리 테제</b>\n\n{title}\n\n{thesis}\n\n📎 {url}")
+    else:
+        await _tg_send(chat_id, f"⚠️ 오늘({today}) 리포트가 아직 없습니다.\n/republish 로 발행할 수 있어요.")
+
+
+async def _cmd_errors(chat_id):
+    r = await _gh("GET", f"/repos/{_DAILY_REPO}/actions/runs?per_page=10&status=failure")
+    if r.status_code != 200:
+        await _tg_send(chat_id, "❌ GitHub API 오류")
+        return
+    runs = r.json()["workflow_runs"]
+    if not runs:
+        await _tg_send(chat_id, "✅ 최근 실패 이력 없음!")
+        return
+    lines = [f"🚨 <b>최근 실패 {len(runs)}건</b>\n"]
+    for run in runs[:5]:
+        lines.append(f"❌ #{run['run_number']} {run['name'][:20]}\n   {run['created_at'][:10]}")
+    await _tg_send(chat_id, "\n".join(lines))
+
+
+@app.post("/telegram/webhook")
+async def telegram_webhook(request: Request):
+    body = await request.json()
+    msg  = body.get("message") or body.get("edited_message")
+    if not msg:
+        return {"ok": True}
+
+    chat_id = str(msg["chat"]["id"])
+    text    = msg.get("text", "")
+
+    if _TG_ALLOWED and chat_id not in _TG_ALLOWED:
+        await _tg_send(chat_id, "⛔ 허가되지 않은 사용자입니다.")
+        return {"ok": True}
+
+    cmd = text.split()[0].lower().split("@")[0] if text else ""
+
+    if   cmd == "/status":    await _cmd_status(chat_id)
+    elif cmd == "/republish": await _cmd_republish(chat_id)
+    elif cmd == "/today":     await _cmd_today(chat_id)
+    elif cmd == "/errors":    await _cmd_errors(chat_id)
+    elif cmd in ("/help", "/start"):
+        await _tg_send(chat_id,
+            "🤖 <b>Hoya Jaeho Bot</b>\n\n"
+            "/status — 최근 발행 실행 이력\n"
+            "/republish — 즉시 재발행 트리거\n"
+            "/today — 오늘 테제 요약\n"
+            "/errors — 최근 실패 이력\n"
+            "/help — 이 메뉴"
+        )
+
+    return {"ok": True}
+
+
+@app.get("/telegram/set-webhook")
+async def telegram_set_webhook(url: str = Query(..., description="Railway 서버 전체 URL, 예: https://xxx.up.railway.app/telegram/webhook")):
+    """웹훅 등록. 배포 직후 한 번만 호출하면 됩니다."""
+    if not _TG_TOKEN:
+        return {"error": "TELEGRAM_BOT_TOKEN이 설정되지 않았습니다."}
+    async with httpx.AsyncClient() as c:
+        r = await c.post(
+            f"https://api.telegram.org/bot{_TG_TOKEN}/setWebhook",
+            json={"url": url},
+        )
+    return r.json()
 
 
 # ──────────────────────────────────────────────
