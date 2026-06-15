@@ -2015,6 +2015,57 @@ async def _cmd_publish(chat_id, topic: str):
         await _tg_send(chat_id, f"❌ 트리거 실패 (HTTP {r.status_code})")
 
 
+_ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+_CHAT_HISTORY: dict[str, list] = {}  # chat_id → 최근 메시지 히스토리 (최대 10턴)
+
+async def _cmd_chat(chat_id: str, user_text: str):
+    """자유 대화: 경제·투자 전문가 JAYCE로 Claude API 호출"""
+    if not _ANTHROPIC_KEY:
+        await _tg_send(chat_id, "⚠️ API 키가 설정되지 않았습니다.")
+        return
+
+    # 히스토리 관리 (최대 10턴 = 20메시지)
+    history = _CHAT_HISTORY.setdefault(chat_id, [])
+    history.append({"role": "user", "content": user_text})
+    if len(history) > 20:
+        history[:] = history[-20:]
+
+    payload = {
+        "model": "claude-sonnet-4-6",
+        "max_tokens": 800,
+        "system": (
+            "당신은 JAYCE입니다. 경제·투자·시장 전문 AI 어시스턴트로 세계일보 소속입니다.\n"
+            "핵심 원칙:\n"
+            "- 답변은 간결하게 (3~5문장), 핵심 인사이트 우선\n"
+            "- 숫자와 데이터로 뒷받침. 불확실한 것은 솔직히 말함\n"
+            "- 투자 권유 아닌 시장 분석 관점으로 답변\n"
+            "- 한국어로 답변. 경제 용어는 한글+영문 병기\n"
+            "- 이모지는 최소화 (문단 구분용으로만 사용)"
+        ),
+        "messages": history,
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": _ANTHROPIC_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json=payload,
+            )
+        if r.status_code == 200:
+            reply = r.json()["content"][0]["text"]
+            history.append({"role": "assistant", "content": reply})
+            await _tg_send(chat_id, reply)
+        else:
+            await _tg_send(chat_id, f"⚠️ Claude API 오류 ({r.status_code})")
+    except Exception as e:
+        await _tg_send(chat_id, f"⚠️ 오류: {e}")
+
+
 async def _cmd_today(chat_id, topic: str = "economy"):
     import re as _re
     from datetime import datetime, timezone, timedelta
@@ -2090,20 +2141,21 @@ async def telegram_webhook(request: Request):
         elif cmd == "/publish":   await _cmd_publish(chat_id, arg1 or "economy")
         elif cmd in ("/help", "/start"):
             await _tg_send(chat_id,
-                "📡 <b>JAYCE</b> — 데일리 테제 발행 봇\n"
-                "📊 경제·투자  🏛️ 정치  🎬 컬처\n\n"
-                "<b>조회</b>\n"
+                "📡 <b>JAYCE</b> — 경제·투자 AI 어시스턴트\n\n"
+                "<b>💬 자유 대화</b>\n"
+                "명령어 없이 질문하면 경제·투자 전문가로 답변합니다.\n\n"
+                "<b>📋 조회 명령어</b>\n"
                 "/today [economy|politics|culture] — 오늘 테제 요약\n"
-                "/status — 최근 발행 이력\n"
-                "/errors — 최근 오류 이력\n\n"
-                "<b>발행</b>\n"
+                "/status — 최근 발행 이력\n\n"
+                "<b>🚀 발행 명령어</b>\n"
                 "/publish economy — 📊 경제·투자 발행\n"
                 "/publish politics — 🏛️ 정치 발행\n"
                 "/publish culture — 🎬 컬처 발행\n"
-                "/publish all — 3개 동시 발행\n"
-                "/republish — 경제·투자 재발행\n\n"
+                "/publish all — 3개 동시 발행\n\n"
                 "/help — 이 메뉴"
             )
+        elif text and not cmd.startswith("/"):
+            await _cmd_chat(chat_id, text)
     except Exception as _e:
         import traceback
         traceback.print_exc()
