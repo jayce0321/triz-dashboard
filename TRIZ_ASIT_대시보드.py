@@ -1941,8 +1941,10 @@ async def _gh(method: str, path: str, body: dict | None = None):
         "Accept": "application/vnd.github.v3+json",
     }
     async with httpx.AsyncClient(timeout=15) as c:
-        fn = c.post if method == "POST" else c.get
-        return await fn(f"https://api.github.com{path}", headers=headers, json=body)
+        url = f"https://api.github.com{path}"
+        if method == "POST":
+            return await c.post(url, headers=headers, json=body)
+        return await c.get(url, headers=headers)
 
 
 async def _cmd_status(chat_id):
