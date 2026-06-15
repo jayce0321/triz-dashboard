@@ -1922,7 +1922,14 @@ _TG_WH_SECRET   = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")  # setWebhook �
 
 _DAILY_REPO  = "jayce0321/daily-thesis"
 _DAILY_WF    = "daily.yml"
+_DAILY_WF_ALL = "daily-all.yml"
 _DAILY_PAGES = "https://jayce0321.github.io/daily-thesis"
+
+_TOPIC_MAP = {
+    "economy":  {"name": "경제·투자", "icon": "📊", "html": "{today}.html",         "wf": "daily.yml"},
+    "politics": {"name": "정치",      "icon": "🏛️", "html": "{today}-politics.html", "wf": "daily.yml"},
+    "culture":  {"name": "컬처",      "icon": "🎬", "html": "{today}-culture.html",  "wf": "daily.yml"},
+}
 
 
 async def _tg_send(chat_id, text: str):
@@ -1963,34 +1970,77 @@ async def _cmd_status(chat_id):
 
 
 async def _cmd_republish(chat_id):
-    r = await _gh("POST", f"/repos/{_DAILY_REPO}/actions/workflows/{_DAILY_WF}/dispatches", {"ref": "main"})
+    r = await _gh("POST", f"/repos/{_DAILY_REPO}/actions/workflows/{_DAILY_WF}/dispatches",
+                  {"ref": "main", "inputs": {"topic": "economy"}})
     if r.status_code == 204:
-        await _tg_send(chat_id, f"🚀 재발행 트리거 완료!\n약 1~2분 후 업데이트됩니다.\n📎 {_DAILY_PAGES}")
+        await _tg_send(chat_id, f"🚀 경제·투자 재발행 트리거!\n약 1~2분 후 업데이트됩니다.\n📎 {_DAILY_PAGES}")
     else:
         await _tg_send(chat_id, f"❌ 트리거 실패 (HTTP {r.status_code})\nGH_PAT 권한을 확인하세요.")
 
 
-async def _cmd_today(chat_id):
+async def _cmd_publish(chat_id, topic: str):
     from datetime import datetime, timezone, timedelta
     today = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
-    url   = f"{_DAILY_PAGES}/{today}.html"
+
+    if topic == "all":
+        r = await _gh("POST", f"/repos/{_DAILY_REPO}/actions/workflows/{_DAILY_WF_ALL}/dispatches",
+                      {"ref": "main"})
+        if r.status_code == 204:
+            await _tg_send(chat_id, "🚀 전체 발행 트리거!\n📊 경제·투자  🏛️ 정치  🎬 컬처\n3개 주제 동시 생성 시작 (~4분)")
+        else:
+            await _tg_send(chat_id, f"❌ 트리거 실패 (HTTP {r.status_code})")
+        return
+
+    if topic not in _TOPIC_MAP:
+        await _tg_send(chat_id,
+            "📋 사용법: /publish [주제]\n\n"
+            "  /publish economy   — 📊 경제·투자\n"
+            "  /publish politics  — 🏛️ 정치\n"
+            "  /publish culture   — 🎬 컬처\n"
+            "  /publish all       — 3개 동시 발행"
+        )
+        return
+
+    t = _TOPIC_MAP[topic]
+    r = await _gh("POST", f"/repos/{_DAILY_REPO}/actions/workflows/{t['wf']}/dispatches",
+                  {"ref": "main", "inputs": {"topic": topic}})
+    if r.status_code == 204:
+        html_name = t["html"].format(today=today)
+        await _tg_send(chat_id,
+            f"{t['icon']} <b>{t['name']}</b> 발행 트리거!\n"
+            f"약 1~2분 후 업데이트됩니다.\n"
+            f"📎 {_DAILY_PAGES}/{html_name}"
+        )
+    else:
+        await _tg_send(chat_id, f"❌ 트리거 실패 (HTTP {r.status_code})")
+
+
+async def _cmd_today(chat_id, topic: str = "economy"):
+    import re as _re
+    from datetime import datetime, timezone, timedelta
+    today = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
+
+    if topic not in _TOPIC_MAP:
+        topic = "economy"
+    t = _TOPIC_MAP[topic]
+    html_name = t["html"].format(today=today)
+    url = f"{_DAILY_PAGES}/{html_name}"
+
     async with httpx.AsyncClient(timeout=10) as c:
         r = await c.get(url)
     if r.status_code == 200:
-        # 간단한 제목 추출 (bs4 없이)
-        html  = r.text
-        start = html.find("<title>")
-        end   = html.find("</title>")
-        title = html[start + 7:end].strip() if start != -1 else "제목 없음"
-        # h2 첫 번째 (핵심 테제)
-        h2s   = html.find("<h2")
-        h2e   = html.find("</h2>", h2s)
-        raw   = html[h2s:h2e + 5] if h2s != -1 else ""
-        import re
-        thesis = re.sub(r"<[^>]+>", "", raw).strip()[:120]
-        await _tg_send(chat_id, f"📰 <b>{today} 데일리 테제</b>\n\n{title}\n\n{thesis}\n\n📎 {url}")
+        body  = r.text
+        start = body.find("<title>"); end = body.find("</title>")
+        title = body[start + 7:end].strip() if start != -1 else "제목 없음"
+        h2s   = body.find("<h2"); h2e = body.find("</h2>", h2s)
+        raw   = body[h2s:h2e + 5] if h2s != -1 else ""
+        thesis = _re.sub(r"<[^>]+>", "", raw).strip()[:120]
+        await _tg_send(chat_id,
+            f"{t['icon']} <b>{today} {t['name']} 데일리 테제</b>\n\n{title}\n\n{thesis}\n\n📎 {url}")
     else:
-        await _tg_send(chat_id, f"⚠️ 오늘({today}) 리포트가 아직 없습니다.\n/republish 로 발행할 수 있어요.")
+        await _tg_send(chat_id,
+            f"⚠️ 오늘({today}) {t['name']} 리포트가 아직 없습니다.\n"
+            f"/publish {topic} 으로 발행할 수 있어요.")
 
 
 async def _cmd_errors(chat_id):
@@ -2028,21 +2078,30 @@ async def telegram_webhook(request: Request):
         await _tg_send(chat_id, "⛔ 허가되지 않은 사용자입니다.")
         return {"ok": True}
 
-    cmd = text.split()[0].lower().split("@")[0] if text else ""
+    parts = text.split() if text else []
+    cmd   = parts[0].lower().split("@")[0] if parts else ""
+    arg1  = parts[1].lower() if len(parts) > 1 else ""
 
     try:
         if   cmd == "/status":    await _cmd_status(chat_id)
         elif cmd == "/republish": await _cmd_republish(chat_id)
-        elif cmd == "/today":     await _cmd_today(chat_id)
+        elif cmd == "/today":     await _cmd_today(chat_id, arg1 or "economy")
         elif cmd == "/errors":    await _cmd_errors(chat_id)
+        elif cmd == "/publish":   await _cmd_publish(chat_id, arg1 or "economy")
         elif cmd in ("/help", "/start"):
             await _tg_send(chat_id,
-                "📡 <b>JAYCE</b>\n"
-                "경제·투자 데일리 리서치 &amp; 테제 발행 봇\n\n"
-                "/today — 오늘의 테제 요약\n"
+                "📡 <b>JAYCE</b> — 데일리 테제 발행 봇\n"
+                "📊 경제·투자  🏛️ 정치  🎬 컬처\n\n"
+                "<b>조회</b>\n"
+                "/today [economy|politics|culture] — 오늘 테제 요약\n"
                 "/status — 최근 발행 이력\n"
-                "/republish — 즉시 재발행 트리거\n"
-                "/errors — 최근 오류 이력\n"
+                "/errors — 최근 오류 이력\n\n"
+                "<b>발행</b>\n"
+                "/publish economy — 📊 경제·투자 발행\n"
+                "/publish politics — 🏛️ 정치 발행\n"
+                "/publish culture — 🎬 컬처 발행\n"
+                "/publish all — 3개 동시 발행\n"
+                "/republish — 경제·투자 재발행\n\n"
                 "/help — 이 메뉴"
             )
     except Exception as _e:
