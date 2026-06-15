@@ -1971,7 +1971,7 @@ async def _cmd_status(chat_id):
 
 async def _cmd_republish(chat_id):
     r = await _gh("POST", f"/repos/{_DAILY_REPO}/actions/workflows/{_DAILY_WF}/dispatches",
-                  {"ref": "main", "inputs": {"topic": "economy"}})
+                  {"ref": "main"})
     if r.status_code == 204:
         await _tg_send(chat_id, f"🚀 경제·투자 재발행 트리거!\n약 1~2분 후 업데이트됩니다.\n📎 {_DAILY_PAGES}")
     else:
@@ -2003,7 +2003,7 @@ async def _cmd_publish(chat_id, topic: str):
 
     t = _TOPIC_MAP[topic]
     r = await _gh("POST", f"/repos/{_DAILY_REPO}/actions/workflows/{t['wf']}/dispatches",
-                  {"ref": "main", "inputs": {"topic": topic}})
+                  {"ref": "main"})
     if r.status_code == 204:
         html_name = t["html"].format(today=today)
         await _tg_send(chat_id,
