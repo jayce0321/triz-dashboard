@@ -1913,9 +1913,12 @@ async def action_plan(req: ActionPlanRequest):
 # ──────────────────────────────────────────────
 # Telegram Bot — Hoya Jaeho Bot
 # ──────────────────────────────────────────────
-_TG_TOKEN    = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-_GH_PAT      = os.environ.get("GH_PAT", "")
-_TG_ALLOWED  = set(filter(None, os.environ.get("TELEGRAM_ALLOWED_IDS", "5066621346").split(",")))
+import hmac as _hmac
+
+_TG_TOKEN       = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+_GH_PAT         = os.environ.get("GH_PAT", "")
+_TG_ALLOWED     = set(filter(None, os.environ.get("TELEGRAM_ALLOWED_IDS", "5066621346").split(",")))
+_TG_WH_SECRET   = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")  # setWebhook 시 secret_token 으로 등록한 값
 
 _DAILY_REPO  = "jayce0321/daily-thesis"
 _DAILY_WF    = "daily.yml"
@@ -2005,6 +2008,12 @@ async def _cmd_errors(chat_id):
 
 @app.post("/telegram/webhook")
 async def telegram_webhook(request: Request):
+    # 웹훅 시크릿 검증 (TELEGRAM_WEBHOOK_SECRET 설정 시에만 강제)
+    if _TG_WH_SECRET:
+        incoming = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+        if not _hmac.compare_digest(incoming, _TG_WH_SECRET):
+            return {"ok": False}
+
     body = await request.json()
     msg  = body.get("message") or body.get("edited_message")
     if not msg:
@@ -2041,10 +2050,13 @@ async def telegram_set_webhook(url: str = Query(..., description="Railway 서버
     """웹훅 등록. 배포 직후 한 번만 호출하면 됩니다."""
     if not _TG_TOKEN:
         return {"error": "TELEGRAM_BOT_TOKEN이 설정되지 않았습니다."}
+    payload: dict = {"url": url}
+    if _TG_WH_SECRET:
+        payload["secret_token"] = _TG_WH_SECRET
     async with httpx.AsyncClient() as c:
         r = await c.post(
             f"https://api.telegram.org/bot{_TG_TOKEN}/setWebhook",
-            json={"url": url},
+            json=payload,
         )
     return r.json()
 
