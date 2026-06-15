@@ -1951,6 +1951,8 @@ async def _gh(method: str, path: str, body: dict | None = None):
         url = f"https://api.github.com{path}"
         if method == "POST":
             return await c.post(url, headers=headers, json=body)
+        if method == "PUT":
+            return await c.put(url, headers=headers, json=body)
         return await c.get(url, headers=headers)
 
 
@@ -2002,6 +2004,19 @@ async def _cmd_publish(chat_id, topic: str):
         return
 
     t = _TOPIC_MAP[topic]
+
+    # 파일 큐 방식으로 topic 전달 (_pending_topic.txt → daily_auto.py가 읽어서 삭제)
+    import base64 as _b64
+    _queue_content = _b64.b64encode(topic.encode()).decode()
+    _queue_sha = None
+    _queue_r = await _gh("GET", f"/repos/{_DAILY_REPO}/contents/_pending_topic.txt")
+    if _queue_r.status_code == 200:
+        _queue_sha = _queue_r.json().get("sha")
+    _queue_body: dict = {"message": f"topic queue: {topic}", "content": _queue_content}
+    if _queue_sha:
+        _queue_body["sha"] = _queue_sha
+    await _gh("PUT", f"/repos/{_DAILY_REPO}/contents/_pending_topic.txt", _queue_body)
+
     r = await _gh("POST", f"/repos/{_DAILY_REPO}/actions/workflows/{t['wf']}/dispatches",
                   {"ref": "main"})
     if r.status_code == 204:
