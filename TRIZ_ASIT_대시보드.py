@@ -1981,17 +1981,28 @@ async def _cmd_republish(chat_id):
         await _tg_send(chat_id, f"❌ 트리거 실패 (HTTP {r.status_code})\nGH_PAT 권한을 확인하세요.")
 
 
+async def _publish_all_sequential(chat_id: str):
+    """economy → politics → culture 순차 발행 (파일 큐 race condition 방지)"""
+    from datetime import datetime, timezone, timedelta
+    topics = ["economy", "politics", "culture"]
+    for i, t in enumerate(topics):
+        await _cmd_publish(chat_id, t)
+        if i < len(topics) - 1:
+            await asyncio.sleep(120)  # GitHub Actions 체크아웃 완료 대기 (2분)
+
+
 async def _cmd_publish(chat_id, topic: str):
     from datetime import datetime, timezone, timedelta
     today = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
 
     if topic == "all":
-        r = await _gh("POST", f"/repos/{_DAILY_REPO}/actions/workflows/{_DAILY_WF_ALL}/dispatches",
-                      {"ref": "main"})
-        if r.status_code == 204:
-            await _tg_send(chat_id, "🚀 전체 발행 트리거!\n📊 경제·투자  🏛️ 정치  🎬 컬처\n3개 주제 동시 생성 시작 (~4분)")
-        else:
-            await _tg_send(chat_id, f"❌ 트리거 실패 (HTTP {r.status_code})")
+        # daily-all.yml 없음 → 순차 발행으로 대체 (파일 큐 race condition 방지)
+        await _tg_send(chat_id,
+            "🚀 전체 발행 시작!\n"
+            "📊 경제·투자 → 🏛️ 정치 → 🎬 컬처\n"
+            "2분 간격 순차 발행 (약 6분 소요)"
+        )
+        asyncio.create_task(_publish_all_sequential(chat_id))
         return
 
     if topic not in _TOPIC_MAP:
@@ -2200,7 +2211,7 @@ async def telegram_set_webhook(url: str = Query(..., description="Railway 서버
 # 내부 스케줄러 (KST 08:00 자동 발행)
 # ──────────────────────────────────────────────
 async def _scheduler_loop():
-    """GitHub Actions cron 보완: 매일 KST 08:00에 economy 자동 발행"""
+    """매일 KST 08:00에 economy → politics → culture 순차 자동 발행"""
     from datetime import datetime, timezone, timedelta
     _kst = timezone(timedelta(hours=9))
 
@@ -2217,8 +2228,12 @@ async def _scheduler_loop():
 
             now = datetime.now(_kst)
             if now.weekday() < 5:  # 월(0)~금(4)
-                print(f"⏰ [스케줄러] KST {now.strftime('%Y-%m-%d %H:%M')} economy 자동 발행 시작")
-                await _cmd_publish(_TG_ADMIN_ID, "economy")
+                print(f"⏰ [스케줄러] KST {now.strftime('%Y-%m-%d %H:%M')} 3개 토픽 자동 발행 시작")
+                for topic in ["economy", "politics", "culture"]:
+                    print(f"⏰ [스케줄러] {topic} 발행 중...")
+                    await _cmd_publish(_TG_ADMIN_ID, topic)
+                    await asyncio.sleep(120)  # GitHub Actions 체크아웃 완료 대기
+                print(f"⏰ [스케줄러] 3개 토픽 발행 완료")
             else:
                 print(f"⏰ [스케줄러] {now.strftime('%Y-%m-%d')} 주말 — 발행 건너뜀")
         except Exception as _e:
@@ -2229,7 +2244,7 @@ async def _scheduler_loop():
 @app.on_event("startup")
 async def _on_startup():
     asyncio.create_task(_scheduler_loop())
-    print("⏰ 내부 스케줄러 시작 (매일 KST 08:00 economy 자동 발행)")
+    print("⏰ 내부 스케줄러 시작 (매일 KST 08:00 economy→politics→culture 순차 자동 발행)")
 
 
 # ──────────────────────────────────────────────
