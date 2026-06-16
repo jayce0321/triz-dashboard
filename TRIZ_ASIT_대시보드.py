@@ -1919,6 +1919,7 @@ _TG_TOKEN       = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 _GH_PAT         = os.environ.get("GH_PAT", "")
 _TG_ALLOWED     = set(filter(None, os.environ.get("TELEGRAM_ALLOWED_IDS", "5066621346").split(",")))
 _TG_WH_SECRET   = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")  # setWebhook 시 secret_token 으로 등록한 값
+_TG_ADMIN_ID    = os.environ.get("TELEGRAM_ADMIN_ID", "5066621346")  # 스케줄러 알림 수신 ID
 
 _DAILY_REPO  = "jayce0321/daily-thesis"
 _DAILY_WF    = "daily.yml"
@@ -2193,6 +2194,42 @@ async def telegram_set_webhook(url: str = Query(..., description="Railway 서버
             json=payload,
         )
     return r.json()
+
+
+# ──────────────────────────────────────────────
+# 내부 스케줄러 (KST 08:00 자동 발행)
+# ──────────────────────────────────────────────
+async def _scheduler_loop():
+    """GitHub Actions cron 보완: 매일 KST 08:00에 economy 자동 발행"""
+    from datetime import datetime, timezone, timedelta
+    _kst = timezone(timedelta(hours=9))
+
+    while True:
+        try:
+            now = datetime.now(_kst)
+            target = now.replace(hour=8, minute=0, second=0, microsecond=0)
+            if now >= target:
+                target += timedelta(days=1)
+
+            wait_secs = (target - now).total_seconds()
+            print(f"⏰ [스케줄러] 다음 발행까지 {int(wait_secs//3600)}시간 {int((wait_secs%3600)//60)}분 대기")
+            await asyncio.sleep(wait_secs)
+
+            now = datetime.now(_kst)
+            if now.weekday() < 5:  # 월(0)~금(4)
+                print(f"⏰ [스케줄러] KST {now.strftime('%Y-%m-%d %H:%M')} economy 자동 발행 시작")
+                await _cmd_publish(_TG_ADMIN_ID, "economy")
+            else:
+                print(f"⏰ [스케줄러] {now.strftime('%Y-%m-%d')} 주말 — 발행 건너뜀")
+        except Exception as _e:
+            print(f"⚠️ [스케줄러] 오류: {_e}")
+            await asyncio.sleep(300)
+
+
+@app.on_event("startup")
+async def _on_startup():
+    asyncio.create_task(_scheduler_loop())
+    print("⏰ 내부 스케줄러 시작 (매일 KST 08:00 economy 자동 발행)")
 
 
 # ──────────────────────────────────────────────
