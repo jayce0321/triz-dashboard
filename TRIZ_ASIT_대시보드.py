@@ -1414,9 +1414,14 @@ async def get_weather(lat: float = Query(37.5665), lon: float = Query(126.9780))
 async def rss_proxy(url: str = Query(..., description="프록시할 URL")):
     """CORS 우회 프록시: segye.com RSS / YouTube 피드 등 허용 도메인 fetch."""
     from urllib.parse import urlparse
-    parsed = urlparse(url)
-    if parsed.hostname not in _ALLOWED_HOSTS:
-        raise HTTPException(status_code=403, detail=f"허용되지 않은 도메인: {parsed.hostname}")
+
+    def _check_host(raw_url: str) -> None:
+        """호스트가 허용 목록에 있는지 검사. 리다이렉트 대상 URL에도 재사용."""
+        p = urlparse(raw_url)
+        if p.hostname not in _ALLOWED_HOSTS:
+            raise HTTPException(status_code=403, detail=f"허용되지 않은 도메인: {p.hostname}")
+
+    _check_host(url)
 
     headers = {
         "User-Agent": (
@@ -1429,8 +1434,14 @@ async def rss_proxy(url: str = Query(..., description="프록시할 URL")):
         "Referer": "https://www.segye.com/",
     }
     try:
-        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+        # follow_redirects=False: 리다이렉트 대상 도메인도 수동으로 검증한다
+        async with httpx.AsyncClient(timeout=10, follow_redirects=False) as client:
             r = await client.get(url, headers=headers)
+            # 3xx 리다이렉트는 Location 헤더 도메인을 재검증 후 수동 추적
+            if r.is_redirect:
+                location = r.headers.get("location", "")
+                _check_host(location)
+                r = await client.get(location, headers=headers)
             r.raise_for_status()
             content_type = r.headers.get("content-type", "application/xml; charset=utf-8")
             # CORS 허용 헤더 포함하여 반환
@@ -1927,9 +1938,10 @@ _DAILY_WF_ALL = "daily-all.yml"
 _DAILY_PAGES = "https://jayce0321.github.io/daily-thesis"
 
 _TOPIC_MAP = {
-    "economy":  {"name": "경제·투자", "icon": "📊", "html": "{today}.html",         "wf": "daily.yml"},
-    "politics": {"name": "정치",      "icon": "🏛️", "html": "{today}-politics.html", "wf": "daily.yml"},
-    "culture":  {"name": "컬처",      "icon": "🎬", "html": "{today}-culture.html",  "wf": "daily.yml"},
+    "economy":    {"name": "경제·투자",       "icon": "📊", "html": "{today}.html",         "wf": "daily.yml"},
+    "economy_pm": {"name": "경제·투자 (오후)", "icon": "📊", "html": "{today}-pm.html",      "wf": "daily.yml"},
+    "politics":   {"name": "정치",            "icon": "🏛️", "html": "{today}-politics.html", "wf": "daily.yml"},
+    "culture":    {"name": "컬처",            "icon": "🎬", "html": "{today}-culture.html",  "wf": "daily.yml"},
 }
 
 
@@ -2008,10 +2020,11 @@ async def _cmd_publish(chat_id, topic: str):
     if topic not in _TOPIC_MAP:
         await _tg_send(chat_id,
             "📋 사용법: /publish [주제]\n\n"
-            "  /publish economy   — 📊 경제·투자\n"
-            "  /publish politics  — 🏛️ 정치\n"
-            "  /publish culture   — 🎬 컬처\n"
-            "  /publish all       — 3개 동시 발행"
+            "  /publish economy    — 📊 경제·투자 (오전)\n"
+            "  /publish economy_pm — 📊 경제·투자 (오후)\n"
+            "  /publish politics   — 🏛️ 정치\n"
+            "  /publish culture    — 🎬 컬처\n"
+            "  /publish all        — 오전 3개 순차 발행"
         )
         return
 
@@ -2211,31 +2224,51 @@ async def telegram_set_webhook(url: str = Query(..., description="Railway 서버
 # 내부 스케줄러 (KST 08:00 자동 발행)
 # ──────────────────────────────────────────────
 async def _scheduler_loop():
-    """매일 KST 08:00에 economy → politics → culture 순차 자동 발행"""
+    """매일 KST 08:00 경제·정치·컬처 순차 발행 + 15:00 경제 오후 발행 (월~금)"""
     from datetime import datetime, timezone, timedelta
     _kst = timezone(timedelta(hours=9))
 
     while True:
         try:
             now = datetime.now(_kst)
-            target = now.replace(hour=8, minute=0, second=0, microsecond=0)
-            if now >= target:
-                target += timedelta(days=1)
+            today_base = now.replace(second=0, microsecond=0)
+
+            # 오늘 08:00 / 15:00 계산
+            t_am = today_base.replace(hour=8,  minute=0)
+            t_pm = today_base.replace(hour=15, minute=0)
+
+            # 아직 지나지 않은 가장 가까운 발행 시각 선택
+            candidates = [(t, "am") for t in [t_am] if t > now] + \
+                         [(t, "pm") for t in [t_pm] if t > now]
+            if not candidates:
+                # 오늘 두 타임슬롯 모두 지났으면 내일 08:00
+                target, slot = t_am + timedelta(days=1), "am"
+            else:
+                target, slot = min(candidates, key=lambda x: x[0])
 
             wait_secs = (target - now).total_seconds()
-            print(f"⏰ [스케줄러] 다음 발행까지 {int(wait_secs//3600)}시간 {int((wait_secs%3600)//60)}분 대기")
+            print(f"⏰ [스케줄러] 다음 발행: KST {target.strftime('%m/%d %H:%M')} "
+                  f"{'오전 3종' if slot=='am' else '오후 경제'} "
+                  f"({int(wait_secs//3600)}h {int((wait_secs%3600)//60)}m 후)")
             await asyncio.sleep(wait_secs)
 
             now = datetime.now(_kst)
-            if now.weekday() < 5:  # 월(0)~금(4)
-                print(f"⏰ [스케줄러] KST {now.strftime('%Y-%m-%d %H:%M')} 3개 토픽 자동 발행 시작")
+            if now.weekday() >= 5:  # 주말 건너뜀
+                print(f"⏰ [스케줄러] {now.strftime('%Y-%m-%d')} 주말 — 발행 건너뜀")
+                continue
+
+            if slot == "am":
+                print(f"⏰ [스케줄러] KST {now.strftime('%Y-%m-%d %H:%M')} 오전 3개 토픽 발행 시작")
                 for topic in ["economy", "politics", "culture"]:
                     print(f"⏰ [스케줄러] {topic} 발행 중...")
                     await _cmd_publish(_TG_ADMIN_ID, topic)
-                    await asyncio.sleep(120)  # GitHub Actions 체크아웃 완료 대기
-                print(f"⏰ [스케줄러] 3개 토픽 발행 완료")
+                    await asyncio.sleep(120)
+                print("⏰ [스케줄러] 오전 3개 토픽 발행 완료")
             else:
-                print(f"⏰ [스케줄러] {now.strftime('%Y-%m-%d')} 주말 — 발행 건너뜀")
+                print(f"⏰ [스케줄러] KST {now.strftime('%Y-%m-%d %H:%M')} 오후 경제 발행 시작")
+                await _cmd_publish(_TG_ADMIN_ID, "economy_pm")
+                print("⏰ [스케줄러] 오후 경제 발행 완료")
+
         except Exception as _e:
             print(f"⚠️ [스케줄러] 오류: {_e}")
             await asyncio.sleep(300)
@@ -2244,7 +2277,7 @@ async def _scheduler_loop():
 @app.on_event("startup")
 async def _on_startup():
     asyncio.create_task(_scheduler_loop())
-    print("⏰ 내부 스케줄러 시작 (매일 KST 08:00 economy→politics→culture 순차 자동 발행)")
+    print("⏰ 내부 스케줄러 시작 (평일 KST 08:00 경제·정치·컬처 순차 발행 | 15:00 경제 오후 발행)")
 
 
 # ──────────────────────────────────────────────
