@@ -1938,10 +1938,11 @@ _DAILY_WF_ALL = "daily-all.yml"
 _DAILY_PAGES = "https://jayce0321.github.io/daily-thesis"
 
 _TOPIC_MAP = {
-    "economy":    {"name": "경제·투자",       "icon": "📊", "html": "{today}.html",         "wf": "daily.yml"},
-    "economy_pm": {"name": "경제·투자 (오후)", "icon": "📊", "html": "{today}-pm.html",      "wf": "daily.yml"},
-    "politics":   {"name": "정치",            "icon": "🏛️", "html": "{today}-politics.html", "wf": "daily.yml"},
-    "culture":    {"name": "컬처",            "icon": "🎬", "html": "{today}-culture.html",  "wf": "daily.yml"},
+    # wf_input: daily.yml의 inputs.topic 값 — 해당 스텝만 실행하도록 제어
+    "economy":    {"name": "경제·투자",       "icon": "📊", "html": "{today}.html",         "wf": "daily.yml", "wf_input": "economy"},
+    "economy_pm": {"name": "경제·투자 (오후)", "icon": "📊", "html": "{today}-pm.html",      "wf": "daily.yml", "wf_input": "economy"},
+    "politics":   {"name": "정치",            "icon": "🏛️", "html": "{today}-politics.html", "wf": "daily.yml", "wf_input": "politics"},
+    "culture":    {"name": "컬처",            "icon": "🎬", "html": "{today}-culture.html",  "wf": "daily.yml", "wf_input": "culture"},
 }
 
 
@@ -2043,7 +2044,7 @@ async def _cmd_publish(chat_id, topic: str):
     await _gh("PUT", f"/repos/{_DAILY_REPO}/contents/_pending_topic.txt", _queue_body)
 
     r = await _gh("POST", f"/repos/{_DAILY_REPO}/actions/workflows/{t['wf']}/dispatches",
-                  {"ref": "main"})
+                  {"ref": "main", "inputs": {"topic": t.get("wf_input", topic)}})
     if r.status_code == 204:
         html_name = t["html"].format(today=today)
         await _tg_send(chat_id,
