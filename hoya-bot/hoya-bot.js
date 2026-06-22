@@ -337,9 +337,23 @@ if (IS_CLOUD) {
   // Railway: webhook 모드 (polling 충돌 없음)
   bot = new TelegramBot(TELEGRAM_TOKEN, { webHook: { port: PORT } });
   const WEBHOOK_URL = `https://hoya-bot-production.up.railway.app/${TELEGRAM_TOKEN}`;
-  bot.setWebHook(WEBHOOK_URL)
-    .then(() => console.log('🔗 Webhook 등록 완료'))
-    .catch(e => console.error('[Webhook 등록 실패]', e.message));
+  // node-telegram-bot-api setWebHook 우회 — Telegram API 직접 호출
+  function registerWebhook() {
+    const apiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=${encodeURIComponent(WEBHOOK_URL)}`;
+    https.get(apiUrl, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const r = JSON.parse(data);
+          if (r.ok) console.log('🔗 Webhook 등록 완료:', WEBHOOK_URL.slice(0, 50) + '...');
+          else console.error('[Webhook 실패]', r.description);
+        } catch (e) { console.error('[Webhook 파싱 오류]', e.message); }
+      });
+    }).on('error', e => console.error('[Webhook 요청 실패]', e.message));
+  }
+  // 서버 준비 후 2초 뒤 등록 (Railway 포트 바인딩 대기)
+  setTimeout(registerWebhook, 2000);
 } else {
   // 로컬 Mac: polling 모드
   bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
