@@ -772,20 +772,26 @@ bot.on('message', async (msg) => {
   }
 });
 
-// ── 네트워크 끊김(ECONNRESET 등) 시 polling 자동 복구 ───────────────
+// ── polling 오류 자동 복구 ───────────────────────────────────────
 bot.on('polling_error', (err) => {
   const code = err.code || '';
-  console.error(`[polling_error] ${code}: ${err.message}`);
+  const msg = err.message || '';
+  console.error(`[polling_error] ${code}: ${msg}`);
 
-  // EFATAL = polling 중단됨 → 5초 후 재시작
-  if (code === 'EFATAL' || err.message?.includes('ECONNRESET') || err.message?.includes('ETIMEDOUT')) {
-    console.log('[복구] 5초 후 polling 재시작...');
+  const shouldRestart =
+    code === 'EFATAL' ||
+    msg.includes('ECONNRESET') || msg.includes('ETIMEDOUT') ||
+    msg.includes('409 Conflict'); // 다른 인스턴스 충돌 → 재시도로 해소
+
+  if (shouldRestart) {
+    const delay = msg.includes('409') ? 15000 : 5000; // 409는 15초 후 재시도
+    console.log(`[복구] ${delay / 1000}초 후 polling 재시작...`);
     setTimeout(() => {
       bot.stopPolling()
         .then(() => bot.startPolling())
         .then(() => console.log('[복구] polling 재시작 완료'))
         .catch(e => console.error('[복구 실패]', e.message));
-    }, 5000);
+    }, delay);
   }
 });
 
