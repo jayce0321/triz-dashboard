@@ -329,7 +329,21 @@ async function ensureTaskflowRunning() {
 // 봇 시작 시각 — 이보다 오래된 메시지는 밀린 것으로 간주해 무시
 const BOT_START_TIME = Math.floor(Date.now() / 1000);
 
-const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
+const IS_CLOUD = !!process.env.TELEGRAM_BOT_TOKEN;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+
+let bot;
+if (IS_CLOUD) {
+  // Railway: webhook 모드 (polling 충돌 없음)
+  bot = new TelegramBot(TELEGRAM_TOKEN, { webHook: { port: PORT } });
+  const WEBHOOK_URL = `https://hoya-bot-production.up.railway.app/${TELEGRAM_TOKEN}`;
+  bot.setWebHook(WEBHOOK_URL)
+    .then(() => console.log('🔗 Webhook 등록 완료'))
+    .catch(e => console.error('[Webhook 등록 실패]', e.message));
+} else {
+  // 로컬 Mac: polling 모드
+  bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
+}
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_KEY });
 
 // 대화 히스토리 (사용자별)
@@ -772,28 +786,30 @@ bot.on('message', async (msg) => {
   }
 });
 
-// ── polling 오류 자동 복구 ───────────────────────────────────────
-bot.on('polling_error', (err) => {
-  const code = err.code || '';
-  const msg = err.message || '';
-  console.error(`[polling_error] ${code}: ${msg}`);
+// ── polling 오류 자동 복구 (로컬 전용) ─────────────────────────
+if (!IS_CLOUD) {
+  bot.on('polling_error', (err) => {
+    const code = err.code || '';
+    const msg = err.message || '';
+    console.error(`[polling_error] ${code}: ${msg}`);
 
-  const shouldRestart =
-    code === 'EFATAL' ||
-    msg.includes('ECONNRESET') || msg.includes('ETIMEDOUT') ||
-    msg.includes('409 Conflict'); // 다른 인스턴스 충돌 → 재시도로 해소
+    const shouldRestart =
+      code === 'EFATAL' ||
+      msg.includes('ECONNRESET') || msg.includes('ETIMEDOUT') ||
+      msg.includes('409 Conflict');
 
-  if (shouldRestart) {
-    const delay = msg.includes('409') ? 15000 : 5000; // 409는 15초 후 재시도
-    console.log(`[복구] ${delay / 1000}초 후 polling 재시작...`);
-    setTimeout(() => {
-      bot.stopPolling()
-        .then(() => bot.startPolling())
-        .then(() => console.log('[복구] polling 재시작 완료'))
-        .catch(e => console.error('[복구 실패]', e.message));
-    }, delay);
-  }
-});
+    if (shouldRestart) {
+      const delay = msg.includes('409') ? 15000 : 5000;
+      console.log(`[복구] ${delay / 1000}초 후 polling 재시작...`);
+      setTimeout(() => {
+        bot.stopPolling()
+          .then(() => bot.startPolling())
+          .then(() => console.log('[복구] polling 재시작 완료'))
+          .catch(e => console.error('[복구 실패]', e.message));
+      }, delay);
+    }
+  });
+}
 
 process.on('uncaughtException', (err) => {
   console.error('[uncaughtException]', err.message);
