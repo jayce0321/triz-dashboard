@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% block title %}대시보드 - 어쩌다 월드컵 배팅{% endblock %}
+
+{% block extra_style %}
+.podium-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  margin: 32px 0;
+}
+.podium-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.podium-block {
+  width: 100px;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+.podium-1 { background: linear-gradient(180deg,#ffd700,#cc9900); height: 120px; }
+.podium-2 { background: linear-gradient(180deg,#c0c0c0,#888); height: 90px; }
+.podium-3 { background: linear-gradient(180deg,#cd7f32,#8b4513); height: 70px; }
+.podium-name { font-weight: 800; font-size: 0.9rem; text-align:center; }
+.podium-prize { font-size: 0.8rem; color: var(--gold); font-weight: 700; }
+.podium-pts { font-size: 0.78rem; color: var(--text-dim); }
+
+.score-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0;
+}
+.score-num {
+  font-size: 4rem;
+  font-weight: 900;
+  font-family: '세계하나제목고딕', 'Apple SD Gothic Neo', sans-serif;
+  line-height: 1;
+}
+.score-team { font-size: 0.9rem; color: var(--text-dim); text-align: center; }
+.score-sep { font-size: 2rem; color: var(--text-dim); }
+
+.participant-row {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  transition: background .2s;
+}
+.participant-row:hover { background: var(--card2); }
+.participant-row.is-me { border-color: rgba(255,215,0,0.4); background: rgba(255,215,0,0.04); }
+
+.bet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: 2px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+}
+.bet-chip.won { background: rgba(0,200,81,0.15); border-color: rgba(0,200,81,0.4); color: var(--green); }
+.bet-chip.lost { opacity: 0.45; }
+
+.rank-badge {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 1rem;
+  flex-shrink: 0;
+}
+.rank-badge.r1 { background: linear-gradient(135deg,#ffd700,#cc9900); color: #1a1000; }
+.rank-badge.r2 { background: linear-gradient(135deg,#c0c0c0,#888); color: #1a1a1a; }
+.rank-badge.r3 { background: linear-gradient(135deg,#cd7f32,#8b4513); color: white; }
+.rank-badge.rn { background: var(--card2); color: var(--text-dim); }
+
+.event-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.event-dot.yes { background: rgba(0,200,81,0.15); color: var(--green); border: 1px solid rgba(0,200,81,0.3); }
+.event-dot.no  { background: rgba(120,120,120,0.1); color: var(--text-dim); border: 1px solid var(--border); }
+{% endblock %}
+
+{% block content %}
+{% set LABELS = {
+  'korea_win': '🇰🇷 한국 승',
+  'draw': '🤝 무승부',
+  'rsa_win': '🇿🇦 남아공 승',
+  '0': '0골 동점',
+  '1': '1골 차이',
+  '2': '2골 차이',
+  '3+': '3골+ 차이',
+  'korea': '🇰🇷 한국 먼저',
+  'rsa': '🇿🇦 남아공 먼저',
+  'none': '🙅 없음',
+  '0-1': '0~1골',
+  '2-3': '2~3골',
+  '4-5': '4~5골',
+  '6+': '6골+',
+  'penalty': '🥅 페널티킥',
+  'red_card': '🟥 퇴장',
+  'comeback': '🔄 역전극',
+  'extra_time': '⏱️ 연장전'
+} %}
+{% set CAT_NAMES = {
+  'result': '결과',
+  'score': '스코어',
+  'goal_diff': '득실차',
+  'first_goal': '선취득점',
+  'total_goals': '총득점',
+  'special': '스페셜'
+} %}
+
+<div class="container-wide">
+
+  {% if result_set and results %}
+  <!-- ── 결과 발표 섹션 ── -->
+  <div style="text-align:center; padding: 40px 0 20px;">
+    <div style="font-size:3rem; margin-bottom:8px;">🏆</div>
+    <h1>경기 결과 발표!</h1>
+    <p class="text-dim mt-1">한국 🇰🇷 vs 🇿🇦 남아공 최종 결과</p>
+  </div>
+
+  <!-- 스코어 -->
+  <div class="card" style="margin-bottom:20px; text-align:center;">
+    <div class="score-display">
+      <div>
+        <div class="score-team">🇰🇷 대한민국</div>
+        <div class="score-num" style="color:var(--primary);">{{ results.korea_score }}</div>
+      </div>
+      <div class="score-sep">:</div>
+      <div>
+        <div class="score-team">🇿🇦 남아프리카공화국</div>
+        <div class="score-num" style="color:#007a4d;">{{ results.rsa_score }}</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px;">
+      {% for ev in special_events %}
+        {% if results.special_truth[ev.value] %}
+        <span class="event-dot yes">{{ ev.label }} ✓</span>
+        {% else %}
+        <span class="event-dot no">{{ ev.label }} ✗</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 시상대 -->
+  {% if results.participants %}
+  <div class="card" style="margin-bottom:20px;">
+    <h2 class="text-center mb-2">🥇 최종 순위</h2>
+    <div class="podium-wrap">
+      {% set ps = results.participants %}
+      {% if ps|length >= 2 %}
+      <div class="podium-item">
+        <div class="podium-name">{{ ps[1].name }}</div>
+        <div class="podium-pts">{{ ps[1].total_pts }}pt</div>
+        <div class="podium-block podium-2">🥈</div>
+        <div class="podium-prize">{{ '{:,}'.format(ps[1].prize) }}원</div>
+      </div>
+      {% endif %}
+      {% if ps|length >= 1 %}
+      <div class="podium-item">
+        <div class="podium-name" style="font-size:1rem;">{{ ps[0].name }}</div>
+        <div class="podium-pts">{{ ps[0].total_pts }}pt</div>
+        <div class="podium-block podium-1">🥇</div>
+        <div class="podium-prize" style="font-size:1rem;">{{ '{:,}'.format(ps[0].prize) }}원</div>
+      </div>
+      {% endif %}
+      {% if ps|length >= 3 %}
+      <div class="podium-item">
+        <div class="podium-name">{{ ps[2].name }}</div>
+        <div class="podium-pts">{{ ps[2].total_pts }}pt</div>
+        <div class="podium-block podium-3">🥉</div>
+        <div class="podium-prize">{{ '{:,}'.format(ps[2].prize) }}원</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- 전체 순위 테이블 -->
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>순위</th>
+            <th>이름</th>
+            <th>부서</th>
+            <th>포인트</th>
+            <th>상금</th>
+            <th>배팅 내역</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in results.participants %}
+          <tr {% if p.id == pid %}style="background:rgba(255,215,0,0.05);"{% endif %}>
+            <td>
+              {% if loop.index == 1 %}<span class="rank-badge r1">1</span>
+              {% elif loop.index == 2 %}<span class="rank-badge r2">2</span>
+              {% elif loop.index == 3 %}<span class="rank-badge r3">3</span>
+              {% else %}<span class="rank-badge rn">{{ loop.index }}</span>{% endif %}
+            </td>
+            <td><strong>{{ p.name }}</strong>{% if p.id == pid %} <span class="badge badge-gold">나</span>{% endif %}</td>
+            <td class="text-dim">{{ p.department }}</td>
+            <td><strong class="text-gold">{{ p.total_pts }}</strong>pt</td>
+            <td>
+              {% if p.prize > 0 %}
+              <strong style="color:var(--green);">{{ '{:,}'.format(p.prize) }}원</strong>
+              {% else %}
+              <span class="text-dim">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% for b in p.bets %}
+              <span class="bet-chip {% if b.won %}won{% else %}lost{% endif %}">
+                <span style="font-size:0.72rem; opacity:0.7;">{{ CAT_NAMES.get(b.category, b.category) }}</span>
+                {{ LABELS.get(b.choice, b.choice) }}
+                {% if b.category == 'score' %}<em style="opacity:0.8;">({{ b.choice }})</em>{% endif %}
+                ×{{ b.odds }}
+                {% if b.won %}<strong>+{{ b.pts }}pt</strong>{% endif %}
+              </span>
+              {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-dim text-center mt-2" style="font-size:0.82rem;">
+      총 상금 풀: <strong class="text-gold">{{ '{:,}'.format(results.pool) }}원</strong>
+    </p>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- ── 진행 중 대시보드 ── -->
+  <div style="padding:32px 0 16px;">
+    <div class="flex-between flex-wrap gap-2">
+      <div>
+        <h1>📊 배팅 현황판</h1>
+        <p class="text-dim mt-1">실시간 참가 현황을 확인하세요</p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        {% if betting_open %}
+        <span class="badge badge-open">● 배팅 진행중</span>
+        <a href="/bet" class="btn btn-gold btn-sm">내 배팅하기</a>
+        {% else %}
+        <span class="badge badge-closed">● 배팅 마감</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 통계 카드 -->
+  <div class="grid-3" style="margin-bottom:20px;">
+    <div class="card text-center">
+      <div style="font-size:2rem; font-weight:900; color:var(--gold);">{{ participants|length }}</div>
+      <div class="text-dim" style="font-size:0.85rem; margin-top:4px;">참가자</div>
+    </div>
+    <div class="card text-center">
+      <div style="font-size:1.6rem; font-weight:900; color:var(--gold);">{{ '{:,}'.format(participants|length * 10000) }}원</div>
+      <div class="text-dim" style="font-size:0.85rem; margin-top:4px;">총 상금 풀</div>
+    </div>
+    <div class="card text-center">
+      <div style="font-size:2rem; font-weight:900; color:var(--gold);">{{ all_bets|length }}</div>
+      <div class="text-dim" style="font-size:0.85rem; margin-top:4px;">총 배팅 수</div>
+    </div>
+  </div>
+
+  <!-- 참가자 목록 -->
+  <div class="card">
+    <h2 style="margin-bottom:16px;">👥 참가자 목록</h2>
+    {% if participants %}
+      {% for p in participants %}
+      <div class="participant-row {% if p.id == pid %}is-me{% endif %}">
+        <div class="flex-between" style="margin-bottom:6px;">
+          <div>
+            <strong>{{ p.name }}</strong>
+            {% if p.id == pid %}<span class="badge badge-gold" style="margin-left:6px;">나</span>{% endif %}
+            <span class="text-dim" style="font-size:0.82rem; margin-left:8px;">{{ p.department }}</span>
+          </div>
+          <span style="font-size:0.78rem; color:var(--text-dim);">{{ p.created_at }}</span>
+        </div>
+        {% set my_bets = all_bets | selectattr('participant_id', 'equalto', p.id) | list %}
+        {% if my_bets %}
+          {% if betting_open %}
+          <div style="font-size:0.82rem; color:var(--green);">✅ 배팅 완료 ({{ my_bets|length }}개 항목)</div>
+          {% else %}
+          <div style="display:flex; flex-wrap:wrap;">
+            {% for b in my_bets %}
+            <span class="bet-chip">{{ CAT_NAMES.get(b.category, b.category) }} · {{ LABELS.get(b.choice, b.choice) }} · {{ b.coins }}코인</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% else %}
+        <div style="font-size:0.82rem; color:var(--text-dim);">⏳ 아직 배팅 안 함</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <div style="text-align:center; padding:40px; color:var(--text-dim);">
+      <div style="font-size:3rem; margin-bottom:12px;">👋</div>
+      <p>아직 참가자가 없습니다.</p>
+      <a href="/register" class="btn btn-gold btn-sm mt-2">첫 번째로 배팅하기!</a>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if not betting_open %}
+  <div class="card mt-2" style="border-color:rgba(255,215,0,0.3); background:rgba(255,215,0,0.05); text-align:center; padding:32px;">
+    <div style="font-size:2rem; margin-bottom:8px;">⏳</div>
+    <h2 class="text-gold">경기 결과 집계 중...</h2>
+    <p class="text-dim mt-1">관리자가 경기 결과를 입력하면 자동으로 정산됩니다.</p>
+  </div>
+  {% endif %}
+
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}어쩌다 월드컵 배팅{% endblock %}</title>
+<style>
+:root {
+  --bg: #0b1b2e;
+  --card: #142238;
+  --card2: #1a2d46;
+  --primary: #e8002d;
+  --primary-dark: #b50023;
+  --blue: #003478;
+  --gold: #ffd700;
+  --gold-dark: #cc9900;
+  --green: #00c851;
+  --red: #e8002d;
+  --text: #f0f4ff;
+  --text-dim: #7a8fa6;
+  --border: rgba(255,255,255,0.08);
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: '세계하나본문명조', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(0,52,120,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(232,0,45,0.2) 0%, transparent 60%);
+}
+
+/* ── NAV ── */
+nav {
+  background: rgba(10,20,38,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-brand {
+  font-family: '세계하나제목고딕', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-brand span { color: var(--gold); }
+.nav-links { display: flex; gap: 8px; align-items: center; }
+.nav-links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  transition: all .2s;
+}
+.nav-links a:hover, .nav-links a.active {
+  background: var(--card2);
+  color: var(--text);
+}
+
+/* ── LAYOUT ── */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+.container-wide {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+/* ── FLASH ── */
+.flash-wrap { padding: 0 20px; margin-top: 12px; }
+.flash {
+  padding: 12px 20px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.flash.success { background: rgba(0,200,81,0.15); border: 1px solid rgba(0,200,81,0.3); color: #00c851; }
+.flash.error   { background: rgba(232,0,45,0.15); border: 1px solid rgba(232,0,45,0.3); color: #ff4d6d; }
+.flash.info    { background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.3); color: var(--gold); }
+
+/* ── CARD ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+.card + .card { margin-top: 16px; }
+
+/* ── BUTTON ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: all .2s;
+  text-decoration: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,0,45,0.4); }
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #1a1000;
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,215,0,0.4); }
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.btn-outline:hover { background: var(--card2); color: var(--text); }
+.btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* ── FORM ── */
+.form-group { margin-bottom: 18px; }
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.form-input {
+  width: 100%;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-size: 1rem;
+  transition: border-color .2s;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(232,0,45,0.1);
+}
+.form-input::placeholder { color: var(--text-dim); }
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.badge-open  { background: rgba(0,200,81,0.15); color: #00c851; border: 1px solid rgba(0,200,81,0.3); }
+.badge-closed { background: rgba(232,0,45,0.15); color: #ff4d6d; border: 1px solid rgba(232,0,45,0.3); }
+.badge-gold  { background: rgba(255,215,0,0.15); color: var(--gold); border: 1px solid rgba(255,215,0,0.3); }
+
+/* ── HEADING ── */
+h1,h2,h3 { font-family: '세계하나제목고딕', 'Apple SD Gothic Neo', sans-serif; }
+h1 { font-size: 2rem; font-weight: 900; }
+h2 { font-size: 1.4rem; font-weight: 800; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+
+/* ── GRID ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 640px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  nav { padding: 0 12px; }
+  .container, .container-wide { padding: 20px 12px; }
+  h1 { font-size: 1.5rem; }
+}
+
+/* ── MISC ── */
+.text-gold  { color: var(--gold); }
+.text-green { color: var(--green); }
+.text-red   { color: var(--red); }
+.text-dim   { color: var(--text-dim); }
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.flex { display: flex; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.gap-2 { gap: 16px; }
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+/* ── RADIO OPTION ── */
+.radio-group { display: flex; flex-direction: column; gap: 10px; }
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.radio-option:hover { border-color: rgba(255,215,0,0.4); background: var(--card2); }
+.radio-option.selected { border-color: var(--gold); background: rgba(255,215,0,0.08); }
+.radio-option input[type=radio] { display: none; }
+.radio-dot {
+  width: 18px; height: 18px;
+  border: 2px solid var(--text-dim);
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.radio-option.selected .radio-dot {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+.radio-dot::after {
+  content: '';
+  width: 6px; height: 6px;
+  background: #1a1000;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.radio-option.selected .radio-dot::after { opacity: 1; }
+.radio-label { flex: 1; font-weight: 600; }
+.radio-odds { color: var(--gold); font-weight: 800; font-size: 0.9rem; }
+
+/* ── COIN INPUT ── */
+.coin-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.coin-input-wrap label { font-size: 0.85rem; color: var(--text-dim); white-space: nowrap; }
+.coin-input {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  width: 100px;
+  text-align: right;
+}
+.coin-input:focus { outline: none; border-color: var(--gold); }
+
+/* ── COIN BAR ── */
+.coin-bar-wrap {
+  position: sticky;
+  top: 60px;
+  z-index: 50;
+  background: rgba(10,20,38,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+}
+.coin-bar-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.coin-bar-track {
+  flex: 1;
+  min-width: 200px;
+  height: 10px;
+  background: var(--card2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.coin-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width .3s, background .3s;
+  background: linear-gradient(90deg, var(--gold), #ff9900);
+}
+.coin-bar-fill.over { background: linear-gradient(90deg, var(--red), #ff4d6d); }
+.coin-stat { font-size: 0.9rem; font-weight: 700; white-space: nowrap; }
+.coin-stat .used { color: var(--gold); }
+.coin-stat .remain { color: var(--green); }
+.coin-stat .over-text { color: var(--red); }
+
+/* ── CHECKBOX TOGGLE ── */
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  margin-bottom: 8px;
+}
+.toggle-wrap:hover { border-color: rgba(0,200,81,0.4); background: var(--card2); }
+.toggle-wrap.checked { border-color: var(--green); background: rgba(0,200,81,0.08); }
+.toggle-wrap input { display: none; }
+.toggle-box {
+  width: 22px; height: 22px;
+  border: 2px solid var(--text-dim);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+  transition: all .2s;
+}
+.toggle-wrap.checked .toggle-box {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+/* ── TABLE ── */
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+th { padding: 10px 14px; text-align: left; color: var(--text-dim); border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ── RANK ── */
+.rank-1 { color: var(--gold); }
+.rank-2 { color: #c0c0c0; }
+.rank-3 { color: #cd7f32; }
+
+/* ── WIN/LOSS ── */
+.won  { color: var(--green); }
+.lost { color: var(--text-dim); text-decoration: line-through; }
+</style>
+<style>{% block extra_style %}{% endblock %}</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-brand">⚽ <span>어쩌다</span> 월드컵 배팅</a>
+  <div class="nav-links">
+    <a href="/" {% if request.endpoint == 'index' %}class="active"{% endif %}>홈</a>
+    <a href="/bet" {% if request.endpoint == 'bet' %}class="active"{% endif %}>배팅하기</a>
+    <a href="/dashboard" {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>대시보드</a>
+    <a href="/admin" {% if request.endpoint == 'admin' %}class="active"{% endif %}>관리자</a>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-wrap">
+    {% for cat, msg in messages %}
+    <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<div style="text-align:center; padding: 40px 20px; color: var(--text-dim); font-size:0.8rem;">
+  🏆 어쩌다 월드컵 배팅 · 한국 🇰🇷 vs 🇿🇦 남아공 · 2026
+</div>
+</body>
+</html>

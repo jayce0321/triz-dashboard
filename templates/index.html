@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}어쩌다 월드컵 배팅 - 홈{% endblock %}
+
+{% block extra_style %}
+.hero {
+  text-align: center;
+  padding: 60px 20px 40px;
+}
+.match-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  margin: 32px 0;
+  flex-wrap: wrap;
+}
+.team-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.team-flag { font-size: 5rem; line-height: 1; }
+.team-name {
+  font-family: '세계하나제목고딕', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+.vs-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.vs-text {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--gold);
+  font-family: '세계하나제목고딕', sans-serif;
+}
+.vs-sub { font-size: 0.8rem; color: var(--text-dim); }
+.stat-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 32px 0;
+}
+.stat-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 28px;
+  text-align: center;
+  min-width: 140px;
+}
+.stat-num {
+  font-size: 2rem;
+  font-weight: 900;
+  font-family: '세계하나제목고딕', sans-serif;
+  color: var(--gold);
+}
+.stat-label { font-size: 0.82rem; color: var(--text-dim); margin-top: 4px; }
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.rule-item {
+  background: var(--card2);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.rule-icon { font-size: 1.5rem; flex-shrink: 0; }
+.rule-text { font-size: 0.88rem; line-height: 1.5; }
+.rule-text strong { display: block; margin-bottom: 2px; font-size: 0.92rem; }
+.cta-area {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 32px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="hero">
+    <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.3); border-radius:20px; padding:6px 16px; margin-bottom:20px;">
+      {% if betting_open %}
+        <span class="badge badge-open">● 배팅 진행중</span>
+      {% elif result_set %}
+        <span class="badge badge-gold">🏆 결과 발표!</span>
+      {% else %}
+        <span class="badge badge-closed">● 배팅 마감</span>
+      {% endif %}
+    </div>
+
+    <h1 style="font-size:2.4rem; line-height:1.2; margin-bottom:8px;">
+      🏆 어쩌다 월드컵 배팅
+    </h1>
+    <p style="color:var(--text-dim); font-size:1rem;">직원 단합을 위한 월드컵 배팅 이벤트</p>
+
+    <div class="match-banner">
+      <div class="team-block">
+        <div class="team-flag">🇰🇷</div>
+        <div class="team-name">대한민국</div>
+      </div>
+      <div class="vs-block">
+        <div class="vs-text">VS</div>
+        <div class="vs-sub">FIFA 월드컵 2026</div>
+      </div>
+      <div class="team-block">
+        <div class="team-flag">🇿🇦</div>
+        <div class="team-name">남아프리카공화국</div>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-num">{{ count }}</div>
+        <div class="stat-label">참가자 수</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="font-size:1.5rem;">{{ '{:,}'.format(pool) }}원</div>
+        <div class="stat-label">총 상금 풀</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">6</div>
+        <div class="stat-label">배팅 카테고리</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">1만원</div>
+        <div class="stat-label">1인 참가비</div>
+      </div>
+    </div>
+
+    {% if result_set %}
+    <div style="background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,153,0,0.1)); border:2px solid rgba(255,215,0,0.5); border-radius:16px; padding:24px; margin-bottom:24px;">
+      <div style="font-size:2rem; margin-bottom:8px;">🏆</div>
+      <h2 class="text-gold">결과가 발표되었습니다!</h2>
+      <p style="color:var(--text-dim); margin-top:8px;">대시보드에서 최종 순위와 상금을 확인하세요.</p>
+      <a href="/dashboard" class="btn btn-gold mt-2">결과 확인하기 →</a>
+    </div>
+    {% endif %}
+
+    <div class="cta-area">
+      {% if participant %}
+        <a href="/bet" class="btn btn-gold">배팅 수정하기 ✏️</a>
+        <a href="/dashboard" class="btn btn-outline">대시보드 보기</a>
+      {% elif betting_open %}
+        <a href="/register" class="btn btn-gold">지금 배팅 참여하기 🎲</a>
+        <a href="/dashboard" class="btn btn-outline">현황 구경하기</a>
+      {% else %}
+        <a href="/dashboard" class="btn btn-gold">결과 확인하기 🏆</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-bottom:16px;">📋 배팅 규칙</h2>
+    <div class="rules-grid">
+      <div class="rule-item">
+        <div class="rule-icon">💰</div>
+        <div class="rule-text">
+          <strong>참가비 1만원</strong>
+          = 1,000코인으로 환산. 6개 카테고리에 자유 분배!
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-icon">⚡</div>
+        <div class="rule-text">
+          <strong>필수 배팅</strong>
+          경기 결과(한국승/무승부/남아공승)에 최소 200코인 필수
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-icon">🎯</div>
+        <div class="rule-text">
+          <strong>정확한 스코어 대박</strong>
+          스코어 정확히 맞추면 배팅 코인 × 15배!
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-icon">🎲</div>
+        <div class="rule-text">
+          <strong>스페셜 이벤트</strong>
+          페널티킥·퇴장·역전극·연장전 발생 여부도 배팅 가능!
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-icon">🏆</div>
+        <div class="rule-text">
+          <strong>상금 배분</strong>
+          최종 포인트 1위 50%, 2위 30%, 3위 20%
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-icon">🔄</div>
+        <div class="rule-text">
+          <strong>배팅 수정</strong>
+          경기 시작 전(배팅 마감 전)까지 자유롭게 수정 가능
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-2">
+    <h2 style="margin-bottom:16px;">📊 배팅 배당률 안내</h2>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>카테고리</th>
+            <th>선택지</th>
+            <th>배당률</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>⚽ 경기 결과</td><td>한국 승</td><td class="text-gold">× 2.5</td></tr>
+          <tr><td></td><td>무승부</td><td class="text-gold">× 3.5</td></tr>
+          <tr><td></td><td>남아공 승</td><td class="text-gold">× 5.0</td></tr>
+          <tr><td>🎯 정확한 스코어</td><td>딱 맞추면</td><td class="text-gold" style="font-weight:900; color:#ffd700;">× 15.0 🔥</td></tr>
+          <tr><td>📊 골 득실차</td><td>0골(동점)</td><td class="text-gold">× 2.0</td></tr>
+          <tr><td></td><td>1골 차이</td><td class="text-gold">× 2.0</td></tr>
+          <tr><td></td><td>2골 차이</td><td class="text-gold">× 3.0</td></tr>
+          <tr><td></td><td>3골+ 차이</td><td class="text-gold">× 5.0</td></tr>
+          <tr><td>🚀 선취득점</td><td>한국</td><td class="text-gold">× 2.0</td></tr>
+          <tr><td></td><td>남아공</td><td class="text-gold">× 3.0</td></tr>
+          <tr><td></td><td>없음(0-0)</td><td class="text-gold">× 5.0</td></tr>
+          <tr><td>💥 총 득점</td><td>0~1골</td><td class="text-gold">× 3.5</td></tr>
+          <tr><td></td><td>2~3골</td><td class="text-gold">× 2.0</td></tr>
+          <tr><td></td><td>4~5골</td><td class="text-gold">× 3.0</td></tr>
+          <tr><td></td><td>6골+</td><td class="text-gold">× 6.0</td></tr>
+          <tr><td>🎲 스페셜</td><td>페널티킥 발생</td><td class="text-gold">× 3.0</td></tr>
+          <tr><td></td><td>퇴장 발생</td><td class="text-gold">× 4.0</td></tr>
+          <tr><td></td><td>역전극</td><td class="text-gold">× 5.0</td></tr>
+          <tr><td></td><td>연장전</td><td class="text-gold">× 4.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
