@@ -552,6 +552,8 @@ def coin_stats():
     return jsonify({'participants': count, 'pool': count * 10000})
 
 
+import sys
+print(f"[STARTUP] DATABASE_URL={'SET (' + DATABASE_URL[:20] + '...)' if DATABASE_URL else 'NOT SET — SQLite mode'}", file=sys.stderr, flush=True)
 init_db()  # gunicorn 기동 시에도 DB 초기화
 
 if __name__ == '__main__':
