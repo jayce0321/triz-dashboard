@@ -624,6 +624,7 @@ const tools = [
 
 // ── 도구 실행 ────────────────────────────────────────────────────
 async function executeTool(name, input) {
+  try {
   if (name === 'get_schedule') {
     const date = input.date || new Date().toISOString().slice(0, 10);
     const timeMin = `${date}T00:00:00+09:00`;
@@ -710,6 +711,13 @@ async function executeTool(name, input) {
   }
 
   return '알 수 없는 도구';
+  } catch (err) {
+    const isAuthErr = err.message?.includes('invalid_grant') || err.message?.includes('Token has been expired');
+    console.error(`[Tool 오류] ${name}:`, err.message);
+    return isAuthErr
+      ? `⚠️ Google 인증 오류: 토큰이 만료됐어요. 관리자에게 재인증을 요청하세요.`
+      : `⚠️ ${name} 실행 중 오류: ${err.message}`;
+  }
 }
 
 // ── Claude 응답 ──────────────────────────────────────────────────
