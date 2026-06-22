@@ -259,7 +259,8 @@ def register():
             return redirect(url_for('register'))
         try:
             with get_db() as db:
-                cur = db.execute('INSERT INTO participants (name, department) VALUES (?,?)', (name, dept))
+                now_kst = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
+                cur = db.execute('INSERT INTO participants (name, department, created_at) VALUES (?,?,?)', (name, dept, now_kst))
                 db.commit()
                 session['pid'] = cur.lastrowid
                 session['pname'] = name
