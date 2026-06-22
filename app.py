@@ -5,9 +5,13 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
 import os
+from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
 app.secret_key = 'korea_vs_rsa_worldcup_2026'
+
+KST = timezone(timedelta(hours=9))
+BETTING_DEADLINE = datetime(2026, 6, 25, 10, 0, 0, tzinfo=KST)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Railway Volume 사용 시 /data, 로컬은 현재 폴더
@@ -82,6 +86,24 @@ SPECIAL_EVENTS = [
     {'value': 'comeback',  'label': '🔄 역전극 발생',    'odds': 5.0},
     {'value': 'extra_time','label': '⏱️ 연장전 돌입',   'odds': 4.0},
 ]
+
+
+# ── 자동 마감 ─────────────────────────────────────────
+
+def _get_cat_name(cat):
+    if cat == 'special':
+        return '스페셜 이벤트'
+    return CATEGORIES.get(cat, {}).get('name', cat)
+
+def _get_choice_label(cat, choice):
+    if cat == 'score':
+        return f'{choice} 스코어'
+    if cat == 'special':
+        ev = next((e for e in SPECIAL_EVENTS if e['value'] == choice), None)
+        return ev['label'] if ev else choice
+    opts = CATEGORIES.get(cat, {}).get('options', [])
+    opt = next((o for o in opts if isinstance(o, dict) and o['value'] == choice), None)
+    return opt['label'] if opt else choice
 
 
 # ── DB ──────────────────────────────────────────────
@@ -199,6 +221,13 @@ def calculate_results():
 
 
 # ── 라우트 ───────────────────────────────────────────
+
+@app.before_request
+def check_auto_close():
+    """6월 25일 10시(KST) 이후 배팅 자동 마감"""
+    if get_setting('betting_open') == '1':
+        if datetime.now(KST) >= BETTING_DEADLINE:
+            set_setting('betting_open', '0')
 
 @app.route('/')
 def index():
@@ -412,17 +441,37 @@ def admin():
 
     is_admin = session.get('admin', False)
     stats = {}
+    participants_data = []
     if is_admin:
         with get_db() as db:
             stats['participants'] = db.execute('SELECT COUNT(*) as c FROM participants').fetchone()['c']
             stats['bets'] = db.execute('SELECT COUNT(*) as c FROM bets').fetchone()['c']
+            ps = db.execute('SELECT * FROM participants ORDER BY created_at').fetchall()
+            for p in ps:
+                bets_raw = db.execute('SELECT * FROM bets WHERE participant_id=?', (p['id'],)).fetchall()
+                participants_data.append({
+                    'name': p['name'],
+                    'department': p['department'],
+                    'created_at': p['created_at'],
+                    'total_coins': sum(b['coins'] for b in bets_raw),
+                    'bets': [
+                        {
+                            'cat_name': _get_cat_name(b['category']),
+                            'choice_label': _get_choice_label(b['category'], b['choice']),
+                            'coins': b['coins'],
+                            'odds': b['odds'],
+                        }
+                        for b in bets_raw
+                    ]
+                })
         stats['pool'] = stats['participants'] * 10000
         stats['betting_open'] = get_setting('betting_open') == '1'
         stats['result_set'] = get_setting('result_set') == '1'
         stats['korea_score'] = get_setting('korea_score')
         stats['rsa_score'] = get_setting('rsa_score')
+        stats['deadline'] = BETTING_DEADLINE.strftime('%Y-%m-%d %H:%M KST')
 
-    return render_template('admin.html', is_admin=is_admin, stats=stats)
+    return render_template('admin.html', is_admin=is_admin, stats=stats, participants_data=participants_data)
 
 
 @app.route('/api/coin_stats')

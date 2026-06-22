@@ -36,6 +36,13 @@
   padding: 20px;
   background: rgba(232,0,45,0.05);
 }
+.bet-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.bet-table th { background: var(--card2); padding: 8px 10px; text-align: left; font-weight: 700; color: var(--text-dim); }
+.bet-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+.bet-table tr:last-child td { border-bottom: none; }
+.participant-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.participant-tag { background: var(--card2); border-radius: 8px; padding: 4px 10px; font-size: 0.82rem; color: var(--text-dim); }
+.deadline-badge { display: inline-block; background: rgba(35,103,215,0.15); color: #6fa3f7; border: 1px solid rgba(35,103,215,0.3); border-radius: 8px; padding: 4px 12px; font-size: 0.82rem; font-weight: 700; }
 {% endblock %}
 
 {% block content %}
@@ -141,6 +148,62 @@
       </div>
       <a href="/dashboard" class="btn btn-outline btn-sm mt-2">대시보드 보기 →</a>
     </div>
+  </div>
+
+  <!-- 자동 마감 안내 -->
+  <div class="card mt-2" style="background: rgba(35,103,215,0.07); border: 1.5px solid rgba(35,103,215,0.25);">
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <span style="font-size:1.1rem;">⏰</span>
+      <div>
+        <strong style="font-size:0.95rem;">배팅 자동 마감 일시</strong>
+        <div class="deadline-badge mt-1">{{ stats.deadline }}</div>
+      </div>
+      <div style="margin-left:auto; font-size:0.82rem; color:var(--text-dim);">
+        해당 시각 이후 모든 배팅 요청이 자동 차단됩니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- 배팅자 목록 -->
+  <div class="card mt-2">
+    <h2 style="margin-bottom:16px;">👥 배팅 참가자 현황</h2>
+    {% if participants_data %}
+    {% for p in participants_data %}
+    <div style="margin-bottom:20px;">
+      <div class="participant-row">
+        <strong style="font-size:0.95rem;">{{ p.name }}</strong>
+        <span class="participant-tag">{{ p.department }}</span>
+        <span class="participant-tag">등록: {{ p.created_at }}</span>
+        <span class="participant-tag" style="margin-left:auto;">총 {{ p.total_coins }}코인</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="bet-table">
+          <thead>
+            <tr>
+              <th>카테고리</th>
+              <th>선택</th>
+              <th>코인</th>
+              <th>배당</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in p.bets %}
+            <tr>
+              <td>{{ b.cat_name }}</td>
+              <td>{{ b.choice_label }}</td>
+              <td>{{ b.coins }}</td>
+              <td>×{{ b.odds }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% if not loop.last %}<hr style="border-color:var(--border); margin:12px 0;">{% endif %}
+    {% endfor %}
+    {% else %}
+    <p class="text-dim" style="text-align:center; padding:20px 0;">아직 배팅한 참가자가 없습니다.</p>
+    {% endif %}
   </div>
 
   <!-- 경기 결과 입력 -->
