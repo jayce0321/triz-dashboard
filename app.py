@@ -7,6 +7,36 @@ import sqlite3
 import os
 from datetime import datetime, timezone, timedelta
 
+DATABASE_URL = os.environ.get('DATABASE_URL')  # PostgreSQL (Neon.tech 등)
+
+if DATABASE_URL:
+    import psycopg2
+    import psycopg2.extras
+
+    class _DBConn:
+        """psycopg2 커넥션을 sqlite3처럼 사용할 수 있게 래핑"""
+        def __init__(self):
+            self._conn = psycopg2.connect(DATABASE_URL,
+                                          cursor_factory=psycopg2.extras.RealDictCursor)
+
+        def execute(self, sql, params=()):
+            cur = self._conn.cursor()
+            cur.execute(sql.replace('?', '%s'), params)
+            return cur
+
+        def commit(self):
+            self._conn.commit()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            if exc_type:
+                self._conn.rollback()
+            else:
+                self._conn.commit()
+            self._conn.close()
+
 app = Flask(__name__)
 app.secret_key = 'korea_vs_rsa_worldcup_2026'
 
@@ -109,44 +139,68 @@ def _get_choice_label(cat, choice):
 # ── DB ──────────────────────────────────────────────
 
 def get_db():
+    if DATABASE_URL:
+        return _DBConn()
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db():
-    with get_db() as db:
-        db.executescript('''
-        CREATE TABLE IF NOT EXISTS participants (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            department TEXT NOT NULL,
-            created_at TEXT DEFAULT (datetime('now','localtime'))
-        );
-        CREATE TABLE IF NOT EXISTS bets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            participant_id INTEGER NOT NULL,
-            category TEXT NOT NULL,
-            choice TEXT NOT NULL,
-            coins INTEGER NOT NULL,
-            odds REAL NOT NULL,
-            FOREIGN KEY (participant_id) REFERENCES participants(id)
-        );
-        CREATE TABLE IF NOT EXISTS settings (
-            key TEXT PRIMARY KEY,
-            value TEXT
-        );
-        INSERT OR IGNORE INTO settings VALUES ('betting_open','1');
-        INSERT OR IGNORE INTO settings VALUES ('result_set','0');
-        INSERT OR IGNORE INTO settings VALUES ('korea_score',NULL);
-        INSERT OR IGNORE INTO settings VALUES ('rsa_score',NULL);
-        INSERT OR IGNORE INTO settings VALUES ('first_goal',NULL);
-        INSERT OR IGNORE INTO settings VALUES ('penalty','0');
-        INSERT OR IGNORE INTO settings VALUES ('red_card','0');
-        INSERT OR IGNORE INTO settings VALUES ('comeback','0');
-        INSERT OR IGNORE INTO settings VALUES ('extra_time','0');
-        ''')
-        db.commit()
+    if DATABASE_URL:
+        _DEFAULTS = [
+            ('betting_open', '1'), ('result_set', '0'), ('korea_score', None),
+            ('rsa_score', None), ('first_goal', None), ('penalty', '0'),
+            ('red_card', '0'), ('comeback', '0'), ('extra_time', '0'),
+        ]
+        with get_db() as db:
+            db.execute('''CREATE TABLE IF NOT EXISTS participants (
+                id SERIAL PRIMARY KEY, name TEXT NOT NULL UNIQUE,
+                department TEXT NOT NULL, created_at TEXT)''')
+            db.execute('''CREATE TABLE IF NOT EXISTS bets (
+                id SERIAL PRIMARY KEY, participant_id INTEGER NOT NULL,
+                category TEXT NOT NULL, choice TEXT NOT NULL,
+                coins INTEGER NOT NULL, odds REAL NOT NULL)''')
+            db.execute('''CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY, value TEXT)''')
+            for k, v in _DEFAULTS:
+                db.execute(
+                    'INSERT INTO settings (key, value) VALUES (%s,%s) ON CONFLICT DO NOTHING',
+                    (k, v))
+            db.commit()
+    else:
+        with get_db() as db:
+            db.executescript('''
+            CREATE TABLE IF NOT EXISTS participants (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                department TEXT NOT NULL,
+                created_at TEXT DEFAULT (datetime('now','localtime'))
+            );
+            CREATE TABLE IF NOT EXISTS bets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                participant_id INTEGER NOT NULL,
+                category TEXT NOT NULL,
+                choice TEXT NOT NULL,
+                coins INTEGER NOT NULL,
+                odds REAL NOT NULL,
+                FOREIGN KEY (participant_id) REFERENCES participants(id)
+            );
+            CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            );
+            INSERT OR IGNORE INTO settings VALUES ('betting_open','1');
+            INSERT OR IGNORE INTO settings VALUES ('result_set','0');
+            INSERT OR IGNORE INTO settings VALUES ('korea_score',NULL);
+            INSERT OR IGNORE INTO settings VALUES ('rsa_score',NULL);
+            INSERT OR IGNORE INTO settings VALUES ('first_goal',NULL);
+            INSERT OR IGNORE INTO settings VALUES ('penalty','0');
+            INSERT OR IGNORE INTO settings VALUES ('red_card','0');
+            INSERT OR IGNORE INTO settings VALUES ('comeback','0');
+            INSERT OR IGNORE INTO settings VALUES ('extra_time','0');
+            ''')
+            db.commit()
 
 
 def get_setting(key):
@@ -156,8 +210,15 @@ def get_setting(key):
 
 
 def set_setting(key, value):
+    v = str(value) if value is not None else None
     with get_db() as db:
-        db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)', (key, str(value) if value is not None else None))
+        if DATABASE_URL:
+            db.execute(
+                'INSERT INTO settings (key, value) VALUES (%s,%s)'
+                ' ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+                (key, v))
+        else:
+            db.execute('INSERT OR REPLACE INTO settings VALUES (?,?)', (key, v))
         db.commit()
 
 
@@ -260,9 +321,18 @@ def register():
         try:
             with get_db() as db:
                 now_kst = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
-                cur = db.execute('INSERT INTO participants (name, department, created_at) VALUES (?,?,?)', (name, dept, now_kst))
-                db.commit()
-                session['pid'] = cur.lastrowid
+                if DATABASE_URL:
+                    cur = db.execute(
+                        'INSERT INTO participants (name, department, created_at)'
+                        ' VALUES (%s,%s,%s) RETURNING id',
+                        (name, dept, now_kst))
+                    session['pid'] = cur.fetchone()['id']
+                else:
+                    cur = db.execute(
+                        'INSERT INTO participants (name, department, created_at) VALUES (?,?,?)',
+                        (name, dept, now_kst))
+                    db.commit()
+                    session['pid'] = cur.lastrowid
                 session['pname'] = name
             flash(f'환영합니다, {name}님! 🎉', 'success')
             return redirect(url_for('bet'))
