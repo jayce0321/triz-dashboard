@@ -7,6 +7,7 @@
  */
 const TelegramBot = require('node-telegram-bot-api');
 const Anthropic = require('@anthropic-ai/sdk');
+const cron = require('node-cron');
 const sqlite3 = require('sqlite3').verbose();
 const { google } = require('googleapis');
 const Imap = require('imap');
@@ -911,6 +912,85 @@ if (!IS_CLOUD) {
     }
   });
 }
+
+// ── 구독자 관리 ──────────────────────────────────────────────────
+const SUBSCRIBERS_FILE = path.join(__dirname, 'subscribers.json');
+
+function loadSubscribers() {
+  const ids = new Set();
+  // env var 우선 (Railway 재시작 대비)
+  if (process.env.SUBSCRIBER_CHAT_ID) {
+    process.env.SUBSCRIBER_CHAT_ID.split(',').forEach(id => ids.add(id.trim()));
+  }
+  // 로컬 파일 fallback
+  try {
+    const saved = JSON.parse(fs.readFileSync(SUBSCRIBERS_FILE, 'utf8'));
+    (saved || []).forEach(id => ids.add(String(id)));
+  } catch (_) {}
+  return ids;
+}
+
+function saveSubscribers(ids) {
+  try { fs.writeFileSync(SUBSCRIBERS_FILE, JSON.stringify([...ids])); } catch (_) {}
+}
+
+const subscribers = loadSubscribers();
+
+bot.onText(/\/subscribe/, (msg) => {
+  const id = String(msg.chat.id);
+  subscribers.add(id);
+  saveSubscribers(subscribers);
+  console.log(`[구독] chat_id=${id} 등록됨`);
+  bot.sendMessage(msg.chat.id,
+    '✅ 경제 브리핑 구독 완료!\n\n' +
+    '📊 매일 아래 시간에 자동으로 발송돼요:\n' +
+    '  • 오전 8:00 (장 시작 전 동향)\n' +
+    '  • 오전 11:00 (오전장 중간)\n' +
+    '  • 오후 1:00 (점심 브리핑)\n' +
+    '  • 오후 3:30 (장 마감 전)\n\n' +
+    '구독 취소: /unsubscribe'
+  );
+});
+
+bot.onText(/\/unsubscribe/, (msg) => {
+  subscribers.delete(String(msg.chat.id));
+  saveSubscribers(subscribers);
+  bot.sendMessage(msg.chat.id, '🔕 경제 브리핑 구독이 취소됐어요.');
+});
+
+// ── 자동 경제 브리핑 생성 ────────────────────────────────────────
+async function sendEconomicBriefing(timeLabel) {
+  if (subscribers.size === 0) return;
+  console.log(`[브리핑] ${timeLabel} 자동 발송 시작 (구독자 ${subscribers.size}명)`);
+  try {
+    const rawData = await getEconomicDigest(8);
+    const summary = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: '재호님의 텔레그램 경제 채널 데이터를 분석해 핵심 브리핑을 작성하세요. ' +
+        '불릿포인트 형식, 한국어, 이모지 활용. 주목할 종목·이슈·흐름 중심으로 300자 이내.',
+      messages: [{ role: 'user', content: `[${timeLabel} 경제 브리핑]\n\n${rawData}\n\n위 내용을 바탕으로 지금 가장 주목할 내용을 요약해줘.` }],
+    });
+    const text = summary.content.find(b => b.type === 'text')?.text || '브리핑 생성 실패';
+    const message = `📊 *${timeLabel} 경제 브리핑*\n\n${text}`;
+    for (const chatId of subscribers) {
+      await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' }).catch(e =>
+        console.error(`[브리핑 발송 실패] ${chatId}:`, e.message)
+      );
+    }
+    console.log(`[브리핑] ${timeLabel} 발송 완료`);
+  } catch (e) {
+    console.error('[브리핑 오류]', e.message);
+  }
+}
+
+// ── cron 스케줄 (KST = UTC+9) ────────────────────────────────────
+// 분 시 * * * (KST 기준)
+cron.schedule('0 8 * * *',  () => sendEconomicBriefing('오전 8:00'), { timezone: 'Asia/Seoul' });
+cron.schedule('0 11 * * *', () => sendEconomicBriefing('오전 11:00'), { timezone: 'Asia/Seoul' });
+cron.schedule('0 13 * * *', () => sendEconomicBriefing('오후 1:00'), { timezone: 'Asia/Seoul' });
+cron.schedule('30 15 * * *', () => sendEconomicBriefing('오후 3:30'), { timezone: 'Asia/Seoul' });
+console.log('⏰ 경제 브리핑 스케줄 등록: 08:00 / 11:00 / 13:00 / 15:30 (KST)');
 
 process.on('uncaughtException', (err) => {
   console.error('[uncaughtException]', err.message);

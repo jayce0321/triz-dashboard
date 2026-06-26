@@ -13,6 +13,7 @@
     "imap": "^0.8.19",
     "mailparser": "^3.9.10",
     "node-telegram-bot-api": "^0.64.0",
+    "node-cron": "^3.0.3",
     "sqlite3": "^6.0.1"
   }
 }
