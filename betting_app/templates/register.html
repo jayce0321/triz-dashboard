@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}참가 등록 - 어쩌다 월드컵 배팅{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:480px;">
+  <div style="text-align:center; padding:40px 0 24px;">
+    <div style="font-size:3rem; margin-bottom:12px;">⚽</div>
+    <h1>참가 등록</h1>
+    <p class="text-dim mt-1">이름과 부서를 입력하고 배팅에 참여하세요!</p>
+  </div>
+
+  <div class="card">
+    <form method="POST" action="/register">
+      <div class="form-group">
+        <label class="form-label">이름</label>
+        <input class="form-input" type="text" name="name" placeholder="홍길동" required autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">부서</label>
+        <input class="form-input" type="text" name="department" placeholder="편집국 / 디지털팀 / 광고팀 ..." required>
+      </div>
+      <button type="submit" class="btn btn-gold w-full" style="margin-top:8px;">
+        🎲 배팅 시작하기
+      </button>
+    </form>
+
+    <hr class="divider">
+    <p class="text-dim text-center" style="font-size:0.85rem;">
+      이미 등록된 이름을 입력하면 자동으로 기존 계정으로 접속됩니다.
+    </p>
+  </div>
+
+  <div class="card mt-2" style="background:rgba(255,215,0,0.06); border-color:rgba(255,215,0,0.2);">
+    <h3 class="text-gold mb-1">💰 1인당 1,000코인 (= 1만원)</h3>
+    <p style="font-size:0.88rem; color:var(--text-dim); line-height:1.6;">
+      등록 후 6개 카테고리에 코인을 자유 배분합니다.<br>
+      경기 결과는 필수(최소 200코인), 나머지는 선택!
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -291,6 +291,51 @@ async function webSearch(query, maxResults = 5) {
   }
 }
 
+// ── 텔레그램 채널 리더 ───────────────────────────────────────────
+const ECON_CHANNELS = {
+  bumgore: '범고래',
+  Brain_And_Body_Research: '브레인앤바디리서치',
+  awake_schedule: '어웨이크 일정',
+  awake_realtimeCheck: '어웨이크 실시간',
+};
+
+async function getTelegramChannelMessages(channel, maxMessages = 20) {
+  const url = `https://t.me/s/${channel}`;
+  const html = await httpsGetRaw(url, { 'User-Agent': 'Mozilla/5.0' });
+  const messages = [];
+  const textRe = /class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/g;
+  const dateRe = /<time datetime="([^"]+)"/g;
+  const texts = [], dates = [];
+  let m;
+  while ((m = textRe.exec(html)) !== null) texts.push(m[1]);
+  while ((m = dateRe.exec(html)) !== null) dates.push(m[1]);
+  for (let i = 0; i < Math.min(texts.length, maxMessages); i++) {
+    const clean = texts[i]
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
+      .trim();
+    if (clean) messages.push({ date: (dates[i] || '').slice(0, 16), text: clean });
+  }
+  return messages;
+}
+
+async function getEconomicDigest(maxPerChannel = 10) {
+  const results = [];
+  for (const [ch, name] of Object.entries(ECON_CHANNELS)) {
+    try {
+      const msgs = await getTelegramChannelMessages(ch, maxPerChannel);
+      if (msgs.length) {
+        results.push(`\n📡 [${name}] (t.me/${ch})`);
+        results.push(...msgs.map(m => `  [${m.date}] ${m.text.slice(0, 300)}`));
+      }
+    } catch (e) {
+      results.push(`\n❌ [${name}] 수신 실패: ${e.message}`);
+    }
+  }
+  return results.join('\n') || '수신된 메시지 없음';
+}
+
 // ── TaskFlow API 헬퍼 ────────────────────────────────────────────
 function httpsGet(url) {
   return new Promise((resolve, reject) => {
@@ -620,6 +665,28 @@ const tools = [
       required: ['eventId'],
     },
   },
+  {
+    name: 'get_telegram_channel',
+    description: '특정 텔레그램 채널의 최신 메시지를 가져옵니다. channel은 채널 아이디(t.me/ 뒤 부분)를 입력합니다. 사용 가능한 채널: bumgore(범고래), Brain_And_Body_Research(브레인앤바디), awake_schedule(어웨이크일정), awake_realtimeCheck(어웨이크실시간)',
+    input_schema: {
+      type: 'object',
+      properties: {
+        channel: { type: 'string', description: '채널 아이디 (예: bumgore, awake_realtimeCheck)' },
+        maxMessages: { type: 'number', description: '가져올 메시지 수 (기본 15)' },
+      },
+      required: ['channel'],
+    },
+  },
+  {
+    name: 'get_economic_digest',
+    description: '재호님이 구독 중인 경제·주식 텔레그램 채널(범고래, 브레인앤바디, 어웨이크 일정·실시간) 전체의 최신 메시지를 한번에 수집합니다. "오늘 경제 뉴스", "시장 동향", "주식 요약", "경제 브리핑" 같은 요청에 사용하세요.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        maxPerChannel: { type: 'number', description: '채널당 메시지 수 (기본 10)' },
+      },
+    },
+  },
 ];
 
 // ── 도구 실행 ────────────────────────────────────────────────────
@@ -708,6 +775,18 @@ async function executeTool(name, input) {
 
   if (name === 'delete_event') {
     return await deleteCalendarEvent(input.eventId);
+  }
+
+  if (name === 'get_telegram_channel') {
+    const msgs = await getTelegramChannelMessages(input.channel, input.maxMessages || 15);
+    const chName = ECON_CHANNELS[input.channel] || input.channel;
+    if (!msgs.length) return `📡 ${chName} 채널에서 메시지를 가져오지 못했어요.`;
+    return `📡 [${chName}] 최신 ${msgs.length}개 메시지:\n\n` +
+      msgs.map(m => `[${m.date}] ${m.text}`).join('\n\n---\n');
+  }
+
+  if (name === 'get_economic_digest') {
+    return await getEconomicDigest(input.maxPerChannel || 10);
   }
 
   return '알 수 없는 도구';

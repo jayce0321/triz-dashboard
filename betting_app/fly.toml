@@ -1,0 +1,30 @@
+# Fly.io configuration
+app = "worldcup-betting"
+primary_region = "nrt"  # Tokyo (한국과 가장 가까운 지역)
+
+[build]
+  builder = "paketobuildpacks/builder:base"
+
+[env]
+  PORT = "8080"
+  DB_DIR = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[mounts]]
+  source = "betting_data"
+  destination = "/data"
+
+[checks]
+  [checks.alive]
+    grace_period = "5s"
+    interval = "30s"
+    method = "get"
+    path = "/"
+    timeout = "5s"
+    type = "http"

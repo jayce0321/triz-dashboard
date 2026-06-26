@@ -1,0 +1,468 @@
+{% extends "base.html" %}
+{% block title %}배팅하기 - 어쩌다 월드컵 배팅{% endblock %}
+
+{% block extra_style %}
+.cat-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+  transition: border-color .2s;
+}
+.cat-card.active { border-color: rgba(255,215,0,0.5); }
+.cat-card.required-badge::before {
+  content: '필수';
+  background: var(--primary);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.cat-title {
+  font-family: '세계하나제목고딕', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.cat-desc { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 14px; }
+.score-inputs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.score-box {
+  background: var(--card2);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  width: 80px;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--text);
+  transition: border-color .2s;
+}
+.score-box:focus { outline: none; border-color: var(--gold); }
+.score-vs { font-size: 1.2rem; font-weight: 900; color: var(--text-dim); }
+.disabled-overlay {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.special-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media(max-width:600px){ .special-grid { grid-template-columns: 1fr; } }
+.special-item {
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  transition: all .2s;
+}
+.special-item.checked { border-color: var(--green); background: rgba(0,200,81,0.06); }
+.special-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 8px;
+}
+.special-coin-wrap { margin-top: 10px; display: none; }
+.special-item.checked .special-coin-wrap { display: block; }
+.submit-bar {
+  position: sticky;
+  bottom: 0;
+  background: rgba(10,20,38,0.97);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 14px 20px;
+  z-index: 50;
+}
+.submit-bar-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+{% endblock %}
+
+{% block content %}
+<!-- 코인 바 -->
+<div class="coin-bar-wrap">
+  <div class="coin-bar-inner">
+    <span style="font-size:0.9rem; font-weight:700;">🪙 코인 배분</span>
+    <div class="coin-bar-track">
+      <div class="coin-bar-fill" id="coinBarFill" style="width:0%"></div>
+    </div>
+    <span class="coin-stat">
+      <span id="coinUsed" class="used">0</span>
+      <span class="text-dim"> / {{ total_coins }}</span>
+      &nbsp;남은:&nbsp;<span id="coinRemain" class="remain">{{ total_coins }}</span>
+    </span>
+  </div>
+</div>
+
+<div class="container">
+  <div style="margin-bottom:24px;">
+    <h1>🎲 배팅하기</h1>
+    <p class="text-dim mt-1">1,000코인을 카테고리에 분배하세요. 코인을 모두 써야 완료됩니다.</p>
+    {% if existing %}
+    <div class="badge badge-gold mt-1" style="padding:6px 14px;">기존 배팅이 있습니다 — 수정 후 다시 제출하면 덮어씌워집니다</div>
+    {% endif %}
+  </div>
+
+  <form method="POST" action="/bet" id="betForm">
+
+    <!-- 1. 경기 결과 (필수) -->
+    <div class="cat-card required-badge" id="card_result">
+      <div class="cat-title">⚽ 경기 최종 결과</div>
+      <div class="cat-desc">90분 풀타임 기준 · 최소 200코인 필수</div>
+      <div class="radio-group">
+        {% for opt in categories.result.options %}
+        <label class="radio-option" onclick="selectRadio(this,'result_choice','{{ opt.value }}')">
+          <input type="radio" name="result_choice" value="{{ opt.value }}"
+            {% for b in existing %}{% if b.category=='result' and b.choice==opt.value %}checked{% endif %}{% endfor %}>
+          <div class="radio-dot"></div>
+          <span class="radio-label">{{ opt.label }}</span>
+          <span class="radio-odds">× {{ opt.odds }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="coin-input-wrap">
+        <label>배팅 코인:</label>
+        <input class="coin-input" type="number" name="result_coins" id="result_coins"
+          min="200" max="800" step="50" placeholder="200~800"
+          value="{% for b in existing %}{% if b.category=='result' %}{{ b.coins }}{% endif %}{% endfor %}"
+          oninput="updateCoins()">
+        <span style="font-size:0.82rem; color:var(--text-dim);">코인 (최소 200)</span>
+      </div>
+    </div>
+
+    <!-- 2. 정확한 스코어 -->
+    <div class="cat-card" id="card_score">
+      <div class="cat-title">🎯 정확한 스코어 <span style="font-size:0.85rem; color:var(--gold);">× 15배!</span></div>
+      <div class="cat-desc">한국 : 남아공 스코어를 정확히 맞추면 15배! (선택, 최소 100코인)</div>
+      <div id="scoreSection">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:12px;">
+          <input type="checkbox" id="score_enable" onchange="toggleSection('score_enable','scoreInputs')" style="width:18px;height:18px; accent-color:var(--gold);">
+          <span style="font-size:0.9rem;">스코어 예측 배팅 하기</span>
+        </label>
+        <div id="scoreInputs" class="disabled-overlay">
+          <div class="score-inputs">
+            <div style="text-align:center;">
+              <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:6px;">🇰🇷 한국</div>
+              <input class="score-box form-input" type="number" name="score_k" id="score_k"
+                min="0" max="20" placeholder="0"
+                value="{% for b in existing %}{% if b.category=='score' %}{{ b.choice.split('-')[0] }}{% endif %}{% endfor %}"
+                oninput="updateCoins()">
+            </div>
+            <span class="score-vs">:</span>
+            <div style="text-align:center;">
+              <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:6px;">🇿🇦 남아공</div>
+              <input class="score-box form-input" type="number" name="score_r" id="score_r"
+                min="0" max="20" placeholder="0"
+                value="{% for b in existing %}{% if b.category=='score' %}{{ b.choice.split('-')[1] }}{% endif %}{% endfor %}"
+                oninput="updateCoins()">
+            </div>
+          </div>
+          <div class="coin-input-wrap">
+            <label>배팅 코인:</label>
+            <input class="coin-input" type="number" name="score_coins" id="score_coins"
+              min="100" max="500" step="50" placeholder="100~500"
+              value="{% for b in existing %}{% if b.category=='score' %}{{ b.coins }}{% endif %}{% endfor %}"
+              oninput="updateCoins()">
+            <span style="font-size:0.82rem; color:var(--text-dim);">코인</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 골 득실차 -->
+    <div class="cat-card" id="card_goal_diff">
+      <div class="cat-title">📊 골 득실차</div>
+      <div class="cat-desc">몇 골 차이로 경기가 끝날까? (선택, 최소 100코인)</div>
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:12px;">
+        <input type="checkbox" id="goal_diff_enable" onchange="toggleSection('goal_diff_enable','goal_diff_inputs')" style="width:18px;height:18px; accent-color:var(--gold);">
+        <span style="font-size:0.9rem;">골 득실차 배팅 하기</span>
+      </label>
+      <div id="goal_diff_inputs" class="disabled-overlay">
+        <div class="radio-group">
+          {% for opt in categories.goal_diff.options %}
+          <label class="radio-option" onclick="selectRadio(this,'goal_diff_choice','{{ opt.value }}')">
+            <input type="radio" name="goal_diff_choice" value="{{ opt.value }}"
+              {% for b in existing %}{% if b.category=='goal_diff' and b.choice==opt.value %}checked{% endif %}{% endfor %}>
+            <div class="radio-dot"></div>
+            <span class="radio-label">{{ opt.label }}</span>
+            <span class="radio-odds">× {{ opt.odds }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <div class="coin-input-wrap">
+          <label>배팅 코인:</label>
+          <input class="coin-input" type="number" name="goal_diff_coins" id="goal_diff_coins"
+            min="100" max="500" step="50" placeholder="100~500"
+            value="{% for b in existing %}{% if b.category=='goal_diff' %}{{ b.coins }}{% endif %}{% endfor %}"
+            oninput="updateCoins()">
+          <span style="font-size:0.82rem; color:var(--text-dim);">코인</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 선취득점 -->
+    <div class="cat-card" id="card_first_goal">
+      <div class="cat-title">🚀 선취득점 팀</div>
+      <div class="cat-desc">먼저 골을 넣는 팀은 어디? (선택, 최소 100코인)</div>
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:12px;">
+        <input type="checkbox" id="first_goal_enable" onchange="toggleSection('first_goal_enable','first_goal_inputs')" style="width:18px;height:18px; accent-color:var(--gold);">
+        <span style="font-size:0.9rem;">선취득점 배팅 하기</span>
+      </label>
+      <div id="first_goal_inputs" class="disabled-overlay">
+        <div class="radio-group">
+          {% for opt in categories.first_goal.options %}
+          <label class="radio-option" onclick="selectRadio(this,'first_goal_choice','{{ opt.value }}')">
+            <input type="radio" name="first_goal_choice" value="{{ opt.value }}"
+              {% for b in existing %}{% if b.category=='first_goal' and b.choice==opt.value %}checked{% endif %}{% endfor %}>
+            <div class="radio-dot"></div>
+            <span class="radio-label">{{ opt.label }}</span>
+            <span class="radio-odds">× {{ opt.odds }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <div class="coin-input-wrap">
+          <label>배팅 코인:</label>
+          <input class="coin-input" type="number" name="first_goal_coins" id="first_goal_coins"
+            min="100" max="500" step="50" placeholder="100~500"
+            value="{% for b in existing %}{% if b.category=='first_goal' %}{{ b.coins }}{% endif %}{% endfor %}"
+            oninput="updateCoins()">
+          <span style="font-size:0.82rem; color:var(--text-dim);">코인</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 총 득점 -->
+    <div class="cat-card" id="card_total_goals">
+      <div class="cat-title">💥 총 득점 수</div>
+      <div class="cat-desc">양팀 합산 골 수 (선택, 최소 100코인)</div>
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:12px;">
+        <input type="checkbox" id="total_goals_enable" onchange="toggleSection('total_goals_enable','total_goals_inputs')" style="width:18px;height:18px; accent-color:var(--gold);">
+        <span style="font-size:0.9rem;">총 득점 수 배팅 하기</span>
+      </label>
+      <div id="total_goals_inputs" class="disabled-overlay">
+        <div class="radio-group">
+          {% for opt in categories.total_goals.options %}
+          <label class="radio-option" onclick="selectRadio(this,'total_goals_choice','{{ opt.value }}')">
+            <input type="radio" name="total_goals_choice" value="{{ opt.value }}"
+              {% for b in existing %}{% if b.category=='total_goals' and b.choice==opt.value %}checked{% endif %}{% endfor %}>
+            <div class="radio-dot"></div>
+            <span class="radio-label">{{ opt.label }}</span>
+            <span class="radio-odds">× {{ opt.odds }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <div class="coin-input-wrap">
+          <label>배팅 코인:</label>
+          <input class="coin-input" type="number" name="total_goals_coins" id="total_goals_coins"
+            min="100" max="500" step="50" placeholder="100~500"
+            value="{% for b in existing %}{% if b.category=='total_goals' %}{{ b.coins }}{% endif %}{% endfor %}"
+            oninput="updateCoins()">
+          <span style="font-size:0.82rem; color:var(--text-dim);">코인</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. 스페셜 이벤트 -->
+    <div class="cat-card" id="card_special">
+      <div class="cat-title">🎲 스페셜 이벤트</div>
+      <div class="cat-desc">발생 여부 예측! 여러 개 동시 배팅 가능 (각 최소 100코인)</div>
+      <div class="special-grid">
+        {% for ev in special_events %}
+        <div class="special-item" id="special_wrap_{{ ev.value }}">
+          <div class="special-header" onclick="toggleSpecial('{{ ev.value }}')">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
+              <input type="checkbox" name="special_{{ ev.value }}" id="special_{{ ev.value }}"
+                {% for b in existing %}{% if b.category=='special' and b.choice==ev.value %}checked{% endif %}{% endfor %}
+                onchange="toggleSpecial('{{ ev.value }}'); updateCoins()">
+              <span style="font-weight:600;">{{ ev.label }}</span>
+            </label>
+            <span class="radio-odds">× {{ ev.odds }}</span>
+          </div>
+          <div class="special-coin-wrap" id="special_coins_wrap_{{ ev.value }}">
+            <div class="coin-input-wrap" style="margin-top:0;">
+              <label>코인:</label>
+              <input class="coin-input" type="number"
+                name="special_{{ ev.value }}_coins" id="special_{{ ev.value }}_coins"
+                min="100" max="300" step="50" placeholder="100~300"
+                value="{% for b in existing %}{% if b.category=='special' and b.choice==ev.value %}{{ b.coins }}{% endif %}{% endfor %}"
+                oninput="updateCoins()">
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<!-- 제출 바 -->
+<div class="submit-bar">
+  <div class="submit-bar-inner">
+    <div>
+      <span style="font-size:0.9rem;">🪙 사용: <strong id="coinUsed2" class="text-gold">0</strong> / 1000</span>
+      &nbsp;&nbsp;
+      <span style="font-size:0.9rem;" id="submitStatus" class="text-dim">1000코인을 모두 배분해야 제출 가능합니다</span>
+    </div>
+    <button type="submit" form="betForm" class="btn btn-gold" id="submitBtn" disabled>
+      🎯 배팅 완료하기
+    </button>
+  </div>
+</div>
+
+<script>
+const TOTAL = 1000;
+
+function selectRadio(label, name, value) {
+  document.querySelectorAll(`[onclick*="${name}"]`).forEach(l => l.classList.remove('selected'));
+  label.classList.add('selected');
+  label.querySelector('input[type=radio]').checked = true;
+  updateCoins();
+}
+
+function toggleSection(checkId, sectionId) {
+  const cb = document.getElementById(checkId);
+  const sec = document.getElementById(sectionId);
+  if (cb.checked) {
+    sec.classList.remove('disabled-overlay');
+  } else {
+    sec.classList.add('disabled-overlay');
+    // clear values
+    sec.querySelectorAll('input[type=number]').forEach(i => i.value = '');
+    sec.querySelectorAll('input[type=radio]').forEach(i => { i.checked = false; });
+    sec.querySelectorAll('.radio-option').forEach(l => l.classList.remove('selected'));
+  }
+  updateCoins();
+}
+
+function toggleSpecial(val) {
+  const cb = document.getElementById(`special_${val}`);
+  const wrap = document.getElementById(`special_coins_wrap_${val}`);
+  const item = document.getElementById(`special_wrap_${val}`);
+  const checked = cb.checked;
+  if (checked) {
+    wrap.style.display = 'block';
+    item.classList.add('checked');
+  } else {
+    wrap.style.display = 'none';
+    item.classList.remove('checked');
+    const ci = document.getElementById(`special_${val}_coins`);
+    if (ci) ci.value = '';
+  }
+  updateCoins();
+}
+
+function getVal(id) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
+  return parseInt(el.value) || 0;
+}
+
+function updateCoins() {
+  let used = 0;
+
+  // 1. result (always counted)
+  used += getVal('result_coins');
+
+  // 2. score
+  if (document.getElementById('score_enable').checked) {
+    used += getVal('score_coins');
+  }
+
+  // 3-5. optional categories
+  ['goal_diff','first_goal','total_goals'].forEach(cat => {
+    if (document.getElementById(`${cat}_enable`).checked) {
+      used += getVal(`${cat}_coins`);
+    }
+  });
+
+  // 6. special
+  ['penalty','red_card','comeback','extra_time'].forEach(val => {
+    const cb = document.getElementById(`special_${val}`);
+    if (cb && cb.checked) {
+      used += getVal(`special_${val}_coins`);
+    }
+  });
+
+  const remain = TOTAL - used;
+  const pct = Math.min((used / TOTAL) * 100, 100);
+
+  document.getElementById('coinUsed').textContent = used;
+  document.getElementById('coinUsed2').textContent = used;
+  document.getElementById('coinRemain').textContent = Math.max(remain, 0);
+
+  const fill = document.getElementById('coinBarFill');
+  fill.style.width = pct + '%';
+  fill.classList.toggle('over', used > TOTAL);
+
+  const btn = document.getElementById('submitBtn');
+  const status = document.getElementById('submitStatus');
+
+  if (used === TOTAL) {
+    btn.disabled = false;
+    status.textContent = '✅ 코인 배분 완료! 제출하세요';
+    status.style.color = 'var(--green)';
+  } else if (used > TOTAL) {
+    btn.disabled = true;
+    status.textContent = `❌ ${used - TOTAL}코인 초과! 줄여주세요`;
+    status.style.color = 'var(--red)';
+  } else {
+    btn.disabled = true;
+    status.textContent = `${remain}코인 남았습니다 — 모두 배분해야 합니다`;
+    status.style.color = 'var(--text-dim)';
+  }
+}
+
+// 기존 배팅 복원
+(function restoreExisting() {
+  // Restore radio selections
+  document.querySelectorAll('input[type=radio]:checked').forEach(r => {
+    const label = r.closest('.radio-option');
+    if (label) label.classList.add('selected');
+  });
+
+  // Restore checkboxes for optional categories
+  ['score','goal_diff','first_goal','total_goals'].forEach(cat => {
+    const coinsEl = document.getElementById(`${cat}_coins`);
+    if (coinsEl && coinsEl.value) {
+      const cb = document.getElementById(`${cat}_enable`);
+      if (cb) {
+        cb.checked = true;
+        const sec = document.getElementById(`${cat}_inputs`) || document.getElementById(`scoreInputs`);
+        if (sec) sec.classList.remove('disabled-overlay');
+      }
+    }
+  });
+
+  // Restore special
+  ['penalty','red_card','comeback','extra_time'].forEach(val => {
+    const cb = document.getElementById(`special_${val}`);
+    if (cb && cb.checked) {
+      const wrap = document.getElementById(`special_coins_wrap_${val}`);
+      const item = document.getElementById(`special_wrap_${val}`);
+      if (wrap) wrap.style.display = 'block';
+      if (item) item.classList.add('checked');
+    }
+  });
+
+  updateCoins();
+})();
+</script>
+{% endblock %}
