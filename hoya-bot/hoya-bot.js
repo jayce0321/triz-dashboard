@@ -989,8 +989,8 @@ async function sendEconomicBriefing(timeLabel) {
 cron.schedule('0 8 * * *',  () => sendEconomicBriefing('오전 8:00'), { timezone: 'Asia/Seoul' });
 cron.schedule('0 11 * * *', () => sendEconomicBriefing('오전 11:00'), { timezone: 'Asia/Seoul' });
 cron.schedule('0 13 * * *', () => sendEconomicBriefing('오후 1:00'), { timezone: 'Asia/Seoul' });
-cron.schedule('30 15 * * *', () => sendEconomicBriefing('오후 3:30'), { timezone: 'Asia/Seoul' });
-console.log('⏰ 경제 브리핑 스케줄 등록: 08:00 / 11:00 / 13:00 / 15:30 (KST)');
+cron.schedule('0 15 * * *',  () => sendEconomicBriefing('오후 3:00'), { timezone: 'Asia/Seoul' });
+console.log('⏰ 경제 브리핑 스케줄 등록: 08:00 / 11:00 / 13:00 / 15:00 (KST)');
 
 process.on('uncaughtException', (err) => {
   console.error('[uncaughtException]', err.message);
