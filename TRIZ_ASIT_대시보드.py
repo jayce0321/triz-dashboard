@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse, Response
 from pydantic import BaseModel
 from typing import List, Optional
+from llm_router import ask as _llm_ask
 
 # ──────────────────────────────────────────────
 # 환경변수 로드
@@ -251,7 +252,7 @@ def _repair_truncated_json(s: str) -> dict:
 
 
 async def call_ai_async(system, user, max_tokens: int = 8192) -> str:
-    """AI API 비동기 호출 — Claude 우선, Gemini 폴백.
+    """AI API 비동기 호출 — Claude 우선, Gemini 폴백, Groq 최종 폴백.
     system/user: str 또는 content blocks list (Claude 프롬프트 캐싱용)
     """
     if AI_BACKEND == "claude":
@@ -264,10 +265,19 @@ async def call_ai_async(system, user, max_tokens: int = 8192) -> str:
             system = "\n".join(b.get("text", "") for b in system if b.get("type") == "text")
         return await _call_gemini(system, user, max_tokens)
     else:
-        raise RuntimeError(
-            "AI 키가 설정되지 않았습니다. "
-            f"{_ANTHROPIC_ENV_PATH} 에 ANTHROPIC_API_KEY=sk-ant-... 를 추가한 뒤 서버를 재시작하세요."
-        )
+        # Groq 최종 폴백 (Claude·Gemini 키 모두 없을 때)
+        if isinstance(user, list):
+            user = "\n".join(b.get("text", "") for b in user if b.get("type") == "text")
+        if isinstance(system, list):
+            system = "\n".join(b.get("text", "") for b in system if b.get("type") == "text")
+        try:
+            return await _llm_ask(system, user, task="analysis", max_tokens=min(max_tokens, 8192))
+        except Exception as e:
+            raise RuntimeError(
+                "AI 키가 설정되지 않았습니다. "
+                f"{_ANTHROPIC_ENV_PATH} 에 ANTHROPIC_API_KEY=sk-ant-... 를 추가한 뒤 서버를 재시작하세요. "
+                f"(Groq 폴백 오류: {e})"
+            )
 
 
 def _call_claude_sync(system, user, max_tokens: int = 8192) -> str:
@@ -2275,10 +2285,47 @@ async def _scheduler_loop():
             await asyncio.sleep(300)
 
 
+async def _check_and_recover_missed():
+    """Railway 재시작 시 당일 누락 발행 자동 보상 (평일 08:00~23:59 한정)"""
+    from datetime import datetime, timezone, timedelta
+    await asyncio.sleep(10)  # 서버 완전 기동 대기
+
+    kst = timezone(timedelta(hours=9))
+    now = datetime.now(kst)
+
+    # 주말 or 08:00 이전이면 스케줄러에 맡김
+    if now.weekday() >= 5 or now.hour < 8:
+        return
+
+    today = now.strftime("%Y-%m-%d")
+
+    # 오늘 오전 발행 파일 존재 여부 확인
+    r_am = await _gh("GET", f"/repos/{_DAILY_REPO}/contents/{today}.html")
+    if r_am.status_code != 200:
+        print(f"⚠️ [보상발행] {today} 오전 발행 누락 감지 → 즉시 발행 시작")
+        for topic in ["economy", "politics", "culture"]:
+            await _cmd_publish(_TG_ADMIN_ID, topic)
+            await asyncio.sleep(120)
+        print("⚠️ [보상발행] 오전 3개 발행 완료")
+    else:
+        print(f"✅ [보상발행] {today} 오전 발행 확인 — 정상")
+
+    # 15:00 이후면 오후 경제도 체크
+    if now.hour >= 15:
+        r_pm = await _gh("GET", f"/repos/{_DAILY_REPO}/contents/{today}-pm.html")
+        if r_pm.status_code != 200:
+            print(f"⚠️ [보상발행] {today} 오후 경제 누락 감지 → 즉시 발행")
+            await _cmd_publish(_TG_ADMIN_ID, "economy_pm")
+            print("⚠️ [보상발행] 오후 경제 발행 완료")
+        else:
+            print(f"✅ [보상발행] {today} 오후 경제 확인 — 정상")
+
+
 @app.on_event("startup")
 async def _on_startup():
     asyncio.create_task(_scheduler_loop())
-    print("⏰ 내부 스케줄러 시작 (평일 KST 08:00 경제·정치·컬처 순차 발행 | 15:00 경제 오후 발행)")
+    asyncio.create_task(_check_and_recover_missed())
+    print("⏰ 내부 스케줄러 시작 (평일 KST 08:00 경제·정치·컬처 | 15:00 경제 오후 | 재시작 누락 보상)")
 
 
 # ──────────────────────────────────────────────
