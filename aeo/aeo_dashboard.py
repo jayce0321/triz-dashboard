@@ -2,7 +2,7 @@
 세계일보 AEO 대시보드 백엔드
 목적: SEO 기사를 AEO/AI 검색 친화형으로 변환 + 품질 평가
 """
-import os, re, uuid, json, csv, asyncio, traceback
+import os, re, uuid, json, csv, asyncio, traceback, ipaddress, socket, logging
 from urllib.parse import quote as urlquote
 from datetime import datetime
 from io import StringIO
@@ -16,6 +16,27 @@ from pydantic import BaseModel
 import httpx
 from bs4 import BeautifulSoup
 import anthropic
+
+logger = logging.getLogger(__name__)
+
+# ── SSRF 방지: 내부 IP 검증 ──────────────────────────────
+def _validate_url_safe(url: str) -> None:
+    """사용자 제공 URL이 내부/사설 네트워크를 가리키면 ValueError를 발생시킨다."""
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"허용되지 않는 URL 스킴: {parsed.scheme!r}")
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("유효하지 않은 URL: 호스트명 없음")
+    try:
+        addrs = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        raise ValueError(f"DNS 조회 실패: {hostname}")
+    for _, _, _, _, sockaddr in addrs:
+        ip = ipaddress.ip_address(sockaddr[0])
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+            raise ValueError(f"내부 네트워크 접근 불가: {hostname} → {ip}")
 
 try:
     import pdfplumber
@@ -115,12 +136,16 @@ class StatusUpdate(BaseModel):
 
 # ── 기사 본문 추출 ────────────────────────────────
 async def fetch_article(url: str) -> dict:
+    try:
+        _validate_url_safe(url)
+    except ValueError as e:
+        raise HTTPException(400, f"URL 검증 실패: {e}")
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                       "AppleWebKit/537.36 (KHTML, like Gecko) "
                       "Chrome/124.0.0.0 Safari/537.36"
     }
-    async with httpx.AsyncClient(timeout=20, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
         r = await client.get(url, headers=headers)
         r.raise_for_status()
 
@@ -631,7 +656,8 @@ async def convert_single(req: ConvertRequest):
             save_db(db)
             yield _sse("done", json.dumps(record, ensure_ascii=False))
         except Exception as e:
-            yield _sse("error", str(e) + "\n" + traceback.format_exc()[:500])
+            logger.error("AEO 처리 오류", exc_info=True)
+            yield _sse("error", f"처리 중 오류가 발생했습니다: {type(e).__name__}")
 
     return StreamingResponse(stream(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
@@ -740,7 +766,8 @@ async def upload_file(file: UploadFile = File(...)):
         except HTTPException as e:
             yield _sse("error", e.detail)
         except Exception as e:
-            yield _sse("error", str(e) + "\n" + traceback.format_exc()[:500])
+            logger.error("AEO 처리 오류", exc_info=True)
+            yield _sse("error", f"처리 중 오류가 발생했습니다: {type(e).__name__}")
 
     return StreamingResponse(stream(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache",

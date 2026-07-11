@@ -553,8 +553,8 @@ function renderTitles(raw, container, errBox) {
     const jsonStr = raw.replace(/^```json\s*/,'').replace(/```\s*$/,'').trim();
     data = JSON.parse(jsonStr);
   } catch(e) {
-    // JSON 파싱 실패 시 원문 출력
-    container.innerHTML = `<div class="card"><pre style="white-space:pre-wrap;font-size:13px">${raw}</pre></div>`;
+    // JSON 파싱 실패 시 원문 출력 (XSS 방지: esc() 적용)
+    container.innerHTML = `<div class="card"><pre style="white-space:pre-wrap;font-size:13px">${esc(raw)}</pre></div>`;
     return;
   }
 

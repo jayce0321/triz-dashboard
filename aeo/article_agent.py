@@ -2,7 +2,7 @@
 세계일보 기사 에이전트 — 서울경제 AI-LINK 벤치마킹 기반
 기능: ① 기사 제목 추천  ② 보도자료 기사화  ③ 교열  ④ AEO 변환
 """
-import os, re, json, asyncio, io
+import os, re, json, asyncio, io, ipaddress, socket, sys
 from typing import AsyncGenerator
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
@@ -10,6 +10,29 @@ from pydantic import BaseModel
 import anthropic
 import httpx
 from bs4 import BeautifulSoup
+
+# llm_router는 프로젝트 루트에 위치 — 경로를 sys.path에 추가
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from llm_router import ask_stream as _llm_ask_stream
+
+# ── SSRF 방지 ────────────────────────────────────────
+def _validate_url_safe(url: str) -> None:
+    """사용자 제공 URL이 내부/사설 네트워크를 가리키면 ValueError를 발생시킨다."""
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"허용되지 않는 URL 스킴: {parsed.scheme!r}")
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("유효하지 않은 URL: 호스트명 없음")
+    try:
+        addrs = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        raise ValueError(f"DNS 조회 실패: {hostname}")
+    for _, _, _, _, sockaddr in addrs:
+        ip = ipaddress.ip_address(sockaddr[0])
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+            raise ValueError(f"내부 네트워크 접근 불가: {hostname} → {ip}")
 
 try:
     import pdfplumber as _pdfplumber
@@ -245,8 +268,12 @@ score는 0~100 (원문 품질 점수). corrections는 발견된 문제점 목록
 
 # ── URL 크롤링 (보도자료 URL 입력 시) ───────────────
 async def fetch_pressrelease(url: str) -> str:
+    try:
+        _validate_url_safe(url)
+    except ValueError as e:
+        raise HTTPException(400, f"URL 검증 실패: {e}")
     headers = {"User-Agent": "Mozilla/5.0 (compatible; SeGye-Agent/1.0)"}
-    async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=15, follow_redirects=False) as client:
         r = await client.get(url, headers=headers)
         r.raise_for_status()
     soup = BeautifulSoup(r.text, "html.parser")
@@ -371,14 +398,14 @@ async def extract_pressrelease_file(file: UploadFile = File(...)):
 # ── ③ 교열 ──────────────────────────────────────
 @router.post("/proofread")
 async def proofread(req: ProofreadRequest):
-    """기사 초안 교열 — 맞춤법·표현·사실관계 검토"""
+    """기사 초안 교열 — 맞춤법·표현·사실관계 검토 (Groq Llama로 고속 처리)"""
     if not req.text.strip():
         raise HTTPException(400, "교열할 기사를 입력하세요.")
     text = req.text[:4000]
     user_prompt = f"아래 기사를 교열해 주세요.\n\n[기사]\n{text}"
 
     async def gen():
-        async for chunk in stream_claude(PROOFREAD_SYSTEM, user_prompt, MODEL_HAIKU):
+        async for chunk in _llm_ask_stream(PROOFREAD_SYSTEM, user_prompt, task="proofread"):
             yield chunk
 
     return StreamingResponse(gen(), media_type="text/event-stream",
