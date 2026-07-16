@@ -1,0 +1,57 @@
+[
+  {
+    "key": "weekly_digest",
+    "name": "주간 다이제스트",
+    "date": "2026-07-10",
+    "description": "한 주의 경제·정치·컬처 흐름을 하나의 구조로 묶어 정리하는 주간 테제입니다.",
+    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W28.html",
+    "title": "균열의 시대",
+    "quote": "고용 쇼크·패권 공백·K문명의 교차점 — 고용 균열이 Fed 피벗 압박을 재점화하는 동안, 한국은 반도체 모멘텀과 외교 다변화로 글로벌 리스크의 수혜자와 피해자를 동시에 자처하고 있다.",
+    "status": "최신 인용",
+    "published_ts": 0
+  },
+  {
+    "key": "economy",
+    "name": "경제·투자",
+    "date": "2026-07-16",
+    "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-07-16.html",
+    "title": "\"워시의 매파 발언 vs. 약한 중국 성장 — 금리·지정학 교차로에서 시장이 방향을 묻다\"",
+    "quote": "Fed 신임 의장 워시의 긴축 시그널과 중국 경기 둔화, 미·이란 긴장 재고조가 동시에 충돌하며 '유동성 파티 종료' 공포가 시장 전반을 흔들고 있다.",
+    "status": "오늘 인용",
+    "published_ts": 0
+  },
+  {
+    "key": "economy_pm",
+    "name": "경제·투자 오후",
+    "date": "2026-07-15",
+    "description": "오후 장 흐름과 추가 변수를 반영하는 경제·투자 테제입니다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-07-15-pm.html",
+    "title": "\"골드만·JPM 실적 서프라이즈 + 코스피 반도체 급등 — AI발 빅머니 귀환의 교차점\"",
+    "quote": "월가 AI 수혜 실적 확인 → 국내 반도체·산업재 순환매 연장, 단 외국인 수급 역전이 지속 관건",
+    "status": "최신 인용",
+    "published_ts": 0
+  },
+  {
+    "key": "politics",
+    "name": "정치",
+    "date": "2026-07-16",
+    "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-07-16-politics.html",
+    "title": "\"권력 재편의 이중주: 이재명 정부의 제도 장악과 트럼프의 군사·정치 압박\"",
+    "quote": "한국은 새 정부의 입법·수사 권력 재편이 가속화되고, 글로벌은 미국의 이란 군사 압박과 중국 AI 굴기가 맞물리며 '패권 없는 혼돈'의 시대로 진입 중이다.",
+    "status": "오늘 인용",
+    "published_ts": 0
+  },
+  {
+    "key": "culture",
+    "name": "컬처",
+    "date": "2026-07-16",
+    "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-07-16-culture.html",
+    "title": "\"K-컬처, 팬덤을 넘어 글로벌 생활양식으로\"",
+    "quote": "K-팝·K-드라마를 넘어 K-라이프스타일 전반이 외국인의 실제 소비·행동 패턴을 바꾸는 '문화 생활화' 단계에 진입했다.",
+    "status": "오늘 인용",
+    "published_ts": 0
+  }
+]

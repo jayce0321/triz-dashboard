@@ -1,0 +1,38 @@
+{
+  "name": "Hoya Bot 데일리 테제",
+  "repository": "jayce0321/daily-thesis",
+  "base_url": "https://jayce0321.github.io/daily-thesis",
+  "feed_url": "https://jayce0321.github.io/daily-thesis/feed.xml",
+  "topics": [
+    {
+      "key": "weekly_digest",
+      "name": "주간 다이제스트",
+      "filename": "weekly-{year}-W{week}.html",
+      "description": "한 주의 경제·정치·컬처 흐름을 하나의 구조로 묶어 정리하는 주간 테제입니다."
+    },
+    {
+      "key": "economy",
+      "name": "경제·투자",
+      "filename": "{today}.html",
+      "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다."
+    },
+    {
+      "key": "economy_pm",
+      "name": "경제·투자 오후",
+      "filename": "{today}-pm.html",
+      "description": "오후 장 흐름과 추가 변수를 반영하는 경제·투자 테제입니다."
+    },
+    {
+      "key": "politics",
+      "name": "정치",
+      "filename": "{today}-politics.html",
+      "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다."
+    },
+    {
+      "key": "culture",
+      "name": "컬처",
+      "filename": "{today}-culture.html",
+      "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다."
+    }
+  ]
+}

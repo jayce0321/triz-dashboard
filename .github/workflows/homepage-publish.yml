@@ -1,0 +1,40 @@
+name: homepage-publish
+
+on:
+  push:
+    paths:
+      - "홈페이지_첫버전/**"
+      - ".github/workflows/homepage-publish.yml"
+  schedule:
+    # KST 08:20, 15:20, 18:20. daily-thesis 발행 직후 홈페이지를 다시 생성한다.
+    - cron: "20 23 * * *"
+    - cron: "20 6 * * *"
+    - cron: "20 9 * * *"
+  repository_dispatch:
+    types: [daily-thesis-published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build static homepage
+        working-directory: 홈페이지_첫버전
+        run: python 홈페이지_생성.py
+      - name: Commit generated homepage
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "자동 업데이트: Hoya Bot 데일리 테제 반영"
+          file_pattern: "홈페이지_첫버전/index.html"
+      - name: Upload homepage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: homepage-first-version
+          path: 홈페이지_첫버전

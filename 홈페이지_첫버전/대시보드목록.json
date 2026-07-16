@@ -1,0 +1,29 @@
+[
+  {
+    "title": "TRIZ ASIT 문제해결 대시보드",
+    "description": "문제 구조화, TRIZ 아이디어, ASIT 평가, 실행 계획을 한 흐름으로 다루는 코딩 대시보드입니다.",
+    "category": "AI 문제해결",
+    "status": "운영 가능",
+    "tech": ["Python", "HTML", "LLM Router"],
+    "url": "../TRIZ_ASIT_대시보드.html",
+    "image": "../TRIZ탭.png"
+  },
+  {
+    "title": "AEO 기사 에이전트 대시보드",
+    "description": "AI 검색 최적화 관점에서 기사 구조와 데이터 활용 가능성을 점검하는 실험형 대시보드입니다.",
+    "category": "뉴스 자동화",
+    "status": "실험 중",
+    "tech": ["Python", "HTML", "JSON"],
+    "url": "../aeo_대시보드.html",
+    "image": "../aeo_deployed_final.png"
+  },
+  {
+    "title": "경영관리 시스템",
+    "description": "주간·월간 입력, 회의, 통계, 관리자 화면을 갖춘 내부 운영형 Flask 대시보드입니다.",
+    "category": "업무 시스템",
+    "status": "프로토타입",
+    "tech": ["Flask", "SQLite", "Templates"],
+    "url": "../mgmt_system/templates/dashboard.html",
+    "image": "../dashboard_fixed.png"
+  }
+]
