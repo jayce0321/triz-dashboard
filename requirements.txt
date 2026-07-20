@@ -7,6 +7,7 @@
 #   키 발급: https://aistudio.google.com/  (Get API key)
 
 anthropic>=0.40
+groq>=0.13
 google-genai>=0.8
 python-dotenv>=1.0
 fastapi>=0.110
