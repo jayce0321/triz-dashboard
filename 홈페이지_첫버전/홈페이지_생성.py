@@ -1712,6 +1712,8 @@ def render() -> str:
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 8px;
+      min-width: 0;
+      overflow: hidden;
     }}
 
     .featured-article {{
