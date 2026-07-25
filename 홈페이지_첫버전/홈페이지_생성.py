@@ -1308,6 +1308,7 @@ def render() -> str:
       padding: 8px 10px;
       border-radius: 6px;
       color: #334155;
+      white-space: nowrap;
     }}
 
     .nav-links a:hover {{ background: #e9f0fb; color: var(--blue); }}
@@ -1793,6 +1794,8 @@ def render() -> str:
       margin-top: 24px;
       color: #1f2937;
       font-size: 18px;
+      min-width: 0;
+      overflow-wrap: anywhere;
     }}
 
     .article-body code {{
