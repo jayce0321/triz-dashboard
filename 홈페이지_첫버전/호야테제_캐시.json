@@ -2,56 +2,56 @@
   {
     "key": "weekly_digest",
     "name": "주간 다이제스트",
-    "date": "2026-07-24",
+    "date": "2026-07-31",
     "description": "한 주의 경제·정치·컬처 흐름을 하나의 구조로 묶어 정리하는 주간 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W30.html",
-    "title": "전쟁·금리·권력 집중, 복합 위기의 임계점",
-    "quote": "전쟁·스태그플레이션·권력 집중이 동시에 임계점에 도달했을 때, 시장의 낙관은 가장 위험한 포지션이 된다.",
+    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W31.html",
+    "title": "긴축 귀환·패권 공백·K-문명 표준화",
+    "quote": "Fed 금리 인상 재점화 + 중동 지정학 리스크가 맞물린 '이중 긴축 충격'이 글로벌 자산 재편을 이끄는 동안, K-컬처만이 역주행하며 한국의 유일한 소프트파워 자산임을 입증했다.",
     "status": "최신 인용",
-    "published_ts": 1784858243.0
+    "published_ts": 1785464691.0
   },
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-07-28",
+    "date": "2026-08-04",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-07-28.html",
-    "title": "\"워시 FOMC·유가 급등, 긴축 공포의 귀환\"",
-    "quote": "이스라엘-이란 충돌發 유가 급등 + 워시 체제 연준의 매파적 신호가 겹치며, AI·반도체 레버리지 포지션이 집중 청산되는 '이중 긴축 충격'이 시장을 관통하고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-04.html",
+    "title": "\"전쟁·인플레·Fed 삼각파고 속 시장 내성 테스트\"",
+    "quote": "이란 전쟁 리스크 + 스태그플레이션 공포 + 분열된 Fed — 세 개의 파고가 동시에 시장을 강타하며, 투자자는 지금 '위험 회피'와 '역발상 매수' 사이의 선택을 강요받고 있다.",
     "status": "오늘 인용",
-    "published_ts": 1785160884.0
+    "published_ts": 1785765686.0
   },
   {
     "key": "economy_pm",
     "name": "경제·투자 오후",
-    "date": "2026-07-27",
+    "date": "2026-08-03",
     "description": "오후 장 흐름과 추가 변수를 반영하는 경제·투자 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-07-27-pm.html",
-    "title": "\"유가 쇼크·금리 역습 — 오후 시장의 새 균형점\"",
-    "quote": "국내 증시는 한은 금리 인상 시그널과 외국인 대규모 매도로 혼조 마감했고, 미국 시장은 유가 급등→Fed 금리인상 기대 재부상이라는 새로운 리스크 축이 열리며 오후 이후 변동성 확대 국면에 진입했다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-03-pm.html",
+    "title": "\"메모리 슈퍼사이클 vs. 매크로 역풍: 반도체가 시장의 방향타\"",
+    "quote": "7월 D램·낸드 역대 최고가 경신과 미국 GDP 쇼크·Fed 금리 인상 시사가 충돌하며, 반도체 펀더멘털 강세가 매크로 역풍을 이길 수 있는지가 오늘 저녁~내일 포지션의 핵심 분기점이다.",
     "status": "최신 인용",
-    "published_ts": 1785099676.0
+    "published_ts": 1785704480.0
   },
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-07-28",
+    "date": "2026-08-04",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-07-28-politics.html",
-    "title": "\"부동산·관세·전쟁외교: 내치와 패권의 동시 시험대\"",
-    "quote": "한국 이재명 정부의 부동산 불로소득 담론과 트럼프의 관세·금리 정치가 맞물리며, 각국 권력자들이 내치 정당성과 국제 질서 재편을 동시에 시험받고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-04-politics.html",
+    "title": "\"권력의 재편: 국내 정책 드라이브와 글로벌 헤게모니 공백\"",
+    "quote": "이재명 정부의 고강도 국내 정책 드라이브와 트럼프발 글로벌 질서 균열이 동시에 진행되며, '리더십 공백 시대'의 각자도생 정치가 본격화되고 있다.",
     "status": "오늘 인용",
-    "published_ts": 1785160988.0
+    "published_ts": 1785765790.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-07-28",
+    "date": "2026-08-04",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-07-28-culture.html",
-    "title": "\"K컬처, 이제 '현상'이 아닌 '기준'이 되다\"",
-    "quote": "K팝·K드라마·K라이프스타일이 글로벌 팝컬처의 참조 기준으로 격상되며, 단순 유행을 넘어 문화 인프라 자체를 재편하고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-04-culture.html",
+    "title": "\"K-콘텐츠 산업의 명암: AI 도입과 제작사 파산의 교차점\"",
+    "quote": "KBS AI 프로덕션 개소와 레트로봇 파산이 동시에 터진 2026년 8월, K-콘텐츠 산업은 '기술 혁신'과 '구조적 침체' 사이의 분기점에 섰다.",
     "status": "오늘 인용",
-    "published_ts": 1785161113.0
+    "published_ts": 1785765940.0
   }
 ]
