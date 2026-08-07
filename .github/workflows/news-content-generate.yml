@@ -53,8 +53,8 @@ jobs:
           git pull --rebase origin main
           if [ $? -ne 0 ]; then
             # 같은 날짜 기사가 먼저 push되어 컨텐츠 충돌 발생 시 새 버전으로 통일
-            git checkout --ours .
-            git add -A
+            git checkout --ours "홈페이지_첫버전/뉴스콘텐츠시스템/기사발행물/"
+            git add "홈페이지_첫버전/뉴스콘텐츠시스템/기사발행물/"
             git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" rebase --continue || { git rebase --abort; exit 1; }
           fi
           git push origin main
