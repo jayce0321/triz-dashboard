@@ -1,0 +1,49 @@
+name: news-content-generate
+
+on:
+  push:
+    paths:
+      - "홈페이지_첫버전/뉴스콘텐츠시스템/**"
+      - ".github/workflows/news-content-generate.yml"
+  schedule:
+    # KST 05:00 (매일 아침 데일리 기사 생성·발행) — UTC 20:00
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install matplotlib feedparser requests
+
+      - name: Generate daily articles
+        working-directory: 홈페이지_첫버전/뉴스콘텐츠시스템
+        env:
+          # 실제 ECOS 키를 GitHub Secrets > ECOS_API_KEY 로 등록 시 실데이터 사용
+          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+        run: |
+          python 뉴스콘텐츠시스템.py 생성 --type 수치리포트 --소재 auto
+          python 뉴스콘텐츠시스템.py 생성 --type 테마해설 --소재 auto
+          python 발행인덱스.py
+
+      - name: Commit generated articles
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "자동 발행: 데일리 뉴스 기사 생성"
+          file_pattern: "홈페이지_첫버전/뉴스콘텐츠시스템/기사발행물/**"
+
+      - name: Upload generated articles artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: news-articles
+          path: 홈페이지_첫버전/뉴스콘텐츠시스템/기사발행물

@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "당일 지표·환율 마감 – 금융·경제 리포트",
+  "datePublished": "2026-08-08T02:04:03+09:00",
+  "dateModified": "2026-08-08T02:04:03+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/당일-지표환율-마감--금융경제-리포트-20260808"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "속보 알림 기사. 오늘 원달러 환율은 1달러당 1416.0원으로 마감됐다. 한국은행 기준금리는 2.75%, 소비자물가 상승률은 2.8%로 집계됐다. 코스피는 최근 30영업일 사이 -29.49% 변했다. 오늘 서울 날씨는 맑음, 현재 27°C(최고 33°C·최저 25°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-08-08/이미지/당일-지표환율-마감--금융경제-리포트-20260808_썸네일.png"
+  }
+}

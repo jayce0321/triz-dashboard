@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "심층 진단 기준금리·환율·물가의 상호작용 – 금융·경제 리포트",
+  "datePublished": "2026-08-07T13:08:49+09:00",
+  "dateModified": "2026-08-07T13:08:49+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/심층-진단-기준금리환율물가의-상호작용--금융경제-리포트-20260807"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "심층 분석 기사. 오늘 원달러 환율은 1달러당 1383.9원으로 마감됐다. 한국은행 기준금리는 2.72%, 소비자물가 상승률은 2.1%로 집계됐다. 코스피는 최근 30영업일 사이 -3.11% 변했다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-08-07/이미지/심층-진단-기준금리환율물가의-상호작용--금융경제-리포트-20260807_썸네일.png"
+  }
+}

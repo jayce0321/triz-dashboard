@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "알아두면 좋은 오늘도 ‘서울 39도’ 펄펄…내일 강원엔 시간당 50mm 폭우 – 금융·경제 리포트",
+  "datePublished": "2026-08-07T16:57:51+09:00",
+  "dateModified": "2026-08-07T16:57:51+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/알아두면-좋은-오늘도-서울-39도-펄펄내일-강원엔-시간당-50mm-폭우--금융경제-리포트-20260807"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "테마 해설 기사. 오늘도 ‘서울 39도’ 펄펄…내일 강원엔 시간당 50mm 폭우를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1423.6원으로 마감됐다. 한국은행 기준금리는 2.67%, 소비자물가 상승률은 2.1%로 집계됐다. 코스피는 최근 30영업일 사이 -25.59% 변했다. 오늘 서울 날씨는 맑음, 현재 36°C(최고 36°C·최저 25°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-08-07/이미지/알아두면-좋은-오늘도-서울-39도-펄펄내일-강원엔-시간당-50mm-폭우--금융경제-리포트-20260807_썸네일.png"
+  }
+}

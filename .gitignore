@@ -1,6 +1,10 @@
 # 환경변수
 .env
+.env.*
 .env.local
+
+# 뉴스콘텐츠시스템 ECOS 키 관련 설정
+홈페이지_첫버전/뉴스콘텐츠시스템/.env
 
 # Python
 __pycache__/

@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "쉽게 이해하는 환율과 금리는 어떻게 다를까 – 금융·경제 리포트",
+  "datePublished": "2026-08-08T01:14:08+09:00",
+  "dateModified": "2026-08-08T01:14:08+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/쉽게-이해하는-환율과-금리는-어떻게-다를까--금융경제-리포트-20260808"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "쉬운 설명 기사. 환율과 금리는 어떻게 다를까를 주요 공공 경제 지표와 함께 살펴본다. 원달러 환율은 1416.0원, 기준금리 2.67%, 물가상승률 2.1%입니다. 각 용어의 뜻을 쉬운 말로 정리했습니다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-08-08/이미지/쉽게-이해하는-환율과-금리는-어떻게-다를까--금융경제-리포트-20260808_썸네일.png"
+  }
+}
