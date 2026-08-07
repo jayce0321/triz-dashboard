@@ -15,7 +15,7 @@ permissions:
 
 concurrency:
   group: news-content
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   generate:
