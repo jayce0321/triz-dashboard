@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "알아두면 좋은 김민석, ‘0.87%p’ 차이로 누적 1위 탈환…제주·인천서 정청래 제쳐 – 금융·경제 리포트",
+  "datePublished": "2026-08-09T05:28:55+09:00",
+  "dateModified": "2026-08-09T05:28:55+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/알아두면-좋은-김민석-087p-차이로-누적-1위-탈환제주인천서-정청래-제쳐--금융경제-리포트-20260809"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "테마 해설 기사. 김민석, ‘0.87%p’ 차이로 누적 1위 탈환…제주·인천서 정청래 제쳐를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1416.0원으로 마감됐다. 한국은행 기준금리는 2.67%, 소비자물가 상승률은 2.1%로 집계됐다. 코스피는 최근 30영업일 사이 -25.59% 변했다. 오늘 서울 날씨는 대체로 맑음, 현재 24°C(최고 30°C·최저 24°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-08-09/이미지/알아두면-좋은-김민석-087p-차이로-누적-1위-탈환제주인천서-정청래-제쳐--금융경제-리포트-20260809_썸네일.png"
+  }
+}
