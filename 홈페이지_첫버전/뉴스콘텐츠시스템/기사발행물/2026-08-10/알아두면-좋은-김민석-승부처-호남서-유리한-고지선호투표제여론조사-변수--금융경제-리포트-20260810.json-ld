@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "알아두면 좋은 김민석, 승부처 호남서 유리한 고지…선호투표제·여론조사 변수 – 금융·경제 리포트",
+  "datePublished": "2026-08-10T05:31:31+09:00",
+  "dateModified": "2026-08-10T05:31:31+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/알아두면-좋은-김민석-승부처-호남서-유리한-고지선호투표제여론조사-변수--금융경제-리포트-20260810"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "테마 해설 기사. 김민석, 승부처 호남서 유리한 고지…선호투표제·여론조사 변수를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1416.0원으로 마감됐다. 한국은행 기준금리는 2.67%, 소비자물가 상승률은 2.1%로 집계됐다. 코스피는 최근 30영업일 사이 -25.59% 변했다. 오늘 서울 날씨는 대체로 맑음, 현재 24°C(최고 32°C·최저 24°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-08-10/이미지/알아두면-좋은-김민석-승부처-호남서-유리한-고지선호투표제여론조사-변수--금융경제-리포트-20260810_썸네일.png"
+  }
+}
