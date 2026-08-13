@@ -18,6 +18,19 @@ DASHBOARD_FILE = ROOT / "대시보드목록.json"
 HOYA_SOURCE_FILE = ROOT / "호야테제_연결.json"
 HOYA_CACHE_FILE = ROOT / "호야테제_캐시.json"
 OUTPUT_FILE = ROOT / "index.html"
+NEWS_DIR = ROOT / "뉴스콘텐츠시스템" / "기사발행물"
+
+
+@dataclass
+class NewsArticle:
+    date: str
+    headline: str
+    summary: str
+    category: str
+    md_path: str
+    image: str | None = None
+    published: str = ""
+    body_html: str = ""
 
 
 @dataclass
@@ -360,6 +373,157 @@ def load_theses() -> list[Thesis]:
 
 def load_dashboards() -> list[dict[str, object]]:
     return json.loads(DASHBOARD_FILE.read_text(encoding="utf-8"))
+
+
+def load_news_articles(limit: int = 6) -> list[NewsArticle]:
+    """뉴스콘텐츠시스템 기사발행 시 카드로 쓸 최신 기사 목록을 만든다."""
+    if not NEWS_DIR.exists():
+        return []
+    articles: list[NewsArticle] = []
+    for date_dir in sorted(NEWS_DIR.iterdir(), reverse=True):
+        if not date_dir.is_dir():
+            continue
+        for ld_path in sorted(date_dir.glob("*.json-ld"), reverse=True):
+            try:
+                item = json.loads(ld_path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+            headline = item.get("headline", ld_path.stem)
+            summary = item.get("description", "")
+            md_path = ld_path.with_suffix(".md")
+            if not md_path.exists():
+                continue
+            image_rel = None
+            img = item.get("image")
+            if isinstance(img, dict):
+                url = img.get("url")
+                if url:
+                    image_rel = url.replace("https://segyesignal.example.com/", "뉴스콘텐츠시스템/")
+            elif isinstance(img, str):
+                image_rel = img.replace("https://segyesignal.example.com/", "뉴스콘텐츠시스템/")
+            body_html = markdown_to_html(md_path.read_text(encoding="utf-8"))
+            articles.append(NewsArticle(
+                date=date_dir.name,
+                headline=headline,
+                summary=summary,
+                category=item.get("articleSection", ""),
+                md_path=str(md_path.relative_to(ROOT)),
+                image=image_rel,
+                published=item.get("datePublished", ""),
+                body_html=body_html,
+            ))
+            if len(articles) >= limit:
+                return articles
+    return articles
+
+
+def news_cards(articles: list[NewsArticle]) -> str:
+    if not articles:
+        return '<p class="empty-note">발행된 기사가 없습니다.</p>'
+    cards: list[str] = []
+    for index, article in enumerate(articles):
+        image = ""
+        if article.image:
+            image = (
+                f'<div class="news-card-image"><img src="{html.escape(article.image)}" '
+                f'alt="{html.escape(article.headline)}"></div>'
+            )
+        category = html.escape(article.category or "뉴스")
+        cards.append(
+            f'<article class="news-card">'
+            f'  {image}'
+            f'  <div class="news-card-body">'
+            f'    <div class="news-card-meta"><span>{html.escape(article.date)}</span><span>{category}</span></div>'
+            f'    <h3><a href="#news" data-open-news="{index}">{html.escape(article.headline)}</a></h3>'
+            f'    <p>{html.escape(article.summary[:160])}</p>'
+            f'    <button type="button" class="news-card-link" data-open-news="{index}">기사 읽기</button>'
+            f'  </div>'
+            f"</article>"
+        )
+    news_data = []
+    for idx, article in enumerate(articles):
+        news_data.append(
+            json.dumps({
+                "id": idx,
+                "date": article.date,
+                "category": article.category or "뉴스",
+                "headline": article.headline,
+                "body_html": article.body_html,
+            }, ensure_ascii=False)
+        )
+    script = (
+        '<script id="news-payload">window.NEWS_ARTICLES = ['
+        + ",".join(news_data)
+        + "];</script>"
+    )
+    return "\n".join(cards) + "\n" + script
+
+
+def news_modal_script() -> str:
+    return """<div id="newsModal" class="news-modal" hidden aria-role="dialog" aria-modal="true">
+  <div class="news-modal-backdrop" data-close-news></div>
+  <div class="news-modal-panel">
+    <div class="news-modal-head">
+      <div>
+        <p class="news-modal-meta" id="newsModalDate"></p>
+        <h2 id="newsModalTitle"></h2>
+      </div>
+      <button type="button" class="news-modal-close" data-close-news aria-label="닫기">&times;</button>
+    </div>
+    <div class="news-modal-body" id="newsModalBody"></div>
+    <div class="news-modal-foot">
+      <button type="button" class="news-modal-close-btn" data-close-news>닫기</button>
+    </div>
+  </div>
+</div>
+<style>
+  .news-modal { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .news-modal[hidden] { display: none; }
+  .news-modal-backdrop { position: absolute; inset: 0; background: rgba(15,23,42,.55); }
+  .news-modal-panel { position: relative; width: min(760px, 94vw); max-height: 86vh; display: flex; flex-direction: column;
+    background: var(--surface,#fff); border: 1px solid var(--line,#e2e8f0); border-radius: 12px; overflow: hidden; }
+  .news-modal-head { display: flex; justify-content: space-between; gap: 12px; padding: 18px 22px;
+    border-bottom: 1px solid var(--line,#e2e8f0); }
+  .news-modal-head h2 { margin: 4px 0 0; font-size: 1.15rem; line-height: 1.4; }
+  .news-modal-meta { color: var(--muted,#64748b); font-size: .8rem; }
+  .news-modal-close { border: 0; background: none; font-size: 1.6rem; line-height: 1; cursor: pointer; color: var(--muted,#64748b); }
+  .news-modal-body { padding: 22px; overflow-y: auto; line-height: 1.7; }
+  .news-modal-body h1, .news-modal-body h2, .news-modal-body h3 { margin: 1.1em 0 .4em; }
+  .news-modal-body ul { padding-left: 20px; margin: .6em 0; }
+  .news-modal-foot { padding: 12px 22px; border-top: 1px solid var(--line,#e2e8f0); text-align: right; }
+  .news-modal-close-btn { border: 1px solid var(--line,#cbd5e1); background: none; border-radius: 6px; padding: 6px 16px; cursor: pointer; }
+</style>
+<script>
+(function () {
+  var data = window.NEWS_ARTICLES || [];
+  var modal = document.getElementById("newsModal");
+  var body = document.getElementById("newsModalBody");
+  var titleEl = document.getElementById("newsModalTitle");
+  var metaEl = document.getElementById("newsModalDate");
+  if (!modal) { return; }
+  function openN(idx) {
+    var a = data[Number(idx)];
+    if (!a) { return; }
+    titleEl.textContent = a.headline;
+    metaEl.textContent = (a.date || "") + " · " + (a.category || "뉴스");
+    body.innerHTML = a.body_html;
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+  function closeN() {
+    modal.hidden = true;
+    document.body.style.overflow = "";
+  }
+  document.addEventListener("click", function (ev) {
+    var btn = ev.target.closest("[data-open-news]");
+    if (btn) { ev.preventDefault(); openN(btn.getAttribute("data-open-news")); return; }
+    if (ev.target.closest("[data-close-news]")) { closeN(); }
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && !modal.hidden) { closeN(); }
+  });
+})();
+</script>"""
 
 
 def load_hoya_cache(today: str) -> dict[str, HoyaThesis]:
@@ -1206,6 +1370,7 @@ def local_editor_script() -> str:
 def render() -> str:
     theses = load_theses()
     dashboards = load_dashboards()
+    news_articles = load_news_articles(limit=6)
     today = datetime.now(ZoneInfo("Asia/Seoul")).date().isoformat()
     hoya_theses = load_hoya_theses(today)
     economy_theses = [item for item in hoya_theses if item.key in {"economy", "economy_pm"}]
@@ -1639,6 +1804,31 @@ def render() -> str:
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
     }}
+
+    .news-grid {{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }}
+
+    .news-card {{
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
+    }}
+
+    .news-card:hover {{ transform: translateY(-2px); box-shadow: var(--shadow); }}
+    .news-card-image img {{ width: 100%; height: 120px; object-fit: cover; display: block; }}
+    .news-card-body {{ padding: 16px 18px 18px; }}
+    .news-card-meta {{ display: flex; gap: 8px; color: var(--muted); font-size: 0.8rem; margin-bottom: 8px; }}
+    .news-card h3 {{ margin: 0 0 8px; font-size: 1.02rem; line-height: 1.4; }}
+    .news-card h3 a {{ color: var(--ink); text-decoration: none; }}
+    .news-card h3 a:hover {{ color: var(--blue); }}
+    .news-card p {{ margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; line-height: 1.55; }}
+    .news-card-link {{ color: var(--blue); font-size: 0.85rem; font-weight: 600; text-decoration: none; }}
+    .empty-note {{ color: var(--muted); padding: 24px 0; }}
 
     .workflow {{
       background: #101827;
@@ -2089,6 +2279,7 @@ def render() -> str:
       .hero-layout,
       .dashboard-grid,
       .thesis-grid,
+      .news-grid,
       .system-strip,
       .flow {{
         grid-template-columns: 1fr;
@@ -2134,6 +2325,7 @@ def render() -> str:
       </a>
       <div class="nav-links">
         <a href="#dashboards">대시보드</a>
+        <a href="#news">뉴스 리포트</a>
         <a href="#theses">테제</a>
         <a href="#workflow">자동 발행</a>
         <a href="#local-editor">보조테제 편집</a>
@@ -2194,6 +2386,19 @@ def render() -> str:
       </div>
     </section>
 
+    <section class="section" id="news">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">NEWS REPORT</p>
+          <h2>데이터 기반 뉴스 리포트</h2>
+        </div>
+        <p class="section-lead">분야별 데이터 엔진이 만든 날씨·반도체·금융 리포트입니다. 오늘 발행된 기사를 카드로 엽니다.</p>
+      </div>
+      <div class="news-grid">
+        {news_cards(news_articles)}
+      </div>
+    </section>
+
     <section class="section" id="theses">
       <div class="section-head">
         <div>
@@ -2250,6 +2455,7 @@ def render() -> str:
   </footer>
 {hoya_live_sync_script()}
 {local_editor_script()}
+{news_modal_script()}
 </body>
 </html>
 """
