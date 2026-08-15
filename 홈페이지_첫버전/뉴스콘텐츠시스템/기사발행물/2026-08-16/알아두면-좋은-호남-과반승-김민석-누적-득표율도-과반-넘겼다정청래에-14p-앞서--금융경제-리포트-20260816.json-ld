@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "알아두면 좋은 ‘호남 과반승’ 김민석, 누적 득표율도 과반 넘겼다…정청래에 14%p 앞서 – 금융·경제 리포트",
+  "datePublished": "2026-08-16T05:21:09+09:00",
+  "dateModified": "2026-08-16T05:21:09+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/알아두면-좋은-호남-과반승-김민석-누적-득표율도-과반-넘겼다정청래에-14p-앞서--금융경제-리포트-20260816"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "테마 해설 기사. ‘호남 과반승’ 김민석, 누적 득표율도 과반 넘겼다…정청래에 14%p 앞서를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1411.3원으로 마감됐다. 한국은행 기준금리는 2.67%, 소비자물가 상승률은 2.1%로 집계됐다. 코스피는 최근 30영업일 사이 -13.73% 변했다. 오늘 서울 날씨는 비, 현재 23°C(최고 26°C·최저 23°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-08-16/이미지/알아두면-좋은-호남-과반승-김민석-누적-득표율도-과반-넘겼다정청래에-14p-앞서--금융경제-리포트-20260816_썸네일.png"
+  }
+}
