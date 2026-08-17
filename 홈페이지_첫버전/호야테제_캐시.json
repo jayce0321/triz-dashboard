@@ -13,13 +13,13 @@
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-08-14",
+    "date": "2026-08-17",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-14.html",
-    "title": "\"인플레 둔화 + 마진 확장 = 골디락스 랠리\"",
-    "quote": "미국 PPI 예상 하회·기업 마진 사상 최고치가 맞물리며, 침체 없는 금리 인하 기대(골디락스)가 글로벌 위험자산 랠리를 견인하고 있다.",
-    "status": "최신 인용",
-    "published_ts": 1786629686.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-17.html",
+    "title": "\"AI 금융화 — 엔비디아가 은행이 되는 날\"",
+    "quote": "엔비디아의 700조 순환금융, 골드만의 AI 인프라 대출, 버크셔의 알파벳 베팅까지 — AI 투자 열기가 실물 금융 구조 자체를 재편하고 있다.",
+    "status": "오늘 인용",
+    "published_ts": 1786888884.0
   },
   {
     "key": "economy_pm",
@@ -35,23 +35,23 @@
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-08-14",
+    "date": "2026-08-17",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-14-politics.html",
-    "title": "\"권력 재편의 교차로: 한국 국정 드라이브와 글로벌 헤게모니 공백\"",
-    "quote": "이재명 정부의 '3대 메가프로젝트·주택공급' 드라이브와 트럼프의 일방적 외교·통상 재편이 맞물리며, 헤게모니 공백 시대 한국의 전략적 선택지가 좁아지고 있다.",
-    "status": "최신 인용",
-    "published_ts": 1786629796.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-17-politics.html",
+    "title": "\"동맹 재편의 교차로: 한미훈련 축소와 패권 없는 전환기\"",
+    "quote": "트럼프의 한미연합훈련 대폭 축소 지시가 한반도 안보 구조를 흔드는 동시에, '패권 없는 광란의 전환기'라는 글로벌 권력 공백이 한국의 전략적 선택지를 압박하고 있다.",
+    "status": "오늘 인용",
+    "published_ts": 1786888989.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-08-14",
+    "date": "2026-08-17",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-14-culture.html",
-    "title": "\"한류, K팝을 넘어 '문화 전방위 확장' 시대로\"",
-    "quote": "K팝·K드라마를 진입로 삼아 한류가 문학·관광·소비·라이프스타일 전반으로 진화하며, 숏폼·틱톡이 새로운 글로벌 확산 엔진으로 부상하고 있다.",
-    "status": "최신 인용",
-    "published_ts": 1786629914.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-17-culture.html",
+    "title": "\"K-컬처, 팝을 넘어 문명 수출로\"",
+    "quote": "K-팝·K-드라마를 넘어 K-푸드·K-공연예술·K-프리미엄까지 — 한류가 '장르'에서 '생활양식(Lifestyle)' 수출로 진화하고 있다.",
+    "status": "오늘 인용",
+    "published_ts": 1786889112.0
   }
 ]
