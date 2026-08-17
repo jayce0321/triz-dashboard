@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "한눈에 보는 민주당 새 대표에 '친명' 김민석…\"李정부 성공 위해 뛰겠다\" – 금융·경제 리포트",
+  "datePublished": "2026-08-18T05:25:44+09:00",
+  "dateModified": "2026-08-18T05:25:44+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/한눈에-보는-민주당-새-대표에-친명-김민석정부-성공-위해-뛰겠다--금융경제-리포트-20260818"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "오늘 기준 원달러 환율은(는) 1411.9원으로 집계됐다. 민주당 새 대표에 '친명' 김민석…\"李정부 성공 위해 뛰겠다\"를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1411.9원으로 마감됐다. 한국은행 기준금리는 2.67%, 소비자물가 상승률은 2.1%로 집계됐다. 코스피는 최근 30영업일 사이 -13.73% 변했다. 오늘 서울 날씨는 대체로 맑음, 현재 23°C(최고 31°C·최저 23°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-08-18/이미지/한눈에-보는-민주당-새-대표에-친명-김민석정부-성공-위해-뛰겠다--금융경제-리포트-20260818_썸네일.png"
+  }
+}
