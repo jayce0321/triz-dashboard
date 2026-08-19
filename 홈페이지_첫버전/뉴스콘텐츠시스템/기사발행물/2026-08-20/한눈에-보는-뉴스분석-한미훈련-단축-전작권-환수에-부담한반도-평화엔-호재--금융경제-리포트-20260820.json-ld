@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "한눈에 보는 [뉴스분석] 한미훈련 단축, 전작권 환수에 부담…한반도 평화엔 호재 – 금융·경제 리포트",
+  "datePublished": "2026-08-20T05:26:43+09:00",
+  "dateModified": "2026-08-20T05:26:43+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/한눈에-보는-뉴스분석-한미훈련-단축-전작권-환수에-부담한반도-평화엔-호재--금융경제-리포트-20260820"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "오늘 기준 원달러 환율은(는) 1391.5원으로 집계됐다. [뉴스분석] 한미훈련 단축, 전작권 환수에 부담…한반도 평화엔 호재를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1391.5원으로 마감됐다. 한국은행 기준금리는 2.67%, 소비자물가 상승률은 2.1%로 집계됐다. 코스피는 최근 30영업일 사이 -14.67% 변했다. 오늘 서울 날씨는 대체로 맑음, 현재 23°C(최고 26°C·최저 23°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-08-20/이미지/한눈에-보는-뉴스분석-한미훈련-단축-전작권-환수에-부담한반도-평화엔-호재--금융경제-리포트-20260820_썸네일.png"
+  }
+}
