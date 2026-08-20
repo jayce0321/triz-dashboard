@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "알아두면 좋은 청, 조희대 ‘대통령 패싱’에 불쾌감…“임명권 무시 초유 사태” – 금융·경제 리포트",
+  "datePublished": "2026-08-21T05:27:20+09:00",
+  "dateModified": "2026-08-21T05:27:20+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/알아두면-좋은-청-조희대-대통령-패싱에-불쾌감임명권-무시-초유-사태--금융경제-리포트-20260821"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "테마 해설 기사. 청, 조희대 ‘대통령 패싱’에 불쾌감…“임명권 무시 초유 사태”를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1396.3원으로 마감됐다. 한국은행 기준금리는 2.67%, 소비자물가 상승률은 2.1%로 집계됐다. 코스피는 최근 30영업일 사이 -15.48% 변했다. 오늘 서울 날씨는 비, 현재 23°C(최고 24°C·최저 23°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-08-21/이미지/알아두면-좋은-청-조희대-대통령-패싱에-불쾌감임명권-무시-초유-사태--금융경제-리포트-20260821_썸네일.png"
+  }
+}
