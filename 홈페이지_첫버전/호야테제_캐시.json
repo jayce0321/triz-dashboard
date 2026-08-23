@@ -2,56 +2,56 @@
   {
     "key": "weekly_digest",
     "name": "주간 다이제스트",
-    "date": "2026-08-14",
+    "date": "2026-08-21",
     "description": "한 주의 경제·정치·컬처 흐름을 하나의 구조로 묶어 정리하는 주간 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W33.html",
-    "title": "고용 쇼크에서 골디락스 랠리로: 시장·권력·문화의 동시 재편",
-    "quote": "고용 쇼크가 촉발한 Fed 불확실성은 오히려 인플레 둔화 확인(CPI·PPI)과 맞물려 '골디락스 랠리'로 역전됐고, 이 흐름은 시장뿐 아니라 정치·문화 전반의 재편 속도를 동시에 끌어올리는 복합 가속기로 작용했다.",
+    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W34.html",
+    "title": "균열의 시대, 버티는 시장과 흔들리는 동맹",
+    "quote": "고금리 장기화·지정학 리스크·동맹 재편이 동시에 맞물린 '복합 균열의 시대'에, 반도체·AI와 K-컬처만이 유일한 방어선으로 남았다.",
     "status": "최신 인용",
-    "published_ts": 1786668849.0
+    "published_ts": 1787272188.0
   },
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-08-20",
+    "date": "2026-08-21",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-20.html",
-    "title": "\"Fed 매파 신호 + 빅테크 부채 = 반도체 패닉셀\"",
-    "quote": "FOMC 의사록이 촉발한 금리 불안이 AI·반도체 밸류에이션을 직격하며, 빅테크 부채 확대와 맞물려 고금리 장기화 공포가 시장을 지배하고 있다.",
-    "status": "오늘 인용",
-    "published_ts": 1787148086.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-21.html",
+    "title": "\"연준 매파 재부상, 글로벌 채권시장 균열\"",
+    "quote": "FOMC 의사록이 '인플레 재점화 시 추가 인상' 가능성을 시사하며, 미국 국채 40조 달러 돌파·달러 약세·금 급등이 동시에 나타나는 '스태그플레이션 경계' 국면이 오늘 시장을 관통한다.",
+    "status": "최신 인용",
+    "published_ts": 1787234498.0
   },
   {
     "key": "economy_pm",
     "name": "경제·투자 오후",
-    "date": "2026-08-19",
+    "date": "2026-08-21",
     "description": "오후 장 흐름과 추가 변수를 반영하는 경제·투자 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-19-pm.html",
-    "title": "\"반도체 쇼크발 코스피 급락, 저녁 뉴욕이 반전 열쇠\"",
-    "quote": "전날 美 반도체 급락(-3.42%)의 충격이 코스피(-7.01%)를 강타했으나, 호르무즈 재개방 기대·팔란티어 급등·원화 강세가 오늘 밤 뉴욕 반등 시나리오의 근거로 부상 중.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-21-pm.html",
+    "title": "\"코스피 나홀로 질주 vs. 미국채 경고음\"",
+    "quote": "SK하이닉스 美 상장·반도체 훈풍에 코스피 +7% 급등했지만, Fed 금리인상 재논의·美 국채 40조 달러 돌파로 오늘 밤 미국 개장은 역풍 가능성 높다.",
     "status": "최신 인용",
-    "published_ts": 1787086892.0
+    "published_ts": 1787259675.0
   },
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-08-20",
+    "date": "2026-08-21",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-20-politics.html",
-    "title": "\"권력 재편의 교차로: 한국 정치 내부 충돌과 외교 변수의 동시 폭발\"",
-    "quote": "국내 여야 권력 재편이 동시에 진행되는 가운데, 이재명 대통령의 왕이 접견과 미-캐나다 관세 협상이 한국 외교·경제의 향방을 가를 분수령으로 떠올랐다.",
-    "status": "오늘 인용",
-    "published_ts": 1787148191.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-21-politics.html",
+    "title": "\"권력 재편기, 동맹·사법·반부패가 교차하다\"",
+    "quote": "이재명 정부의 공직기강·사법 주도권 장악 시도와 트럼프의 한미훈련 축소가 맞물리며, 한국 정치는 내부 권력 재편과 동맹 신뢰성 균열이라는 이중 압력에 직면했다.",
+    "status": "최신 인용",
+    "published_ts": 1787234584.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-08-20",
+    "date": "2026-08-21",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-20-culture.html",
-    "title": "\"K-컬처, 팝에서 일상文化 전방위 확장\"",
-    "quote": "K-팝·K-드라마를 넘어 공연예술·식문화·뷰티까지 확산되는 K-컬처의 '라이프스타일 제국화'가 2026년 하반기 문화 트렌드의 핵심 축으로 부상했다.",
-    "status": "오늘 인용",
-    "published_ts": 1787148321.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-21-culture.html",
+    "title": "\"K-컬처, 팝에서 라이프스타일 전방위 확장\"",
+    "quote": "K-팝·K-드라마를 넘어 한식·공연예술·뷰티까지 — 한류가 '장르'에서 '생활양식(Lifestyle)'으로 진화하며 글로벌 문화 표준을 재편 중이다.",
+    "status": "최신 인용",
+    "published_ts": 1787234714.0
   }
 ]
