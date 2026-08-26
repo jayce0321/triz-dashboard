@@ -13,45 +13,45 @@
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-08-26",
+    "date": "2026-08-27",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-26.html",
-    "title": "\"베센트의 도박: 국채 개입이 시장을 구할 수 있나?\"",
-    "quote": "미 재무부의 장기금리 억제 시도 vs 시장의 불신 — 이 긴장이 오늘 모든 자산가격의 진짜 배경이다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-27.html",
+    "title": "\"금리 천장론 vs. 매파 역습 — 채권시장이 2026년 하반기 판을 가른다\"",
+    "quote": "美 PCE 둔화 신호와 베센트 TGA 채권 매입 카드가 겹치며 '금리 고점' 기대가 피어나지만, FOMC 매파 리스크와 드러켄밀러 회의론이 정면 충돌하는 하루다.",
     "status": "오늘 인용",
-    "published_ts": 1787666475.0
+    "published_ts": 1787752881.0
   },
   {
     "key": "economy_pm",
     "name": "경제·투자 오후",
-    "date": "2026-08-25",
+    "date": "2026-08-26",
     "description": "오후 장 흐름과 추가 변수를 반영하는 경제·투자 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-25-pm.html",
-    "title": "\"반도체 충격 속 코스피 급락, 미국 채권·인플레 변수가 방향 가른다\"",
-    "quote": "필라델피아반도체 -3.2% 충격이 코스피 -2.57% 급락으로 전이된 가운데, 베센트의 채권 개입 인플레 역풍과 SK하이닉스 미국 상장 이벤트가 오늘 저녁 포지션의 핵심 갈림길이다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-26-pm.html",
+    "title": "\"코스피 나홀로 강세, 밤이 변수\"",
+    "quote": "SK하이닉스 뉴욕 상장 효과로 코스피가 +2%대 독주하는 사이, 나스닥 선물 하락·SOX 약세·베센트 국채 개입 불확실성이 오늘 밤 미국 개장의 최대 리스크다.",
     "status": "최신 인용",
-    "published_ts": 1787605286.0
+    "published_ts": 1787691679.0
   },
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-08-26",
+    "date": "2026-08-27",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-26-politics.html",
-    "title": "\"정치 질서 재편: 한국 야당 분열과 글로벌 세력 재정렬\"",
-    "quote": "국내 야권 구심점 약화와 미·러 비밀접촉·대이란 정책전환이 맞물리며, 기존 정치 질서가 동시에 흔들리는 '이중 재편'의 국면이 열렸다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-27-politics.html",
+    "title": "\"한미 재조정의 계절: 동맹 관리와 국내 권력 재편이 교차하다\"",
+    "quote": "9월 유엔총회·대미투자 발표를 앞두고 한미관계 복원 시험대가 열리는 동시에, 국내에서는 특별감찰관 지명·여야 워크숍 등 권력 재편 신호가 동시에 분출되고 있다.",
     "status": "오늘 인용",
-    "published_ts": 1787666595.0
+    "published_ts": 1787752990.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-08-26",
+    "date": "2026-08-27",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-26-culture.html",
-    "title": "\"K-콘텐츠, 팝컬처를 넘어 '교과서'가 되다\"",
-    "quote": "K-드라마·K-팝이 글로벌 소비재를 넘어 교육·제도·일상 언어로 편입되는 '문화 인프라화' 단계에 진입했다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-27-culture.html",
+    "title": "\"K-컬처, 팬덤을 넘어 산업 인프라로\"",
+    "quote": "K-드라마·K-팝·K-뷰티가 단순 한류 열풍을 넘어 글로벌 콘텐츠 산업의 구조적 플랫폼으로 재편되고 있다.",
     "status": "오늘 인용",
-    "published_ts": 1787666712.0
+    "published_ts": 1787753111.0
   }
 ]
