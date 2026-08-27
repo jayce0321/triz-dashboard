@@ -4,6 +4,7 @@ import argparse
 import shutil
 import subprocess
 import sys
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -42,9 +43,9 @@ def main() -> int:
 
     subprocess.run([sys.executable, str(ROOT / "홈페이지_생성.py")], cwd=ROOT, check=True)
 
-    slug = source.stem
+    slug = unicodedata.normalize("NFC", source.stem)
     generated = INDEX_FILE.read_text(encoding="utf-8")
-    if f'id="{slug}"' not in generated or source.stem not in generated:
+    if f'id="{slug}"' not in generated or slug not in generated:
         print("홈페이지 생성 후 보조테제 카드 검증에 실패했습니다.", file=sys.stderr)
         return 2
 
