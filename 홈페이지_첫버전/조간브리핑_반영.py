@@ -32,7 +32,7 @@ def main() -> int:
     if not source.is_file():
         print(f"조간 브리핑 원문을 찾지 못했습니다: {source}", file=sys.stderr)
         return 1
-    if not source.name.endswith("_조간브리핑.md"):
+    if not unicodedata.normalize("NFC", source.name).endswith("_조간브리핑.md"):
         print(f"조간 브리핑 파일명이 아닙니다: {source.name}", file=sys.stderr)
         return 1
 
