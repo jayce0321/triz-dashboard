@@ -13,45 +13,45 @@
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-08-27",
+    "date": "2026-08-28",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-27.html",
-    "title": "\"금리 천장론 vs. 매파 역습 — 채권시장이 2026년 하반기 판을 가른다\"",
-    "quote": "美 PCE 둔화 신호와 베센트 TGA 채권 매입 카드가 겹치며 '금리 고점' 기대가 피어나지만, FOMC 매파 리스크와 드러켄밀러 회의론이 정면 충돌하는 하루다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-28.html",
+    "title": "\"금리 인상 재점화에도 시장은 웃는다\"",
+    "quote": "Fed 매파 발언·끈적한 인플레에도 기술주·금·반도체가 동반 상승하며 '긴축 무감각(Tightening Immunity)' 국면 진입을 시사한다.",
     "status": "오늘 인용",
-    "published_ts": 1787752881.0
+    "published_ts": 1787818462.0
   },
   {
     "key": "economy_pm",
     "name": "경제·투자 오후",
-    "date": "2026-08-26",
+    "date": "2026-08-27",
     "description": "오후 장 흐름과 추가 변수를 반영하는 경제·투자 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-26-pm.html",
-    "title": "\"코스피 나홀로 강세, 밤이 변수\"",
-    "quote": "SK하이닉스 뉴욕 상장 효과로 코스피가 +2%대 독주하는 사이, 나스닥 선물 하락·SOX 약세·베센트 국채 개입 불확실성이 오늘 밤 미국 개장의 최대 리스크다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-27-pm.html",
+    "title": "\"한은 연속 인상 후 증시 안도 랠리 — 엔비디아·AI 빅딜이 불쏘시개\"",
+    "quote": "한은 연속 금리 인상 충격을 시장이 소화하며 코스피 +2.19% 반등, 엔비디아의 허깅페이스 18조 원 인수·앤트로픽 62조 원 데이터센터 계약 등 AI 메가딜이 미국 개장 전 상승 모멘텀을 제공 — 오늘 저녁 '금리 피크아웃 + AI 수요 폭발'의 교차점에 서 있다.",
     "status": "최신 인용",
-    "published_ts": 1787691679.0
+    "published_ts": 1787778092.0
   },
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-08-27",
+    "date": "2026-08-28",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-27-politics.html",
-    "title": "\"한미 재조정의 계절: 동맹 관리와 국내 권력 재편이 교차하다\"",
-    "quote": "9월 유엔총회·대미투자 발표를 앞두고 한미관계 복원 시험대가 열리는 동시에, 국내에서는 특별감찰관 지명·여야 워크숍 등 권력 재편 신호가 동시에 분출되고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-28-politics.html",
+    "title": "\"정기국회 전야, 여야 단합의 균열과 글로벌 패권 공백\"",
+    "quote": "9월 정기국회를 앞두고 한국 여야가 각자의 내부 균열을 봉합하는 가운데, 글로벌 무대에서는 미국의 일방주의 확대와 패권 공백이 동시에 가시화되고 있다.",
     "status": "오늘 인용",
-    "published_ts": 1787752990.0
+    "published_ts": 1787839390.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-08-27",
+    "date": "2026-08-28",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-27-culture.html",
-    "title": "\"K-컬처, 팬덤을 넘어 산업 인프라로\"",
-    "quote": "K-드라마·K-팝·K-뷰티가 단순 한류 열풍을 넘어 글로벌 콘텐츠 산업의 구조적 플랫폼으로 재편되고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-28-culture.html",
+    "title": "\"K-컬처, 팬덤을 넘어 글로벌 산업 인프라로\"",
+    "quote": "K-드라마·K팝·K공연예술이 단순 한류 콘텐츠를 넘어 글로벌 엔터 생태계의 표준 인프라로 재편되고 있다.",
     "status": "오늘 인용",
-    "published_ts": 1787753111.0
+    "published_ts": 1787839515.0
   }
 ]
