@@ -2,35 +2,35 @@
   {
     "key": "weekly_digest",
     "name": "주간 다이제스트",
-    "date": "2026-08-21",
+    "date": "2026-08-29",
     "description": "한 주의 경제·정치·컬처 흐름을 하나의 구조로 묶어 정리하는 주간 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W34.html",
-    "title": "균열의 시대, 버티는 시장과 흔들리는 동맹",
-    "quote": "고금리 장기화·지정학 리스크·동맹 재편이 동시에 맞물린 '복합 균열의 시대'에, 반도체·AI와 K-컬처만이 유일한 방어선으로 남았다.",
-    "status": "최신 인용",
-    "published_ts": 1787272188.0
+    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W35.html",
+    "title": "균열의 시대: 긴축·패권·K-컬처의 삼중 재편",
+    "quote": "긴축·패권·문화 세 전선이 동시에 재편되는 가운데, 유일하게 방향이 명확한 벡터는 'K-컬처의 플랫폼화'다 — 불확실성의 시대에 소프트파워가 하드파워를 앞서고 있다.",
+    "status": "오늘 인용",
+    "published_ts": 1787916895.0
   },
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-08-28",
+    "date": "2026-08-29",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-28.html",
-    "title": "\"금리 인상 재점화에도 시장은 웃는다\"",
-    "quote": "Fed 매파 발언·끈적한 인플레에도 기술주·금·반도체가 동반 상승하며 '긴축 무감각(Tightening Immunity)' 국면 진입을 시사한다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-29.html",
+    "title": "\"워시의 경고: 긴축 재점화냐, 버티기냐\"",
+    "quote": "워시 연준 의장의 잭슨홀 매파 발언으로 9월 금리인상 가능성이 급부상, 시장은 '인플레 재연 vs 경기 버팀목' 갈림길에 섰다.",
     "status": "오늘 인용",
-    "published_ts": 1787818462.0
+    "published_ts": 1787907991.0
   },
   {
     "key": "economy_pm",
     "name": "경제·투자 오후",
-    "date": "2026-08-27",
+    "date": "2026-08-28",
     "description": "오후 장 흐름과 추가 변수를 반영하는 경제·투자 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-27-pm.html",
-    "title": "\"한은 연속 인상 후 증시 안도 랠리 — 엔비디아·AI 빅딜이 불쏘시개\"",
-    "quote": "한은 연속 금리 인상 충격을 시장이 소화하며 코스피 +2.19% 반등, 엔비디아의 허깅페이스 18조 원 인수·앤트로픽 62조 원 데이터센터 계약 등 AI 메가딜이 미국 개장 전 상승 모멘텀을 제공 — 오늘 저녁 '금리 피크아웃 + AI 수요 폭발'의 교차점에 서 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-28-pm.html",
+    "title": "\"코스피 나홀로 역행, 미장 온기 전달 여부가 관건\"",
+    "quote": "나스닥·SOX 강세에도 코스피 약보합 마감 — 오늘 저녁 워시 Fed 의장 잭슨홀 연설과 미 PCE 지표가 내일 국내 증시 방향성을 결정한다.",
     "status": "최신 인용",
-    "published_ts": 1787778092.0
+    "published_ts": 1787864492.0
   },
   {
     "key": "politics",
@@ -40,7 +40,7 @@
     "url": "https://jayce0321.github.io/daily-thesis/2026-08-28-politics.html",
     "title": "\"정기국회 전야, 여야 단합의 균열과 글로벌 패권 공백\"",
     "quote": "9월 정기국회를 앞두고 한국 여야가 각자의 내부 균열을 봉합하는 가운데, 글로벌 무대에서는 미국의 일방주의 확대와 패권 공백이 동시에 가시화되고 있다.",
-    "status": "오늘 인용",
+    "status": "최신 인용",
     "published_ts": 1787839390.0
   },
   {
@@ -51,7 +51,7 @@
     "url": "https://jayce0321.github.io/daily-thesis/2026-08-28-culture.html",
     "title": "\"K-컬처, 팬덤을 넘어 글로벌 산업 인프라로\"",
     "quote": "K-드라마·K팝·K공연예술이 단순 한류 콘텐츠를 넘어 글로벌 엔터 생태계의 표준 인프라로 재편되고 있다.",
-    "status": "오늘 인용",
+    "status": "최신 인용",
     "published_ts": 1787839515.0
   }
 ]
