@@ -13,45 +13,45 @@
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-08-31",
+    "date": "2026-09-01",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-31.html",
-    "title": "\"Fed 매파 복귀, 금리인상이 현실이 된다\"",
-    "quote": "잭슨홀 이후 연준 매파 발언이 연쇄 점화되며 '금리인상 재개' 가능성이 시장의 새 기준선으로 부상했다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-01.html",
+    "title": "\"워시의 매파 신호, 글로벌 긴축 공포 재점화\"",
+    "quote": "Fed 워시 의장의 9월 금리인상 시사 발언이 글로벌 증시를 흔들며, '긴축 재개 vs 성장 둔화'의 교차점에서 투자자 판단이 갈리고 있다.",
     "status": "오늘 인용",
-    "published_ts": 1788098488.0
+    "published_ts": 1788184892.0
   },
   {
     "key": "economy_pm",
     "name": "경제·투자 오후",
-    "date": "2026-08-28",
+    "date": "2026-08-31",
     "description": "오후 장 흐름과 추가 변수를 반영하는 경제·투자 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-28-pm.html",
-    "title": "\"코스피 나홀로 역행, 미장 온기 전달 여부가 관건\"",
-    "quote": "나스닥·SOX 강세에도 코스피 약보합 마감 — 오늘 저녁 워시 Fed 의장 잭슨홀 연설과 미 PCE 지표가 내일 국내 증시 방향성을 결정한다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-31-pm.html",
+    "title": "\"반도체 투심 균열, 에너지가 채운다\"",
+    "quote": "AI·반도체 모멘텀이 SOX 약세로 균열 조짐을 보이는 사이, WTI 급등과 잭슨홀 매파 시그널이 미국 개장 전 복합 리스크로 부상 — 오늘 저녁 포지션은 섹터 로테이션 가능성에 무게를 둬야 한다.",
     "status": "최신 인용",
-    "published_ts": 1787864492.0
+    "published_ts": 1788146887.0
   },
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-08-31",
+    "date": "2026-09-01",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-31-politics.html",
-    "title": "\"균열하는 질서: 국내 권력 재편과 미·이란 충돌의 교차\"",
-    "quote": "한국 정치는 여야 권력 구조 재편 경쟁에 몰입한 사이, 글로벌 무대에서는 미·이란 군사 충돌과 패권 공백이 동시에 폭발하며 '지도자 없는 혼돈의 시대'가 가시화되고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-01-politics.html",
+    "title": "\"입법 전쟁과 패권 공백 — 한국·글로벌 권력 재편\"",
+    "quote": "한국 정기국회 개막과 트럼프發 글로벌 질서 재편이 동시에 충돌하며, 국내외 권력 구조가 동시다발적 시험대에 올랐다.",
     "status": "오늘 인용",
-    "published_ts": 1788098593.0
+    "published_ts": 1788184990.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-08-31",
+    "date": "2026-09-01",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-31-culture.html",
-    "title": "\"K컬처, 소비에서 교육·일상으로\"",
-    "quote": "K팝·K드라마가 글로벌 '팬덤 소비'를 넘어 교과서·일상어·공연예술로 편입되며 문화 인프라 자체로 격상되고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-01-culture.html",
+    "title": "\"K-콘텐츠, 문화 수출에서 팬덤 수출로 진화\"",
+    "quote": "K-팝·K-드라마가 단순 콘텐츠 소비를 넘어 '글로벌 팬덤 경제'라는 새로운 수출 품목으로 진화하고 있다.",
     "status": "오늘 인용",
-    "published_ts": 1788098714.0
+    "published_ts": 1788185110.0
   }
 ]
