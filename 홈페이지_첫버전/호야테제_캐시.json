@@ -13,13 +13,13 @@
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-08-29",
+    "date": "2026-08-31",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-29.html",
-    "title": "\"워시의 경고: 긴축 재점화냐, 버티기냐\"",
-    "quote": "워시 연준 의장의 잭슨홀 매파 발언으로 9월 금리인상 가능성이 급부상, 시장은 '인플레 재연 vs 경기 버팀목' 갈림길에 섰다.",
-    "status": "최신 인용",
-    "published_ts": 1787907991.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-31.html",
+    "title": "\"Fed 매파 복귀, 금리인상이 현실이 된다\"",
+    "quote": "잭슨홀 이후 연준 매파 발언이 연쇄 점화되며 '금리인상 재개' 가능성이 시장의 새 기준선으로 부상했다.",
+    "status": "오늘 인용",
+    "published_ts": 1788098488.0
   },
   {
     "key": "economy_pm",
@@ -35,23 +35,23 @@
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-08-28",
+    "date": "2026-08-31",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-28-politics.html",
-    "title": "\"정기국회 전야, 여야 단합의 균열과 글로벌 패권 공백\"",
-    "quote": "9월 정기국회를 앞두고 한국 여야가 각자의 내부 균열을 봉합하는 가운데, 글로벌 무대에서는 미국의 일방주의 확대와 패권 공백이 동시에 가시화되고 있다.",
-    "status": "최신 인용",
-    "published_ts": 1787839390.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-31-politics.html",
+    "title": "\"균열하는 질서: 국내 권력 재편과 미·이란 충돌의 교차\"",
+    "quote": "한국 정치는 여야 권력 구조 재편 경쟁에 몰입한 사이, 글로벌 무대에서는 미·이란 군사 충돌과 패권 공백이 동시에 폭발하며 '지도자 없는 혼돈의 시대'가 가시화되고 있다.",
+    "status": "오늘 인용",
+    "published_ts": 1788098593.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-08-28",
+    "date": "2026-08-31",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-08-28-culture.html",
-    "title": "\"K-컬처, 팬덤을 넘어 글로벌 산업 인프라로\"",
-    "quote": "K-드라마·K팝·K공연예술이 단순 한류 콘텐츠를 넘어 글로벌 엔터 생태계의 표준 인프라로 재편되고 있다.",
-    "status": "최신 인용",
-    "published_ts": 1787839515.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-08-31-culture.html",
+    "title": "\"K컬처, 소비에서 교육·일상으로\"",
+    "quote": "K팝·K드라마가 글로벌 '팬덤 소비'를 넘어 교과서·일상어·공연예술로 편입되며 문화 인프라 자체로 격상되고 있다.",
+    "status": "오늘 인용",
+    "published_ts": 1788098714.0
   }
 ]
