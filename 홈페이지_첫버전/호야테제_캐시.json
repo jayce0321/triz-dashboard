@@ -13,13 +13,13 @@
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-09-01",
+    "date": "2026-09-02",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-09-01.html",
-    "title": "\"워시의 매파 신호, 글로벌 긴축 공포 재점화\"",
-    "quote": "Fed 워시 의장의 9월 금리인상 시사 발언이 글로벌 증시를 흔들며, '긴축 재개 vs 성장 둔화'의 교차점에서 투자자 판단이 갈리고 있다.",
-    "status": "최신 인용",
-    "published_ts": 1788184892.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-02.html",
+    "title": "\"중동 전쟁발 인플레 재점화 — 금리 고점 연장 공포\"",
+    "quote": "이란-미국 충돌로 유가가 급등하며 글로벌 채권금리가 동반 급등, '금리 더 오래 더 높게(Higher for Longer)' 시나리오가 2026년 9월 시장을 지배하기 시작했다.",
+    "status": "오늘 인용",
+    "published_ts": 1788271291.0
   },
   {
     "key": "economy_pm",
@@ -35,23 +35,23 @@
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-09-01",
+    "date": "2026-09-02",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-09-01-politics.html",
-    "title": "\"입법 전쟁과 패권 공백 — 한국·글로벌 권력 재편\"",
-    "quote": "한국 정기국회 개막과 트럼프發 글로벌 질서 재편이 동시에 충돌하며, 국내외 권력 구조가 동시다발적 시험대에 올랐다.",
-    "status": "최신 인용",
-    "published_ts": 1788184990.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-02-politics.html",
+    "title": "\"균열하는 질서 — 한국 정치 재편과 글로벌 힘의 공백\"",
+    "quote": "국내에선 정기국회를 앞두고 여야 대치가 격화되는 가운데, 글로벌 무대에서는 미·이란 충돌 확전·AI 규제 전선 형성 등 '패권 없는 혼돈'이 동시에 심화되고 있다.",
+    "status": "오늘 인용",
+    "published_ts": 1788271397.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-09-01",
+    "date": "2026-09-02",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-09-01-culture.html",
-    "title": "\"K-콘텐츠, 문화 수출에서 팬덤 수출로 진화\"",
-    "quote": "K-팝·K-드라마가 단순 콘텐츠 소비를 넘어 '글로벌 팬덤 경제'라는 새로운 수출 품목으로 진화하고 있다.",
-    "status": "최신 인용",
-    "published_ts": 1788185110.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-02-culture.html",
+    "title": "\"K-콘텐츠, 문화 수출을 넘어 글로벌 표준이 되다\"",
+    "quote": "K-팝·K-드라마가 단순 한류 콘텐츠를 넘어 글로벌 팝컬처의 문법 자체를 재편하고 있으며, 숏폼·틱톡 바이럴이 그 속도를 가속화하는 구조적 전환점에 도달했다.",
+    "status": "오늘 인용",
+    "published_ts": 1788271512.0
   }
 ]
