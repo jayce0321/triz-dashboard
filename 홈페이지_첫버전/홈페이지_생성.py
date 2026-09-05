@@ -93,44 +93,67 @@ def parse_front_matter(text: str) -> tuple[dict[str, str], str]:
 
 def inline_markdown(text: str) -> str:
     escaped = html.escape(text)
+    escaped = re.sub(
+        r"\[([^]]+)\]\((https?://[^)\s]+)\)",
+        r'<a href="\2" target="_blank" rel="noopener noreferrer">\1</a>',
+        escaped,
+    )
     escaped = re.sub(r"`([^`]+)`", r"<code>\1</code>", escaped)
     escaped = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", escaped)
+    escaped = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", escaped)
     return escaped
 
 
 def markdown_to_html(markdown: str) -> str:
     blocks: list[str] = []
     paragraph: list[str] = []
+    list_items: list[str] = []
 
     def flush_paragraph() -> None:
         if paragraph:
             blocks.append(f"<p>{inline_markdown(' '.join(paragraph))}</p>")
             paragraph.clear()
 
+    def flush_list() -> None:
+        if list_items:
+            items = "".join(f"<li>{item}</li>" for item in list_items)
+            blocks.append(f"<ul>{items}</ul>")
+            list_items.clear()
+
     for raw_line in markdown.splitlines():
         line = raw_line.strip()
         if not line:
             flush_paragraph()
+            flush_list()
             continue
         image_match = re.match(r"^!\[(.*?)\]\((.*?)\)$", line)
         if image_match:
             flush_paragraph()
+            flush_list()
             alt = html.escape(image_match.group(1))
             src = html.escape(image_match.group(2), quote=True)
             blocks.append(f'<figure class="article-image"><img src="{src}" alt="{alt}"><figcaption>{alt}</figcaption></figure>')
         elif line.startswith("### "):
             flush_paragraph()
+            flush_list()
             blocks.append(f"<h3>{inline_markdown(line[4:])}</h3>")
         elif line.startswith("## "):
             flush_paragraph()
+            flush_list()
             blocks.append(f"<h2>{inline_markdown(line[3:])}</h2>")
         elif line.startswith("# "):
             flush_paragraph()
+            flush_list()
             blocks.append(f"<h1>{inline_markdown(line[2:])}</h1>")
+        elif line.startswith("- "):
+            flush_paragraph()
+            list_items.append(inline_markdown(line[2:]))
         else:
+            flush_list()
             paragraph.append(line)
 
     flush_paragraph()
+    flush_list()
     return "\n".join(blocks)
 
 
