@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "한눈에 보는 ‘호르무즈 파병’ 딜레마…“우회적 파병을”-“침략전쟁 가담 안 돼” – 금융·경제 리포트",
+  "datePublished": "2026-09-07T06:57:58+09:00",
+  "dateModified": "2026-09-07T06:57:58+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/한눈에-보는-호르무즈-파병-딜레마우회적-파병을침략전쟁-가담-안-돼--금융경제-리포트-20260907"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "오늘 기준 원달러 환율은(는) 1350.3원으로 집계됐다. ‘호르무즈 파병’ 딜레마…“우회적 파병을”-“침략전쟁 가담 안 돼”를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1350.3원으로 마감됐다. 한국은행 기준금리는 3.02%, 소비자물가 상승률은 1.9%로 집계됐다. 코스피는 최근 30영업일 사이 -0.05% 변했다. 오늘 서울 날씨는 맑음, 현재 18°C(최고 28°C·최저 18°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-09-07/이미지/한눈에-보는-호르무즈-파병-딜레마우회적-파병을침략전쟁-가담-안-돼--금융경제-리포트-20260907_썸네일.png"
+  }
+}
