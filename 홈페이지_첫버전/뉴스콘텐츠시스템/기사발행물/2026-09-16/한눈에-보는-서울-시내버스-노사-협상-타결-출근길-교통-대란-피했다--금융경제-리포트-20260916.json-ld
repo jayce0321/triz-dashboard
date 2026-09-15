@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "한눈에 보는 서울 시내버스 노사 협상 타결... 출근길 교통 대란 피했다 – 금융·경제 리포트",
+  "datePublished": "2026-09-16T07:43:34+09:00",
+  "dateModified": "2026-09-16T07:43:34+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/한눈에-보는-서울-시내버스-노사-협상-타결-출근길-교통-대란-피했다--금융경제-리포트-20260916"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "오늘 기준 원달러 환율은(는) 1359.2원으로 집계됐다. 서울 시내버스 노사 협상 타결... 출근길 교통 대란 피했다를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1359.2원으로 마감됐다. 한국은행 기준금리는 3.02%, 소비자물가 상승률은 1.9%로 집계됐다. 코스피는 최근 30영업일 사이 +6.82% 변했다. 오늘 서울 날씨는 맑음, 현재 15°C(최고 27°C·최저 14°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-09-16/이미지/한눈에-보는-서울-시내버스-노사-협상-타결-출근길-교통-대란-피했다--금융경제-리포트-20260916_썸네일.png"
+  }
+}
