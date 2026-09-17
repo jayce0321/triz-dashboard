@@ -13,13 +13,13 @@
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-09-15",
+    "date": "2026-09-16",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-09-15.html",
-    "title": "\"연준 금리인상 공포가 시장을 덮친다\"",
-    "quote": "이번 주 FOMC·BOJ·BOE 트리플 중앙은행 회의를 앞두고, 연준의 추가 금리인상 확률 92%가 글로벌 위험자산 전반을 압박하는 '매크로 빅위크'가 시작됐다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-16.html",
+    "title": "\"Fed 인상 공포가 시장 판을 바꾼다\"",
+    "quote": "미국 인플레이션 재가속 → Fed 추가 금리 인상 92% 베팅 → 반도체·성장주 급락, 달러·유가 급등으로 글로벌 자금 지형 전면 재편",
     "status": "최신 인용",
-    "published_ts": 1789401792.0
+    "published_ts": 1789487580.0
   },
   {
     "key": "economy_pm",
@@ -35,23 +35,23 @@
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-09-15",
+    "date": "2026-09-16",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-09-15-politics.html",
-    "title": "\"동시다발 외교·입법 드라이브, 권력 재편의 속도전\"",
-    "quote": "이재명 정부가 중앙아시아 릴레이 외교·3대 메가프로젝트·민생입법 동시 가동으로 국정 주도권을 굳히는 가운데, 글로벌 무대에서도 미국의 우주무기 공개·러 제재·EU 아동 SNS 규제 등 '규칙 재설정' 경쟁이 격화되고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-16-politics.html",
+    "title": "\"권력 재편의 시대: 국내 인준 갈등과 글로벌 패권 공백의 교차\"",
+    "quote": "한국은 법무장관 인준 갈등·탄핵 경고로 정치 리스크가 고조되는 가운데, 글로벌 무대에서는 미국 주도의 대이란 공조와 후티 자립화가 새로운 불안정 축으로 부상하고 있다.",
     "status": "최신 인용",
-    "published_ts": 1789401850.0
+    "published_ts": 1789487640.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-09-15",
+    "date": "2026-09-16",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-09-15-culture.html",
-    "title": "\"K콘텐츠, 수출품에서 글로벌 문화 인프라로\"",
-    "quote": "K드라마·K팝·K공연예술이 단순 '한류 수출'을 넘어 현지 리메이크·배우 역수입·무료 플랫폼 구축 등 글로벌 문화 인프라 자체로 진화하고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-16-culture.html",
+    "title": "\"K-컬처, 팬덤을 넘어 글로벌 교양으로\"",
+    "quote": "K팝·K드라마·K뷰티가 단순 소비 콘텐츠를 넘어 교육·학술·패션 수출 인프라로 격상되며, '문화 취향'에서 '글로벌 표준'으로 전환 중이다.",
     "status": "최신 인용",
-    "published_ts": 1789401910.0
+    "published_ts": 1789487698.0
   }
 ]
