@@ -2,24 +2,24 @@
   {
     "key": "weekly_digest",
     "name": "주간 다이제스트",
-    "date": "2026-09-11",
+    "date": "2026-09-18",
     "description": "한 주의 경제·정치·컬처 흐름을 하나의 구조로 묶어 정리하는 주간 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W37.html",
-    "title": "긴축 귀환·동맹 균열·한류 제도화의 삼중 전환점",
-    "quote": "Fed 금리 인상 재개 공포가 글로벌 자산 가격의 새로운 기준점을 강제하는 가운데, 한국은 경제·정치·문화 세 축 모두에서 '기존 질서의 종료'와 '새 질서의 미확정' 사이 가장 불안한 구간을 통과하고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W38.html",
+    "title": "균열의 시대",
+    "quote": "긴축·권력·문화 표준이 동시에 재편되다 — Fed 긴축 재개·권력 정당성 위기·K-문화 표준화가 동시에 진행되는 이 국면은, 낡은 질서가 균열하는 속도만큼 새로운 표준이 빠르게 자리를 채우고 있음을 보여준다.",
     "status": "최신 인용",
-    "published_ts": 1789099787.0
+    "published_ts": 1789705104.0
   },
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-09-16",
+    "date": "2026-09-24",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-09-16.html",
-    "title": "\"Fed 인상 공포가 시장 판을 바꾼다\"",
-    "quote": "미국 인플레이션 재가속 → Fed 추가 금리 인상 92% 베팅 → 반도체·성장주 급락, 달러·유가 급등으로 글로벌 자금 지형 전면 재편",
-    "status": "최신 인용",
-    "published_ts": 1789487580.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-24.html",
+    "title": "\"미중 휴전 연장, 그러나 매파 Fed가 발목 잡는다\"",
+    "quote": "트럼프-시진핑 국빈 회담으로 무역 휴전이 1월까지 연장됐지만, 인플레 3%대 고착과 Fed 매파 기조가 실질 위험자산 랠리를 억제하는 구도다.",
+    "status": "오늘 인용",
+    "published_ts": 1790179063.0
   },
   {
     "key": "economy_pm",
@@ -35,23 +35,23 @@
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-09-16",
+    "date": "2026-09-24",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-09-16-politics.html",
-    "title": "\"권력 재편의 시대: 국내 인준 갈등과 글로벌 패권 공백의 교차\"",
-    "quote": "한국은 법무장관 인준 갈등·탄핵 경고로 정치 리스크가 고조되는 가운데, 글로벌 무대에서는 미국 주도의 대이란 공조와 후티 자립화가 새로운 불안정 축으로 부상하고 있다.",
-    "status": "최신 인용",
-    "published_ts": 1789487640.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-24-politics.html",
+    "title": "\"권력의 균열과 재편: 안팎의 도전\"",
+    "quote": "이재명 대통령 지지율 최저·국회 파행이라는 국내 권력 위기와, 트럼프-시진핑 정상회담이 촉발한 동아시아 안보 재편이 동시에 한국의 전략적 입지를 압박하고 있다.",
+    "status": "오늘 인용",
+    "published_ts": 1790179121.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-09-16",
+    "date": "2026-09-24",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-09-16-culture.html",
-    "title": "\"K-컬처, 팬덤을 넘어 글로벌 교양으로\"",
-    "quote": "K팝·K드라마·K뷰티가 단순 소비 콘텐츠를 넘어 교육·학술·패션 수출 인프라로 격상되며, '문화 취향'에서 '글로벌 표준'으로 전환 중이다.",
-    "status": "최신 인용",
-    "published_ts": 1789487698.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-09-24-culture.html",
+    "title": "\"K-컬처, 글로벌 교과서가 되다\"",
+    "quote": "K팝·K드라마·K뷰티가 단순 유행을 넘어 학문·산업·외교의 정식 언어로 제도화되는 '문화 인프라화' 전환점에 진입했다.",
+    "status": "오늘 인용",
+    "published_ts": 1790179185.0
   }
 ]
