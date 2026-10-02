@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "알아두면 좋은 일본 “북한, 탄도미사일 가능성 물체 발사…EEZ 밖 낙하한 듯” – 금융·경제 리포트",
+  "datePublished": "2026-10-03T08:34:01+09:00",
+  "dateModified": "2026-10-03T08:34:01+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/알아두면-좋은-일본-북한-탄도미사일-가능성-물체-발사EEZ-밖-낙하한-듯--금융경제-리포트-20261003"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "테마 해설 기사. 일본 “북한, 탄도미사일 가능성 물체 발사…EEZ 밖 낙하한 듯”를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1348.3원으로 마감됐다. 한국은행 기준금리는 2.57%, 소비자물가 상승률은 2.4%로 집계됐다. 코스피는 최근 30영업일 사이 +7.73% 변했다. 오늘 서울 날씨는 대체로 맑음, 현재 12°C(최고 22°C·최저 10°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-10-03/이미지/알아두면-좋은-일본-북한-탄도미사일-가능성-물체-발사EEZ-밖-낙하한-듯--금융경제-리포트-20261003_썸네일.png"
+  }
+}
