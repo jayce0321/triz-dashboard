@@ -2,13 +2,13 @@
   {
     "key": "weekly_digest",
     "name": "주간 다이제스트",
-    "date": "2026-09-25",
+    "date": "2026-10-03",
     "description": "한 주의 경제·정치·컬처 흐름을 하나의 구조로 묶어 정리하는 주간 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W39.html",
-    "title": "균열의 시대: 권력·시장·문화의 동시 재편",
-    "quote": "기성 권력·기성 시장·기성 문화 모두가 동시에 균열하는 국면에서, 균열의 방향을 먼저 읽는 쪽이 다음 사이클의 주도권을 쥔다.",
+    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W40.html",
+    "title": "긴축 충격 속 K-컬처의 제도화, 권력 재편의 진통",
+    "quote": "Fed 긴축이 금융시장을 압박하고 정치가 권력을 재편하는 동안, K-컬처는 '유행'에서 '구조'로 이동하며 가장 지속 가능한 한국의 글로벌 자산으로 부상하고 있다.",
     "status": "최신 인용",
-    "published_ts": 1790313709.0
+    "published_ts": 1790921702.0
   },
   {
     "key": "economy",
@@ -18,7 +18,7 @@
     "url": "https://jayce0321.github.io/daily-thesis/2026-10-02.html",
     "title": "\"금리 발작 속 시장의 분열: 채권 vs 위험자산\"",
     "quote": "미 10년물 국채금리 5.29%의 고공행진과 Fed 매파 기조 재확인이 글로벌 자산시장을 '금리 발작' 구도로 재편하는 중, 한국 증시는 독자적 강세로 역주행 중이다.",
-    "status": "오늘 인용",
+    "status": "최신 인용",
     "published_ts": 1790873550.0
   },
   {
@@ -40,7 +40,7 @@
     "url": "https://jayce0321.github.io/daily-thesis/2026-10-02-politics.html",
     "title": "\"외교 충돌·개헌 논쟁·미중 패권 공백의 삼중 교차\"",
     "quote": "이재명 대통령의 우크라이나 정면 충돌·연임 개헌 파장이 국내 권력 구조를 흔드는 동시에, 글로벌 패권 공백 속에서 한국의 전략적 자율성 시험대가 가동되고 있다.",
-    "status": "오늘 인용",
+    "status": "최신 인용",
     "published_ts": 1790873610.0
   },
   {
@@ -51,7 +51,7 @@
     "url": "https://jayce0321.github.io/daily-thesis/2026-10-02-culture.html",
     "title": "\"K-컬처, 소비에서 교육·제도로 진입\"",
     "quote": "K팝·K드라마·K뷰티가 글로벌 팬덤 소비를 넘어 미국 교과서·스탠퍼드 강좌·일본 역직구 트렌드까지 제도권에 편입되는 '문화 인프라화' 단계에 진입했다.",
-    "status": "오늘 인용",
+    "status": "최신 인용",
     "published_ts": 1790873671.0
   }
 ]
