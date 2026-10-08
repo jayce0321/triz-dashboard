@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "한눈에 보는 누리호 4연속 궤도 진입 성공…“군집위성 수송 능력 확인” – 금융·경제 리포트",
+  "datePublished": "2026-10-08T09:01:31+09:00",
+  "dateModified": "2026-10-08T09:01:31+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/한눈에-보는-누리호-4연속-궤도-진입-성공군집위성-수송-능력-확인--금융경제-리포트-20261008"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "오늘 기준 원달러 환율은(는) 1338.7원으로 집계됐다. 누리호 4연속 궤도 진입 성공…“군집위성 수송 능력 확인”를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1338.7원으로 마감됐다. 한국은행 기준금리는 2.57%, 소비자물가 상승률은 2.4%로 집계됐다. 코스피는 최근 30영업일 사이 +0.41% 변했다. 오늘 서울 날씨는 맑음, 현재 14°C(최고 23°C·최저 11°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-10-08/이미지/한눈에-보는-누리호-4연속-궤도-진입-성공군집위성-수송-능력-확인--금융경제-리포트-20261008_썸네일.png"
+  }
+}
