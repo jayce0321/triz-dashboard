@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "한눈에 보는 “노벨평화상 필라이는 국제법 수호자”…트럼프·이스라엘에 경종 – 금융·경제 리포트",
+  "datePublished": "2026-10-10T08:49:43+09:00",
+  "dateModified": "2026-10-10T08:49:43+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/한눈에-보는-노벨평화상-필라이는-국제법-수호자트럼프이스라엘에-경종--금융경제-리포트-20261010"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "오늘 기준 원달러 환율은(는) 1341.5원으로 집계됐다. “노벨평화상 필라이는 국제법 수호자”…트럼프·이스라엘에 경종를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1341.5원으로 마감됐다. 한국은행 기준금리는 2.57%, 소비자물가 상승률은 2.4%로 집계됐다. 코스피는 최근 30영업일 사이 -1.73% 변했다. 오늘 서울 날씨는 대체로 맑음, 현재 14°C(최고 24°C·최저 13°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-10-10/이미지/한눈에-보는-노벨평화상-필라이는-국제법-수호자트럼프이스라엘에-경종--금융경제-리포트-20261010_썸네일.png"
+  }
+}
