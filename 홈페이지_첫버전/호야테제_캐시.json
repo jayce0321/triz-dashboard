@@ -2,24 +2,24 @@
   {
     "key": "weekly_digest",
     "name": "주간 다이제스트",
-    "date": "2026-10-03",
+    "date": "2026-10-10",
     "description": "한 주의 경제·정치·컬처 흐름을 하나의 구조로 묶어 정리하는 주간 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W40.html",
-    "title": "긴축 충격 속 K-컬처의 제도화, 권력 재편의 진통",
-    "quote": "Fed 긴축이 금융시장을 압박하고 정치가 권력을 재편하는 동안, K-컬처는 '유행'에서 '구조'로 이동하며 가장 지속 가능한 한국의 글로벌 자산으로 부상하고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/weekly-2026-W41.html",
+    "title": "균열의 주: 긴축·권력·K컬처의 삼중 변곡",
+    "quote": "고금리 장기화와 정치 지지율 하락이 동시에 심화되는 구조적 균열 속에서, K컬처만이 유일하게 '붕괴'가 아닌 '진화'의 벡터를 그리고 있다.",
     "status": "최신 인용",
-    "published_ts": 1790921702.0
+    "published_ts": 1791528190.0
   },
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-10-08",
+    "date": "2026-10-09",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-08.html",
-    "title": "\"금리 고원(高原) 장기화 vs. 시장의 내성\"",
-    "quote": "미 10년물 국채금리 5.27%의 고공행진 속 FOMC 의사록이 추가 긴축 신호를 내비치며, 시장은 '금리 고원 장기화'를 얼마나 버틸 수 있는가가 오늘 시장을 관통하는 핵심 질문이다.",
-    "status": "오늘 인용",
-    "published_ts": 1791393702.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-09.html",
+    "title": "\"관세발 인플레 재점화 — 금리 고원 장기화의 귀환\"",
+    "quote": "뉴욕 연준이 관세가 인플레를 2.9%p 끌어올렸다고 확인한 가운데, 소비자 기대인플레 3.9%·미 10년물 5.28%가 동시에 치솟으며 '금리 고원 장기화(Higher for Longer 2.0)' 국면이 재개되고 있다.",
+    "status": "최신 인용",
+    "published_ts": 1791481139.0
   },
   {
     "key": "economy_pm",
@@ -35,23 +35,23 @@
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-10-08",
+    "date": "2026-10-09",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-08-politics.html",
-    "title": "\"국감 정국과 글로벌 권력 재편: 협치냐 대결이냐\"",
-    "quote": "이재명 대통령이 국정감사 정국에서 '합리적 수용·정치공세 지양'을 주문하는 사이, 글로벌 무대에선 미국의 반(反)DEI 드라이브·브라질 정치 지형 변동·프랑스 재정 압박이 동시에 권력 구조를 흔들고 있다.",
-    "status": "오늘 인용",
-    "published_ts": 1791393760.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-09-politics.html",
+    "title": "\"지지율 하락과 안보 균열: 이재명 정부의 이중 압박\"",
+    "quote": "이재명 대통령 지지율이 출범 후 최저치를 기록하는 가운데, 북한 지뢰 도발·미국과의 외교 잡음·글로벌 안보 재편이 동시에 한국 정치를 압박하고 있다.",
+    "status": "최신 인용",
+    "published_ts": 1791481199.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-10-08",
+    "date": "2026-10-09",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-08-culture.html",
-    "title": "\"K컬처, 콘텐츠를 넘어 생활문화 인프라로\"",
-    "quote": "K팝·K드라마·K푸드가 단순 엔터테인먼트를 초월해 글로벌 유학·소비·외교까지 연결되는 '생활문화 인프라'로 진화 중이다.",
-    "status": "오늘 인용",
-    "published_ts": 1791393819.0
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-09-culture.html",
+    "title": "\"K컬처, 팬덤을 넘어 제도·교육·산업으로\"",
+    "quote": "K콘텐츠가 글로벌 팬덤 소비를 넘어 교육·현지화·IP 확장 등 '구조적 산업'으로 진화하는 임계점에 진입했다.",
+    "status": "최신 인용",
+    "published_ts": 1791481259.0
   }
 ]
