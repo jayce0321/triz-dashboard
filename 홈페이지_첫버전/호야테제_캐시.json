@@ -13,13 +13,13 @@
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-10-09",
+    "date": "2026-10-12",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-09.html",
-    "title": "\"관세발 인플레 재점화 — 금리 고원 장기화의 귀환\"",
-    "quote": "뉴욕 연준이 관세가 인플레를 2.9%p 끌어올렸다고 확인한 가운데, 소비자 기대인플레 3.9%·미 10년물 5.28%가 동시에 치솟으며 '금리 고원 장기화(Higher for Longer 2.0)' 국면이 재개되고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-12.html",
+    "title": "\"인플레 재점화 공포가 시장을 다시 흔든다\"",
+    "quote": "관세발 인플레이션 재점화 + 미 장기금리 5%대 고착화 우려가 글로벌 위험자산을 동시에 압박하는 '복합 긴축 충격'이 오늘 시장을 지배했다.",
     "status": "최신 인용",
-    "published_ts": 1791481139.0
+    "published_ts": 1791737653.0
   },
   {
     "key": "economy_pm",
@@ -35,23 +35,23 @@
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-10-09",
+    "date": "2026-10-12",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-09-politics.html",
-    "title": "\"지지율 하락과 안보 균열: 이재명 정부의 이중 압박\"",
-    "quote": "이재명 대통령 지지율이 출범 후 최저치를 기록하는 가운데, 북한 지뢰 도발·미국과의 외교 잡음·글로벌 안보 재편이 동시에 한국 정치를 압박하고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-12-politics.html",
+    "title": "\"압박의 계절: 한국·글로벌 권력재편\"",
+    "quote": "이재명 정부 국감 2주차·북 미사일·트럼프의 우크라 '에너지 휴전'·중국 군사활동이 동시 분출하며, 한국 안팎의 권력구조가 동시에 흔들리고 있다.",
     "status": "최신 인용",
-    "published_ts": 1791481199.0
+    "published_ts": 1791737710.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-10-09",
+    "date": "2026-10-12",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-09-culture.html",
-    "title": "\"K컬처, 팬덤을 넘어 제도·교육·산업으로\"",
-    "quote": "K콘텐츠가 글로벌 팬덤 소비를 넘어 교육·현지화·IP 확장 등 '구조적 산업'으로 진화하는 임계점에 진입했다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-12-culture.html",
+    "title": "\"K-콘텐츠, 현지화·IP확장으로 글로벌 생태계 구축\"",
+    "quote": "K-콘텐츠가 단순 수출을 넘어 현지화·IP 다각화·무료 스트리밍 플랫폼으로 글로벌 문화 생태계를 자체 구축하는 단계에 진입했다.",
     "status": "최신 인용",
-    "published_ts": 1791481259.0
+    "published_ts": 1791737764.0
   }
 ]
