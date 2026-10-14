@@ -13,13 +13,13 @@
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-10-12",
+    "date": "2026-10-13",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-12.html",
-    "title": "\"인플레 재점화 공포가 시장을 다시 흔든다\"",
-    "quote": "관세발 인플레이션 재점화 + 미 장기금리 5%대 고착화 우려가 글로벌 위험자산을 동시에 압박하는 '복합 긴축 충격'이 오늘 시장을 지배했다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-13.html",
+    "title": "\"고금리 장기화 공포가 시장을 갈랐다\"",
+    "quote": "Fed 매파 기조 재확인 속 미 10년물 국채 5.22% 돌파 — 코스피 급락·반도체 패닉, 금·달러만 피난처로 부상",
     "status": "최신 인용",
-    "published_ts": 1791737653.0
+    "published_ts": 1791828966.0
   },
   {
     "key": "economy_pm",
@@ -35,23 +35,23 @@
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-10-12",
+    "date": "2026-10-13",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-12-politics.html",
-    "title": "\"압박의 계절: 한국·글로벌 권력재편\"",
-    "quote": "이재명 정부 국감 2주차·북 미사일·트럼프의 우크라 '에너지 휴전'·중국 군사활동이 동시 분출하며, 한국 안팎의 권력구조가 동시에 흔들리고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-13-politics.html",
+    "title": "\"흔들리는 중심: 국내외 권력 재편의 교차점\"",
+    "quote": "이재명 대통령 지지율 42% 최저 기록 속 국정감사 공방이 격화되는 한편, 트럼프의 러시아 유화와 머스크의 중간선거 초대형 지출이 글로벌 권력 지형을 동시에 흔들고 있다.",
     "status": "최신 인용",
-    "published_ts": 1791737710.0
+    "published_ts": 1791829028.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-10-12",
+    "date": "2026-10-13",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-12-culture.html",
-    "title": "\"K-콘텐츠, 현지화·IP확장으로 글로벌 생태계 구축\"",
-    "quote": "K-콘텐츠가 단순 수출을 넘어 현지화·IP 다각화·무료 스트리밍 플랫폼으로 글로벌 문화 생태계를 자체 구축하는 단계에 진입했다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-13-culture.html",
+    "title": "\"K-컬처, 글로벌 산업 인프라로 진화 중\"",
+    "quote": "K-팝·K-드라마가 '한류 감성' 수출을 넘어 한일 펀드·미국 무료 스트리밍·스탠퍼드 강좌 등 글로벌 산업 인프라로 제도화되고 있다.",
     "status": "최신 인용",
-    "published_ts": 1791737764.0
+    "published_ts": 1791829087.0
   }
 ]
