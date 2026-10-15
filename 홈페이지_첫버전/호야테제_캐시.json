@@ -13,13 +13,13 @@
   {
     "key": "economy",
     "name": "경제·투자",
-    "date": "2026-10-13",
+    "date": "2026-10-14",
     "description": "시장과 투자 흐름을 중심으로 발행되는 오전 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-13.html",
-    "title": "\"고금리 장기화 공포가 시장을 갈랐다\"",
-    "quote": "Fed 매파 기조 재확인 속 미 10년물 국채 5.22% 돌파 — 코스피 급락·반도체 패닉, 금·달러만 피난처로 부상",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-14.html",
+    "title": "\"금리 고원(High-for-Longer)의 균열 — 시장은 다음 피벗을 탐색 중\"",
+    "quote": "Fed 추가 인상 우려와 인플레 재가속 신호가 충돌하는 가운데, 국채금리 급등 리스크가 주식·채권·원자재를 동시에 흔들고 있다.",
     "status": "최신 인용",
-    "published_ts": 1791828966.0
+    "published_ts": 1791908914.0
   },
   {
     "key": "economy_pm",
@@ -35,23 +35,23 @@
   {
     "key": "politics",
     "name": "정치",
-    "date": "2026-10-13",
+    "date": "2026-10-14",
     "description": "정치 이슈를 구조화해 당일 관찰 포인트로 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-13-politics.html",
-    "title": "\"흔들리는 중심: 국내외 권력 재편의 교차점\"",
-    "quote": "이재명 대통령 지지율 42% 최저 기록 속 국정감사 공방이 격화되는 한편, 트럼프의 러시아 유화와 머스크의 중간선거 초대형 지출이 글로벌 권력 지형을 동시에 흔들고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-14-politics.html",
+    "title": "\"권력 재편 vs. 외압 차단: 한국 정치·외교의 이중 긴장\"",
+    "quote": "이재명 대통령은 국감 국면에서 야당의 특검 공세를 방어하는 동시에 트럼프발 LNG·무역 압박에 대응하며 '국내 권력 안정'과 '대외 실리 확보'라는 이중 과제를 동시에 떠안았다.",
     "status": "최신 인용",
-    "published_ts": 1791829028.0
+    "published_ts": 1791908974.0
   },
   {
     "key": "culture",
     "name": "컬처",
-    "date": "2026-10-13",
+    "date": "2026-10-14",
     "description": "문화·콘텐츠 흐름을 읽고 의미 있는 신호를 정리하는 데일리 테제입니다.",
-    "url": "https://jayce0321.github.io/daily-thesis/2026-10-13-culture.html",
-    "title": "\"K-컬처, 글로벌 산업 인프라로 진화 중\"",
-    "quote": "K-팝·K-드라마가 '한류 감성' 수출을 넘어 한일 펀드·미국 무료 스트리밍·스탠퍼드 강좌 등 글로벌 산업 인프라로 제도화되고 있다.",
+    "url": "https://jayce0321.github.io/daily-thesis/2026-10-14-culture.html",
+    "title": "\"한류, K팝을 넘어 일상 라이프스타일 전방위 확산\"",
+    "quote": "K팝·드라마를 넘어 음식·문학·스포츠·패션까지 침투한 '생활 밀착형 한류'가 글로벌 문화 판도를 바꾸고 있다.",
     "status": "최신 인용",
-    "published_ts": 1791829087.0
+    "published_ts": 1791909029.0
   }
 ]
