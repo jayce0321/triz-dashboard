@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "알아두면 좋은 전작권 전환 “새 기준” 밝힌 미국…국방부 “골대 옮기면 영원히 불가” – 금융·경제 리포트",
+  "datePublished": "2026-10-16T07:54:53+09:00",
+  "dateModified": "2026-10-16T07:54:53+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/알아두면-좋은-전작권-전환-새-기준-밝힌-미국국방부-골대-옮기면-영원히-불가--금융경제-리포트-20261016"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "테마 해설 기사. 전작권 전환 “새 기준” 밝힌 미국…국방부 “골대 옮기면 영원히 불가”를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1345.9원으로 마감됐다. 한국은행 기준금리는 2.57%, 소비자물가 상승률은 2.4%로 집계됐다. 코스피는 최근 30영업일 사이 -11.49% 변했다. 오늘 서울 날씨는 대체로 맑음, 현재 14°C(최고 23°C·최저 14°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-10-16/이미지/알아두면-좋은-전작권-전환-새-기준-밝힌-미국국방부-골대-옮기면-영원히-불가--금융경제-리포트-20261016_썸네일.png"
+  }
+}
