@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "한눈에 보는 공주 실종 50대 여성 숨진 채 발견…스토킹 신고 남성 차량서 – 금융·경제 리포트",
+  "datePublished": "2026-10-17T07:34:17+09:00",
+  "dateModified": "2026-10-17T07:34:17+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/한눈에-보는-공주-실종-50대-여성-숨진-채-발견스토킹-신고-남성-차량서--금융경제-리포트-20261017"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "오늘 기준 원달러 환율은(는) 1332.1원으로 집계됐다. 공주 실종 50대 여성 숨진 채 발견…스토킹 신고 남성 차량서를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1332.1원으로 마감됐다. 한국은행 기준금리는 2.57%, 소비자물가 상승률은 2.4%로 집계됐다. 코스피는 최근 30영업일 사이 -18.56% 변했다. 오늘 서울 날씨는 맑음, 현재 13°C(최고 24°C·최저 13°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-10-17/이미지/한눈에-보는-공주-실종-50대-여성-숨진-채-발견스토킹-신고-남성-차량서--금융경제-리포트-20261017_썸네일.png"
+  }
+}
