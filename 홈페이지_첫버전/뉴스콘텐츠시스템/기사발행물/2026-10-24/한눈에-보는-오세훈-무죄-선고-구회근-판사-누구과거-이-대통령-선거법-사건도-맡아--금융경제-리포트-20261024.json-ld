@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "한눈에 보는 오세훈 무죄 선고 구회근 판사 누구?…과거 이 대통령 선거법 사건도 맡아 – 금융·경제 리포트",
+  "datePublished": "2026-10-24T07:55:17+09:00",
+  "dateModified": "2026-10-24T07:55:17+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/한눈에-보는-오세훈-무죄-선고-구회근-판사-누구과거-이-대통령-선거법-사건도-맡아--금융경제-리포트-20261024"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "오늘 기준 원달러 환율은(는) 1324.5원으로 집계됐다. 오세훈 무죄 선고 구회근 판사 누구?…과거 이 대통령 선거법 사건도 맡아를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1324.5원으로 마감됐다. 한국은행 기준금리는 2.57%, 소비자물가 상승률은 2.4%로 집계됐다. 코스피는 최근 30영업일 사이 -20.89% 변했다. 오늘 서울 날씨는 흐림, 현재 13°C(최고 18°C·최저 13°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-10-24/이미지/한눈에-보는-오세훈-무죄-선고-구회근-판사-누구과거-이-대통령-선거법-사건도-맡아--금융경제-리포트-20261024_썸네일.png"
+  }
+}
