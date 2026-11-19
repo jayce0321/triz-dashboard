@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "알아두면 좋은 오늘의 주요 이슈 – 금융·경제 리포트",
+  "datePublished": "2026-11-19T10:45:28+09:00",
+  "dateModified": "2026-11-19T10:45:28+09:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://segyesignal.example.com/news/알아두면-좋은-오늘의-주요-이슈--금융경제-리포트-20261119"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "jayce's 세계시그널",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://segyesignal.example.com/logo.png"
+    }
+  },
+  "inLanguage": "ko",
+  "description": "테마 해설 기사. 오늘의 주요 이슈를 주요 공공 경제 지표와 함께 살펴본다. 오늘 원달러 환율은 1달러당 1332.3원으로 마감됐다. 한국은행 기준금리는 2.69%, 소비자물가 상승률은 1.8%로 집계됐다. 코스피는 최근 30영업일 사이 -26.43% 변했다. 오늘 서울 날씨는 맑음, 현재 2°C(최고 5°C·최저 -1°C)다.",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://segyesignal.example.com/기사발행물/2026-11-19/이미지/알아두면-좋은-오늘의-주요-이슈--금융경제-리포트-20261119_썸네일.png"
+  }
+}
